@@ -60,7 +60,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <p className="text-slate-500">
                 {/* 动态显示当前筛选状态 */}
-                {selectedTagId ? `正在查看：${selectedTagId} ` : "2023年考研数学一真题概览"}
+                {selectedTagId ? `正在查看：${selectedTagId}` : "2023年考研数学一真题概览"}
               </p>
               {/* 这里以后可以放统计组件 */}
               <div className="text-sm font-mono text-slate-400">
