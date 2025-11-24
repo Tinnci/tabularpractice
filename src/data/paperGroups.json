@@ -1,0 +1,41 @@
+[
+    {
+        "id": "math1",
+        "name": "数学一 (统考)",
+        "type": "unified"
+    },
+    {
+        "id": "math2",
+        "name": "数学二 (统考)",
+        "type": "unified"
+    },
+    {
+        "id": "math3",
+        "name": "数学三 (统考)",
+        "type": "unified"
+    },
+    {
+        "id": "english1",
+        "name": "英语一 (统考)",
+        "type": "unified"
+    },
+    {
+        "id": "english2",
+        "name": "英语二 (统考)",
+        "type": "unified"
+    },
+    {
+        "id": "shu-812",
+        "name": "上海大学 812 控制理论",
+        "type": "self_proposed",
+        "university": "上海大学",
+        "courseCode": "812"
+    },
+    {
+        "id": "shu-915",
+        "name": "上海大学 915 信号与系统",
+        "type": "self_proposed",
+        "university": "上海大学",
+        "courseCode": "915"
+    }
+]

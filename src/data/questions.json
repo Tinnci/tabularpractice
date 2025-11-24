@@ -1,68 +1,72 @@
 [
     {
-        "id": "2023-1",
-        "year": 2023,
+        "id": "math1-2023-01",
+        "paperId": "math1-2023",
         "number": 1,
-        "status": "mastered",
+        "type": "choice",
         "tags": [
-            "Calculus",
-            "Limit"
-        ]
+            "limit-calculation"
+        ],
+        "imageUrl": ""
     },
     {
-        "id": "2023-2",
-        "year": 2023,
+        "id": "math1-2023-02",
+        "paperId": "math1-2023",
         "number": 2,
-        "status": "unanswered",
+        "type": "choice",
         "tags": [
-            "Linear Algebra"
-        ]
+            "derivative-calculation"
+        ],
+        "imageUrl": ""
     },
     {
-        "id": "2023-3",
-        "year": 2023,
+        "id": "math1-2023-03",
+        "paperId": "math1-2023",
         "number": 3,
-        "status": "failed",
+        "type": "choice",
         "tags": [
-            "Probability"
-        ]
+            "definite-integral-calculation"
+        ],
+        "imageUrl": ""
     },
     {
-        "id": "2023-4",
-        "year": 2023,
+        "id": "math1-2023-04",
+        "paperId": "math1-2023",
         "number": 4,
-        "status": "confused",
+        "type": "choice",
         "tags": [
-            "Calculus",
-            "Integral"
-        ]
+            "matrix-operation"
+        ],
+        "imageUrl": ""
     },
     {
-        "id": "2023-5",
-        "year": 2023,
-        "number": 5,
-        "status": "unanswered",
-        "tags": []
+        "id": "math1-2022-01",
+        "paperId": "math1-2022",
+        "number": 1,
+        "type": "choice",
+        "tags": [
+            "sequence-convergence"
+        ],
+        "imageUrl": ""
     },
     {
-        "id": "2023-6",
-        "year": 2023,
-        "number": 6,
-        "status": "unanswered",
-        "tags": []
+        "id": "math1-2022-02",
+        "paperId": "math1-2022",
+        "number": 2,
+        "type": "choice",
+        "tags": [
+            "taylor-formula"
+        ],
+        "imageUrl": ""
     },
     {
-        "id": "2023-7",
-        "year": 2023,
-        "number": 7,
-        "status": "mastered",
-        "tags": []
-    },
-    {
-        "id": "2023-8",
-        "year": 2023,
-        "number": 8,
-        "status": "unanswered",
-        "tags": []
+        "id": "math1-2021-01",
+        "paperId": "math1-2021",
+        "number": 1,
+        "type": "choice",
+        "tags": [
+            "limit-parameter"
+        ],
+        "imageUrl": ""
     }
 ]

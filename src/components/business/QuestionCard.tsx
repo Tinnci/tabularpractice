@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { Question } from "@/lib/types"
+import { Question, Status } from "@/lib/types"
 
 interface Props {
     question: Question;
@@ -8,7 +8,7 @@ interface Props {
 }
 
 // 状态对应的 Tailwind 颜色类映射
-const statusColors = {
+const statusColors: Record<Status, string> = {
     unanswered: "bg-white hover:bg-slate-50 border-slate-200",
     mastered: "bg-green-100 hover:bg-green-200 border-green-300",
     confused: "bg-yellow-100 hover:bg-yellow-200 border-yellow-300",
@@ -16,18 +16,17 @@ const statusColors = {
 }
 
 export function QuestionCard({ question, onClick }: Props) {
+    const status = question.status || 'unanswered';
+
     return (
         <Card
             className={cn(
                 "cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg",
-                statusColors[question.status]
+                statusColors[status]
             )}
             onClick={onClick}
         >
             <CardContent className="p-2 flex flex-col items-center justify-center h-24 relative">
-                <span className="absolute top-1 left-2 text-xs text-slate-400 font-mono">
-                    {question.year}-{question.number}
-                </span>
                 {/* 这里放缩略图或占位符 */}
                 <div className="text-slate-300 text-2xl font-bold select-none">?</div>
                 {question.tags.length > 0 && (

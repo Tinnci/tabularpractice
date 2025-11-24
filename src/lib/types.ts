@@ -1,12 +1,33 @@
-export type Difficulty = 'easy' | 'medium' | 'hard';
+// 基础枚举
+export type SubjectType = 'unified' | 'self_proposed'; // 统考 | 自命题
 export type Status = 'unanswered' | 'mastered' | 'confused' | 'failed';
 
+// 1. 试卷组定义 (核心概念：把一类试卷打包)
+export interface PaperGroup {
+  id: string;           // e.g., "math1", "shu-812", "shu-915"
+  name: string;         // e.g., "数学一", "上海大学-812控制理论"
+  type: SubjectType;
+  university?: string;  // 仅自命题需要，e.g., "上海大学"
+  courseCode?: string;  // 仅自命题需要，e.g., "812"
+}
+
+// 2. 试卷定义 (连接 试卷组 和 题目)
+export interface Paper {
+  id: string;           // e.g., "math1-2023"
+  groupId: string;      // 关联到 PaperGroup.id
+  year: number;         // 2023
+  name: string;         // "2023年考研数学一真题"
+}
+
+// 3. 题目定义
 export interface Question {
   id: string;
-  year: number;
-  number: number; // 题号
-  imageUrl?: string; // Optional for now
-  status: Status;
-  tags: string[]; // 知识点
-  difficulty?: Difficulty;
+  paperId: string;      // 关联到 Paper.id
+  number: number;       // 题号 1, 2, 3...
+  type: 'choice' | 'fill' | 'answer';
+  imageUrl?: string;    // 题目图片地址
+  status?: Status;      // 状态，用于UI显示
+  tags: string[];       // 知识点ID，注意：不同groupId下的tags集合是不同的
 }
+
+export type Difficulty = 'easy' | 'medium' | 'hard';
