@@ -33,7 +33,7 @@ export function QuestionModal({ question, isOpen, onClose, onUpdateStatus }: Pro
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl">
-                        <span>{question.year}年 - 第{question.number}题</span>
+                        <span>第{question.number}题</span>
                         {question.tags.map(tag => (
                             <Badge key={tag} variant="secondary" className="text-xs font-normal">
                                 {tag}
