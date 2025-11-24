@@ -18,9 +18,11 @@ import {
   SelectGroup,
   SelectLabel
 } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ListFilter } from "lucide-react";
 
 export default function Home() {
-  const { progress, updateStatus, selectedTagId, currentGroupId, setCurrentGroupId } = useProgressStore();
+  const { progress, updateStatus, selectedTagId, currentGroupId, setCurrentGroupId, filterStatus, setFilterStatus } = useProgressStore();
 
   const [mergedQuestions, setMergedQuestions] = useState<Question[]>([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
@@ -39,18 +41,23 @@ export default function Home() {
     return (papersData as Paper[]).filter(p => p.groupId === currentGroupId);
   }, [currentGroupId]);
 
-  // 根据 currentPapers 和 selectedTagId 筛选出对应的 Questions
+  // 根据 currentPapers 和 selectedTagId 和 filterStatus 筛选出对应的 Questions
   const filteredQuestions = useMemo(() => {
     const currentPaperIds = currentPapers.map(p => p.id);
     let filtered = mergedQuestions.filter(q => currentPaperIds.includes(q.paperId));
 
-    // 如果选中了知识点，进一步筛选
+    // 知识点筛选
     if (selectedTagId) {
       filtered = filtered.filter(q => q.tags.includes(selectedTagId));
     }
 
+    // 新增：状态筛选
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(q => (q.status || 'unanswered') === filterStatus);
+    }
+
     return filtered;
-  }, [mergedQuestions, currentPapers, selectedTagId]);
+  }, [mergedQuestions, currentPapers, selectedTagId, filterStatus]);
 
   const handleQuestionClick = (id: string) => {
     setSelectedQuestionId(id);
@@ -109,6 +116,33 @@ export default function Home() {
                 )}
               </SelectContent>
             </Select>
+
+            {/* 状态筛选器 */}
+            <div className="flex items-center gap-2 border-l pl-4">
+              <ListFilter className="w-4 h-4 text-slate-400" />
+              <ToggleGroup
+                type="single"
+                value={filterStatus}
+                onValueChange={(value) => setFilterStatus((value as Status | 'all') || 'all')}
+                className="gap-1"
+              >
+                <ToggleGroupItem value="all" aria-label="全部" className="text-xs">
+                  全部
+                </ToggleGroupItem>
+                <ToggleGroupItem value="unanswered" aria-label="未做" className="text-xs">
+                  未做
+                </ToggleGroupItem>
+                <ToggleGroupItem value="mastered" aria-label="熟练" className="text-xs text-green-600">
+                  熟练
+                </ToggleGroupItem>
+                <ToggleGroupItem value="confused" aria-label="不熟" className="text-xs text-yellow-600">
+                  不熟
+                </ToggleGroupItem>
+                <ToggleGroupItem value="failed" aria-label="不会" className="text-xs text-red-600">
+                  不会
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
           </div>
 
           {/* 统计信息 */}

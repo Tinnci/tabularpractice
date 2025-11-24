@@ -7,8 +7,10 @@ interface ProgressState {
     progress: Record<string, Status>;
     // 知识点筛选
     selectedTagId: string | null;
-    // 新增：当前选中的试卷组ID
+    // 当前选中的试卷组ID
     currentGroupId: string;
+    // 新增：状态筛选 ('all' 表示不筛选)
+    filterStatus: Status | 'all';
 
     // 动作：更新状态
     updateStatus: (id: string, status: Status) => void;
@@ -16,6 +18,8 @@ interface ProgressState {
     setSelectedTagId: (id: string | null) => void;
     // 设置当前试卷组
     setCurrentGroupId: (id: string) => void;
+    // 设置状态筛选
+    setFilterStatus: (status: Status | 'all') => void;
 
     // 动作：获取统计数据
     getStats: () => { mastered: number; confused: number; failed: number; total: number };
@@ -27,6 +31,7 @@ export const useProgressStore = create<ProgressState>()(
             progress: {},
             selectedTagId: null,
             currentGroupId: 'math1', // 默认数学一
+            filterStatus: 'all', // 默认显示全部
 
             updateStatus: (id, status) =>
                 set((state) => ({
@@ -36,6 +41,8 @@ export const useProgressStore = create<ProgressState>()(
             setSelectedTagId: (id) => set({ selectedTagId: id }),
 
             setCurrentGroupId: (id) => set({ currentGroupId: id, selectedTagId: null }), // 切换试卷组时重置知识点筛选
+
+            setFilterStatus: (status) => set({ filterStatus: status }),
 
             getStats: () => {
                 const values = Object.values(get().progress);
