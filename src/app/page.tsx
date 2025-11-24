@@ -63,12 +63,42 @@ export default function Home() {
     setSelectedQuestionId(id);
   };
 
-  const handleStatusUpdate = (id: string, status: Status) => {
-    updateStatus(id, status);
-    setSelectedQuestionId(null);
+  // 计算当前题目在筛选结果中的索引（上下文感知）
+  const currentIndex = useMemo(() => {
+    if (!selectedQuestionId) return -1;
+    return filteredQuestions.findIndex(q => q.id === selectedQuestionId);
+  }, [selectedQuestionId, filteredQuestions]);
+
+  const currentQuestion = filteredQuestions[currentIndex] || null;
+
+  // 导航处理函数
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+
+    // 边界检查
+    if (newIndex >= 0 && newIndex < filteredQuestions.length) {
+      setSelectedQuestionId(filteredQuestions[newIndex].id);
+    }
   };
 
-  const currentQuestion = mergedQuestions.find(q => q.id === selectedQuestionId) || null;
+  // 状态更新处理（优化：自动跳转下一题）
+  const handleStatusUpdate = (id: string, status: Status) => {
+    updateStatus(id, status);
+
+    // 自动跳转到下一题，如果是最后一题则关闭
+    const hasNext = currentIndex < filteredQuestions.length - 1 && currentIndex !== -1;
+    if (hasNext) {
+      handleNavigate('next');
+    } else {
+      setSelectedQuestionId(null);
+    }
+  };
+
+  // 计算导航按钮状态
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < filteredQuestions.length - 1 && currentIndex !== -1;
 
   // 将试卷组按类型分组
   const groupedPaperGroups = useMemo(() => {
@@ -167,6 +197,10 @@ export default function Home() {
         onClose={() => setSelectedQuestionId(null)}
         question={currentQuestion}
         onUpdateStatus={handleStatusUpdate}
+        onPrev={() => handleNavigate('prev')}
+        onNext={() => handleNavigate('next')}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
       />
     </div>
   );
