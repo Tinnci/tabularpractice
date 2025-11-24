@@ -1,4 +1,3 @@
-```
 "use client"
 
 import { ExamWall } from "@/components/business/ExamWall";
@@ -49,7 +48,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]"> {/* Flex 容器 */}
-      
+
       {/* 左侧：侧边栏 */}
       <Sidebar />
 
@@ -61,7 +60,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <p className="text-slate-500">
                 {/* 动态显示当前筛选状态 */}
-                {selectedTagId ? `正在查看：${ selectedTagId } ` : "2023年考研数学一真题概览"}
+                {selectedTagId ? `正在查看：${selectedTagId} ` : "2023年考研数学一真题概览"}
               </p>
               {/* 这里以后可以放统计组件 */}
               <div className="text-sm font-mono text-slate-400">
@@ -78,8 +77,8 @@ export default function Home() {
                 <ExamWall questions={filteredQuestions} onQuestionClick={handleQuestionClick} />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-slate-400 py-20">
-                   <p>该知识点下暂无题目</p>
-                   <p className="text-xs mt-2">请确保 data/questions.json 中的 tags 字段包含对应 ID</p>
+                  <p>该知识点下暂无题目</p>
+                  <p className="text-xs mt-2">请确保 data/questions.json 中的 tags 字段包含对应 ID</p>
                 </div>
               )}
             </div>
