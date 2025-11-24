@@ -1,0 +1,44 @@
+[
+    {
+        "id": "math1",
+        "label": "高等数学",
+        "children": [
+            {
+                "id": "function",
+                "label": "函数、极限、连续"
+            },
+            {
+                "id": "derivative",
+                "label": "一元函数微分学"
+            },
+            {
+                "id": "integral",
+                "label": "一元函数积分学"
+            }
+        ]
+    },
+    {
+        "id": "linear",
+        "label": "线性代数",
+        "children": [
+            {
+                "id": "determinant",
+                "label": "行列式"
+            },
+            {
+                "id": "matrix",
+                "label": "矩阵"
+            }
+        ]
+    },
+    {
+        "id": "probability",
+        "label": "概率论",
+        "children": [
+            {
+                "id": "variable",
+                "label": "随机变量及其分布"
+            }
+        ]
+    }
+]
