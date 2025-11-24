@@ -14,60 +14,32 @@
 
 ## 🟢 第一阶段：核心功能完善
 
-### 1. ✅ 按状态筛选 (错题本逻辑) - **进行中**
+### 1. ✅ 按状态筛选 (错题本逻辑) - **已完成**
 **优先级**: 🔥 最高  
-**预计工时**: 1-2小时
+**完成时间**: 2025-11-25
 
 **功能点**:
-- [ ] 顶部工具栏添加 ToggleGroup: `[全部] [未做] [熟练] [不熟] [不会]`
-- [ ] Store 增加 `filterStatus` 状态
-- [ ] 筛选逻辑整合
-- [ ] 空状态处理 (如错题本为空时显示激励信息)
-
-**技术实现**:
-```typescript
-// src/lib/store.ts
-filterStatus: Status | 'all';
-
-// src/app/page.tsx
-const filteredQuestions = useMemo(() => {
-  return mergedQuestions.filter(q => {
-    if (filterStatus !== 'all' && q.status !== filterStatus) return false;
-    // ... other filters
-    return true;
-  });
-}, [mergedQuestions, filterStatus, ...]);
-```
+- [x] 顶部工具栏添加 ToggleGroup: `[全部] [未做] [熟练] [不熟] [不会]`
+- [x] Store 增加 `filterStatus` 状态
+- [x] 筛选逻辑整合
+- [x] 空状态处理 (如错题本为空时显示激励信息)
 
 ---
 
-### 2. 题目详情页 (Modal) 增强
+### 2. ✅ 题目详情页 (Modal) 增强 - **已完成**
 **优先级**: 🔥 高  
-**预计工时**: 3-4小时
+**完成时间**: 2025-11-25
 
-#### 2.1 视频嵌入
-- [ ] 在 Question 类型中添加 `videoUrl` 字段
-- [ ] Modal 中添加 Tabs: `[题目] [解析] [视频]`
-- [ ] 支持 B站 iframe 嵌入 (带时间戳: `?t=120`)
-- [ ] 优化：仅当切换到视频 Tab 时才加载 iframe (性能优化)
+#### 2.1 ✅ 视频嵌入
+- [x] 在 Question 类型中添加 `videoUrl`, `contentImg`, `answerImg`, `analysisImg` 字段
+- [x] Modal 中添加 Tabs: `[题目] [答案] [解析] [视频]`
+- [x] 支持 B站 iframe 嵌入 (带时间戳: `?t=120`)
+- [x] 优化：仅当切换到视频 Tab 时才加载 iframe (性能优化)
+- [x] 工具函数 `getBilibiliEmbed` 自动转换链接
 
-**示例结构**:
-```tsx
-<Tabs defaultValue="question">
-  <TabsList>
-    <TabsTrigger value="question">题目</TabsTrigger>
-    <TabsTrigger value="analysis">解析</TabsTrigger>
-    <TabsTrigger value="video">视频讲解</TabsTrigger>
-  </TabsList>
-  <TabsContent value="video">
-    <iframe src={question.videoUrl} />
-  </TabsContent>
-</Tabs>
-```
-
-#### 2.2 解析/答案遮罩交互
-- [ ] 添加"查看答案"按钮，点击后显示答案图片
-- [ ] 使用 `blur` 效果 + 点击取消模糊的交互
+#### 2.2 ✅ 解析/答案遮罩交互
+- [x] Tabs 天然防剧透，默认打开"题目"
+- [x] 用户需主动点击才能看到答案和解析
 
 #### 2.3 上一题/下一题导航
 - [ ] Modal 底部添加 `← 上一题` `下一题 →` 按钮

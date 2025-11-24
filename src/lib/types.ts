@@ -25,9 +25,17 @@ export interface Question {
   paperId: string;      // 关联到 Paper.id
   number: number;       // 题号 1, 2, 3...
   type: 'choice' | 'fill' | 'answer';
-  imageUrl?: string;    // 题目图片地址
   status?: Status;      // 状态，用于UI显示
-  tags: string[];       // 知识点ID，注意：不同groupId下的tags集合是不同的
+  tags: string[];       // 知识点ID
+
+  // 新增：更详细的内容字段
+  contentImg?: string;  // 题目图片 (主要内容)
+  answerImg?: string;   // 答案图片 (纯结果)
+  analysisImg?: string; // 解析图片 (详细步骤)
+  videoUrl?: string;    // 视频链接 (B站链接，如 https://www.bilibili.com/video/BV1xxxx?t=120)
+
+  // 保留向后兼容
+  imageUrl?: string;    // 废弃，使用 contentImg
 }
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
