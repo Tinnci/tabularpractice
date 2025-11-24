@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState } from "react";
 import {
     Dialog,
     DialogContent,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -101,6 +102,8 @@ export function QuestionModal({
         - 桌面端: sm:max-w-5xl sm:h-[95vh] sm:rounded-xl (悬浮大窗)
       */}
             <DialogContent className="w-screen h-screen sm:max-w-5xl sm:h-[95vh] flex flex-col p-0 gap-0 outline-none rounded-none sm:rounded-xl overflow-hidden">
+                {/* Accessibility: provide a DialogTitle for screen readers (hidden visually) */}
+                <DialogTitle className="sr-only">{`第 ${question.number} 题 · ${question.type}`}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
                 <div className="px-4 sm:px-6 py-3 border-b bg-white flex items-center justify-between z-20 shadow-sm shrink-0 gap-2">
