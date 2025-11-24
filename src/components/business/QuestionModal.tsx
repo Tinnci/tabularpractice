@@ -1,59 +1,67 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import {
     Dialog,
     DialogContent,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 import { Question, Status } from "@/lib/types";
 import { getBilibiliEmbed } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, HelpCircle, PlayCircle, BookOpen, Eye, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    Check, X, HelpCircle, PlayCircle, BookOpen, Eye, FileText,
+    ChevronLeft, ChevronRight, MonitorPlay
+} from "lucide-react";
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     question: Question | null;
     onUpdateStatus: (id: string, status: Status) => void;
-    // 新增导航 Props
     onPrev: () => void;
     onNext: () => void;
     hasPrev: boolean;
     hasNext: boolean;
 }
 
+type ViewType = 'question' | 'answer' | 'analysis' | 'video';
+
 export function QuestionModal({
-    isOpen,
-    onClose,
-    question,
-    onUpdateStatus,
-    onPrev,
-    onNext,
-    hasPrev,
-    hasNext
+    isOpen, onClose, question, onUpdateStatus,
+    onPrev, onNext, hasPrev, hasNext
 }: Props) {
+
+    // 管理可见区域的状态 (允许多选)
+    const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
+
+    // 当题目切换时，重置视图状态 (防止下一题直接剧透答案)
+    useEffect(() => {
+        if (isOpen && question) {
+            setVisibleViews(new Set(['question']));
+        }
+    }, [question?.id, isOpen]);
 
     // 键盘快捷键监听
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (!isOpen) return;
 
-        // 如果焦点在输入框内，不触发快捷键（为未来的笔记功能预留）
+        // 避免输入框干扰
         const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-            return;
-        }
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
         switch (e.key) {
             case "ArrowLeft":
-                if (hasPrev) {
+                // 只有当没有按下修饰键时才触发
+                if (hasPrev && !e.metaKey && !e.ctrlKey && !e.altKey) {
                     e.preventDefault();
                     onPrev();
                 }
                 break;
             case "ArrowRight":
-                if (hasNext) {
+                if (hasNext && !e.metaKey && !e.ctrlKey && !e.altKey) {
                     e.preventDefault();
                     onNext();
                 }
@@ -61,7 +69,6 @@ export function QuestionModal({
             case "Escape":
                 onClose();
                 break;
-            // 可选：数字键快速标记
             case "1":
                 if (question) onUpdateStatus(question.id, 'mastered');
                 break;
@@ -82,130 +89,186 @@ export function QuestionModal({
     if (!question) return null;
 
     const videoEmbedUrl = question.videoUrl ? getBilibiliEmbed(question.videoUrl) : null;
-    const questionImg = question.contentImg || question.imageUrl; // 向后兼容
+
+    // 切换视图显示的辅助函数
+    const toggleView = (view: ViewType) => {
+        const newSet = new Set(visibleViews);
+        if (newSet.has(view)) {
+            newSet.delete(view);
+        } else {
+            newSet.add(view);
+        }
+        setVisibleViews(newSet);
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            {/* max-w-4xl 宽度加大，方便看视频和宽图 */}
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0 outline-none">
+            <DialogContent className="max-w-5xl h-[95vh] flex flex-col p-0 gap-0 outline-none">
 
-                {/* 1. 头部信息 */}
-                <div className="px-6 py-4 border-b flex items-center justify-between bg-slate-50/50">
-                    <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="text-base px-3 py-1 bg-white font-mono">
-                            第 {question.number} 题
-                        </Badge>
-                        {/* Tag 显示 */}
+                {/* 1. 头部信息与工具栏 */}
+                <div className="px-6 py-3 border-b bg-white flex items-center justify-between z-20 shadow-sm shrink-0">
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-800">第 {question.number} 题</span>
+                            <span className="text-xs text-slate-500">类型: {question.type}</span>
+                        </div>
+
+                        {/* 视图切换开关组 - 核心 UX 改进 */}
+                        <div className="flex items-center bg-slate-100 p-1 rounded-lg border">
+                            <Toggle
+                                pressed={visibleViews.has('question')}
+                                onPressedChange={() => toggleView('question')}
+                                aria-label="显示题目"
+                                className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-8 px-3 text-xs gap-2"
+                            >
+                                <BookOpen className="w-3.5 h-3.5" /> 题目
+                            </Toggle>
+
+                            {videoEmbedUrl && (
+                                <Toggle
+                                    pressed={visibleViews.has('video')}
+                                    onPressedChange={() => toggleView('video')}
+                                    aria-label="显示视频"
+                                    className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-8 px-3 text-xs gap-2 text-blue-600 data-[state=on]:text-blue-700"
+                                >
+                                    <MonitorPlay className="w-3.5 h-3.5" /> 视频
+                                </Toggle>
+                            )}
+
+                            <div className="w-px h-4 bg-slate-300 mx-1" />
+
+                            <Toggle
+                                pressed={visibleViews.has('answer')}
+                                onPressedChange={() => toggleView('answer')}
+                                aria-label="显示答案"
+                                className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-8 px-3 text-xs gap-2"
+                            >
+                                <Eye className="w-3.5 h-3.5" /> 答案
+                            </Toggle>
+                            <Toggle
+                                pressed={visibleViews.has('analysis')}
+                                onPressedChange={() => toggleView('analysis')}
+                                aria-label="显示解析"
+                                className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-8 px-3 text-xs gap-2"
+                            >
+                                <FileText className="w-3.5 h-3.5" /> 解析
+                            </Toggle>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-2">
                         {question.tags?.slice(0, 3).map(tag => (
-                            <Badge key={tag} variant="secondary" className="text-xs text-slate-500">
+                            <Badge key={tag} variant="outline" className="text-xs text-slate-500 font-normal">
                                 {tag}
                             </Badge>
                         ))}
                         {question.tags && question.tags.length > 3 && (
-                            <Badge variant="secondary" className="text-xs text-slate-400">
+                            <Badge variant="outline" className="text-xs text-slate-400">
                                 +{question.tags.length - 3}
                             </Badge>
                         )}
                     </div>
                 </div>
 
-                {/* 2. 核心内容区 (Tabs) */}
-                <div className="flex-1 overflow-hidden bg-slate-50/30">
-                    <Tabs defaultValue="question" className="h-full flex flex-col">
+                {/* 2. 内容瀑布流区域 */}
+                <div className="flex-1 min-h-0 bg-slate-50/50 relative">
+                    <ScrollArea className="h-full">
+                        <div className="p-6 flex flex-col gap-6 max-w-4xl mx-auto pb-20">
 
-                        {/* Tabs 导航栏 */}
-                        <div className="px-6 border-b bg-white">
-                            <TabsList className="h-12">
-                                <TabsTrigger value="question" className="text-sm gap-2">
-                                    <BookOpen className="w-4 h-4" /> 题目
-                                </TabsTrigger>
-                                <TabsTrigger value="answer" className="text-sm gap-2">
-                                    <Eye className="w-4 h-4" /> 答案
-                                </TabsTrigger>
-                                <TabsTrigger value="analysis" className="text-sm gap-2">
-                                    <FileText className="w-4 h-4" /> 解析
-                                </TabsTrigger>
-                                {videoEmbedUrl && (
-                                    <TabsTrigger value="video" className="text-sm gap-2">
-                                        <PlayCircle className="w-4 h-4" /> 视频讲解
-                                    </TabsTrigger>
-                                )}
-                            </TabsList>
-                        </div>
-
-                        {/* 内容区域 */}
-                        <div className="flex-1 overflow-y-auto bg-white">
-
-                            {/* Tab: 题目 */}
-                            <TabsContent value="question" className="mt-0 h-full flex items-center justify-center min-h-[400px] p-6">
-                                <div className="w-full max-w-2xl">
-                                    {questionImg ? (
-                                        <img
-                                            src={questionImg}
-                                            alt="题目"
-                                            className="w-full h-auto rounded-lg border shadow-sm"
-                                        />
-                                    ) : (
-                                        <div className="h-64 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
-                                            题目图片占位符
-                                        </div>
-                                    )}
+                            {/* 题目区域 */}
+                            {visibleViews.has('question') && (
+                                <div className="bg-white rounded-xl border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="bg-slate-50/80 border-b px-4 py-2 flex items-center gap-2 text-sm font-medium text-slate-600">
+                                        <BookOpen className="w-4 h-4" /> 题目描述
+                                    </div>
+                                    <div className="p-6 flex justify-center">
+                                        {question.contentImg || question.imageUrl ? (
+                                            <img
+                                                src={question.contentImg || question.imageUrl}
+                                                alt="题目"
+                                                className="max-w-full h-auto object-contain rounded-lg"
+                                            />
+                                        ) : (
+                                            <div className="h-64 w-full bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                                题目图片占位符
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </TabsContent>
+                            )}
 
-                            {/* Tab: 答案 (纯结果) */}
-                            <TabsContent value="answer" className="mt-0 h-full flex items-center justify-center p-6">
-                                {question.answerImg ? (
-                                    <img
-                                        src={question.answerImg}
-                                        alt="答案"
-                                        className="max-w-full max-h-full object-contain rounded-lg border shadow-sm"
-                                    />
-                                ) : (
-                                    <div className="text-center space-y-2">
-                                        <div className="text-slate-400 text-lg">暂无答案图片</div>
-                                        <p className="text-xs text-slate-400">可以在 questions.json 中添加 answerImg 字段</p>
+                            {/* 视频区域 */}
+                            {visibleViews.has('video') && videoEmbedUrl && (
+                                <div className="bg-black rounded-xl border shadow-sm overflow-hidden aspect-video animate-in fade-in slide-in-from-bottom-2 duration-300 ring-2 ring-blue-200">
+                                    <div className="bg-blue-50/90 border-b border-blue-200 px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-700">
+                                        <MonitorPlay className="w-4 h-4" /> 视频讲解
                                     </div>
-                                )}
-                            </TabsContent>
-
-                            {/* Tab: 解析 (详细过程) */}
-                            <TabsContent value="analysis" className="mt-0 h-full flex items-center justify-center p-6">
-                                {question.analysisImg ? (
-                                    <img
-                                        src={question.analysisImg}
-                                        alt="解析"
-                                        className="max-w-full max-h-full object-contain rounded-lg border shadow-sm"
-                                    />
-                                ) : (
-                                    <div className="text-center space-y-2">
-                                        <div className="text-slate-400 text-lg">暂无解析图片</div>
-                                        <p className="text-xs text-slate-400">可以在 questions.json 中添加 analysisImg 字段</p>
+                                    <div className="aspect-video bg-black">
+                                        <iframe
+                                            src={videoEmbedUrl}
+                                            className="w-full h-full"
+                                            scrolling="no"
+                                            frameBorder="0"
+                                            allowFullScreen
+                                            allow="autoplay; encrypted-media"
+                                            title="视频讲解"
+                                        />
                                     </div>
-                                )}
-                            </TabsContent>
+                                </div>
+                            )}
 
-                            {/* Tab: 视频 */}
-                            {videoEmbedUrl && (
-                                <TabsContent value="video" className="mt-0 h-full bg-black p-0">
-                                    <iframe
-                                        src={videoEmbedUrl}
-                                        className="w-full h-full"
-                                        scrolling="no"
-                                        frameBorder="0"
-                                        allowFullScreen
-                                        allow="autoplay; encrypted-media"
-                                        title="视频讲解"
-                                    />
-                                </TabsContent>
+                            {/* 答案区域 */}
+                            {visibleViews.has('answer') && (
+                                <div className="bg-white rounded-xl border border-green-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="bg-green-50/50 border-b border-green-200 px-4 py-2 flex items-center gap-2 text-sm font-medium text-green-700">
+                                        <Eye className="w-4 h-4" /> 参考答案
+                                    </div>
+                                    <div className="p-6 flex justify-center">
+                                        {question.answerImg ? (
+                                            <img
+                                                src={question.answerImg}
+                                                alt="答案"
+                                                className="max-w-full h-auto object-contain rounded-lg"
+                                            />
+                                        ) : (
+                                            <div className="text-center space-y-2 py-8">
+                                                <span className="text-slate-400 text-sm">暂无答案图片</span>
+                                                <p className="text-xs text-slate-400">可以在 questions.json 中添加 answerImg 字段</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 解析区域 */}
+                            {visibleViews.has('analysis') && (
+                                <div className="bg-white rounded-xl border border-blue-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="bg-blue-50/50 border-b border-blue-200 px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-700">
+                                        <FileText className="w-4 h-4" /> 详细解析
+                                    </div>
+                                    <div className="p-6 flex justify-center">
+                                        {question.analysisImg ? (
+                                            <img
+                                                src={question.analysisImg}
+                                                alt="解析"
+                                                className="max-w-full h-auto object-contain rounded-lg"
+                                            />
+                                        ) : (
+                                            <div className="text-center space-y-2 py-8">
+                                                <span className="text-slate-400 text-sm">暂无解析图片</span>
+                                                <p className="text-xs text-slate-400">可以在 questions.json 中添加 analysisImg 字段</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             )}
 
                         </div>
-                    </Tabs>
+                    </ScrollArea>
                 </div>
 
-                {/* 3. 底部操作栏 - 全新三栏布局 */}
-                <div className="p-4 border-t bg-white grid grid-cols-[1fr_auto_1fr] items-center gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+                {/* 3. 底部操作栏 */}
+                <div className="p-4 border-t bg-white grid grid-cols-[1fr_auto_1fr] items-center gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
 
                     {/* 左侧：上一题 */}
                     <div className="flex justify-start">
