@@ -159,19 +159,16 @@ export default function Home() {
       {/* 右侧：主内容区 */}
       <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
         {/* 顶部工具栏：切换试卷组 */}
-        <div className="px-6 py-4 border-b flex items-center justify-between bg-background z-20 shadow-sm">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold text-foreground">真题墙</h2>
+        {/* 顶部工具栏：切换试卷组 */}
+        <div className="px-4 sm:px-6 py-3 border-b flex flex-wrap items-center justify-between gap-y-3 gap-x-4 bg-background z-20 shadow-sm">
 
-            {/* 全局搜索 */}
-            <GlobalSearch
-              questions={mergedQuestions}
-              onQuestionSelect={(id) => setSelectedQuestionId(id)}
-            />
+          {/* 1. 左侧：核心上下文 (标题 + 试卷组) */}
+          <div className="flex items-center gap-3 shrink-0">
+            <h2 className="text-lg font-semibold text-foreground whitespace-nowrap hidden sm:block">真题墙</h2>
 
-            {/* 试卷组选择器 */}
+            {/* 试卷组选择器 - 稍微调窄一点 */}
             <Select value={currentGroupId} onValueChange={setCurrentGroupId}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] sm:w-[180px] h-9 border-dashed sm:border-solid">
                 <SelectValue placeholder="选择试卷组" />
               </SelectTrigger>
               <SelectContent>
@@ -195,67 +192,73 @@ export default function Home() {
                 )}
               </SelectContent>
             </Select>
+          </div>
 
-            {/* 年份筛选 */}
-            <Select value={filterYear} onValueChange={setFilterYear}>
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="年份" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部年份</SelectItem>
-                {availableYears.map(year => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* 2. 中间：筛选器组 (在小屏幕上允许换行或隐藏) */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-linear-fade flex-1 justify-start sm:justify-center order-3 sm:order-2 w-full sm:w-auto">
 
-            {/* 题型筛选 */}
-            <Select value={filterType} onValueChange={(val) => setFilterType(val as any)}>
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="题型" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部题型</SelectItem>
-                <SelectItem value="choice">选择题</SelectItem>
-                <SelectItem value="fill">填空题</SelectItem>
-                <SelectItem value="answer">解答题</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* 状态筛选器 */}
-            <div className="flex items-center gap-2 border-l pl-4">
-              <ListFilter className="w-4 h-4 text-muted-foreground" />
+            {/* 状态筛选器 (高频) - 始终显示 */}
+            <div className="flex items-center bg-muted/50 p-1 rounded-lg shrink-0">
               <ToggleGroup
                 type="single"
                 value={filterStatus}
-                onValueChange={(value) => setFilterStatus((value as Status | 'all') || 'all')}
-                className="gap-1"
+                onValueChange={(v) => setFilterStatus((v as Status | 'all') || 'all')}
+                className="gap-0"
               >
-                <ToggleGroupItem value="all" aria-label="全部" className="text-xs">
-                  全部
-                </ToggleGroupItem>
-                <ToggleGroupItem value="unanswered" aria-label="未做" className="text-xs">
-                  未做
-                </ToggleGroupItem>
-                <ToggleGroupItem value="mastered" aria-label="熟练" className="text-xs text-green-600 dark:text-green-400">
-                  熟练
-                </ToggleGroupItem>
-                <ToggleGroupItem value="confused" aria-label="不熟" className="text-xs text-yellow-600 dark:text-yellow-400">
-                  不熟
-                </ToggleGroupItem>
-                <ToggleGroupItem value="failed" aria-label="不会" className="text-xs text-red-600 dark:text-red-400">
-                  不会
-                </ToggleGroupItem>
+                {/* 使用图标+文字的响应式设计，或者仅用文字 */}
+                <ToggleGroupItem value="all" className="h-7 px-2 text-xs data-[state=on]:bg-white data-[state=on]:shadow-sm">全部</ToggleGroupItem>
+                <ToggleGroupItem value="unanswered" className="h-7 px-2 text-xs data-[state=on]:bg-white data-[state=on]:shadow-sm">未做</ToggleGroupItem>
+                <div className="w-px h-4 bg-border mx-1" />
+                <ToggleGroupItem value="mastered" className="h-7 px-2 text-xs data-[state=on]:bg-green-100 data-[state=on]:text-green-700 dark:data-[state=on]:bg-green-900/30 dark:data-[state=on]:text-green-400">斩</ToggleGroupItem>
+                <ToggleGroupItem value="confused" className="h-7 px-2 text-xs data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-700 dark:data-[state=on]:bg-yellow-900/30 dark:data-[state=on]:text-yellow-400">懵</ToggleGroupItem>
+                <ToggleGroupItem value="failed" className="h-7 px-2 text-xs data-[state=on]:bg-red-100 data-[state=on]:text-red-700 dark:data-[state=on]:bg-red-900/30 dark:data-[state=on]:text-red-400">崩</ToggleGroupItem>
               </ToggleGroup>
+            </div>
+
+            {/* 年份/题型 (次高频) - 在极窄屏幕可能需要隐藏或放入更多菜单 */}
+            <div className="flex items-center gap-2 shrink-0">
+              <Select value={filterYear} onValueChange={setFilterYear}>
+                <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
+                  <span>{filterYear === 'all' ? '年份' : filterYear}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部年份</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterType} onValueChange={(val) => setFilterType(val as any)}>
+                <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
+                  <span>{filterType === 'all' ? '题型' : (filterType === 'choice' ? '选择' : filterType === 'fill' ? '填空' : '解答')}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部题型</SelectItem>
+                  <SelectItem value="choice">选择题</SelectItem>
+                  <SelectItem value="fill">填空题</SelectItem>
+                  <SelectItem value="answer">解答题</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* 统计信息 */}
-          <div className="text-sm font-mono text-muted-foreground">
-            显示: {filteredQuestions.length} 题 | 已刷: {Object.keys(progress).length} 题
+          {/* 3. 右侧：搜索与统计 */}
+          <div className="flex items-center gap-2 shrink-0 order-2 sm:order-3 ml-auto sm:ml-0">
+            <GlobalSearch
+              questions={mergedQuestions}
+              onQuestionSelect={(id) => setSelectedQuestionId(id)}
+            />
+
+            {/* 统计信息 (大屏显示) */}
+            <div className="hidden lg:flex flex-col items-end text-[10px] text-muted-foreground border-l pl-3 leading-tight">
+              <span>{filteredQuestions.length} 题</span>
+              <span>/ {Object.keys(progress).length} 已刷</span>
+            </div>
           </div>
+
         </div>
 
         {/* 真题墙区域 - 高度自适应 */}

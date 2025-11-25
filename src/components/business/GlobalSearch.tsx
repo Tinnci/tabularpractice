@@ -104,15 +104,15 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
     return (
         <>
             {/* 触发按钮 (放在 Navbar) */}
+            {/* 触发按钮 (放在 Navbar) */}
             <Button
                 variant="outline"
-                className="relative h-9 w-full justify-start rounded-lg text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64 bg-background border-border hover:bg-muted/50"
+                className="relative h-9 w-9 p-0 xl:w-64 xl:justify-start xl:px-4 xl:py-2 overflow-hidden transition-all duration-300 ease-in-out hover:w-64 hover:justify-start hover:px-4 hover:bg-muted/50 group"
                 onClick={() => setOpen(true)}
             >
-                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                <span className="hidden lg:inline-flex">搜索题目...</span>
-                <span className="inline-flex lg:hidden">搜索...</span>
-                <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                <Search className="h-4 w-4 shrink-0 opacity-50 xl:mr-2 group-hover:mr-2" />
+                <span className="hidden xl:inline-flex group-hover:inline-flex whitespace-nowrap">搜索题目...</span>
+                <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 xl:flex group-hover:flex">
                     <span className="text-xs">⌘</span>K
                 </kbd>
             </Button>
