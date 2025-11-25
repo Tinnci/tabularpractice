@@ -48,7 +48,12 @@ export function SidebarContent({ className, onSelect }: { className?: string, on
                     isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground"
                 )}
                 onClick={() => {
-                    setSelectedTagId(node.id);
+                    // ✨ Toggle 逻辑：如果已选中，则取消选中；否则选中
+                    if (isSelected) {
+                        setSelectedTagId(null);
+                    } else {
+                        setSelectedTagId(node.id);
+                    }
                     onSelect?.();
                 }}
             >
