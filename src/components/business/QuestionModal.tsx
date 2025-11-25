@@ -17,6 +17,9 @@ import {
     ChevronLeft, ChevronRight, MonitorPlay, PenLine
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { useProgressStore } from "@/lib/store";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -33,6 +36,18 @@ interface Props {
 }
 
 type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note';
+
+// 通用 Markdown 渲染组件
+const MarkdownContent = ({ content }: { content: string }) => (
+    <div className="prose prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted prose-pre:text-foreground">
+        <ReactMarkdown
+            remarkPlugins={[remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+        >
+            {content}
+        </ReactMarkdown>
+    </div>
+);
 
 export function QuestionModal({
     isOpen, onClose, question, onUpdateStatus,
@@ -232,14 +247,18 @@ export function QuestionModal({
                                         </div>
                                     </div>
                                     <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
-                                        {question.contentImg || question.imageUrl ? (
+                                        {question.contentMd ? (
+                                            <div className="w-full p-2">
+                                                <MarkdownContent content={question.contentMd} />
+                                            </div>
+                                        ) : (question.contentImg || question.imageUrl) ? (
                                             <img
                                                 src={question.contentImg || question.imageUrl}
                                                 alt="题目"
                                                 className="max-w-full h-auto object-contain"
                                             />
                                         ) : (
-                                            <div className="text-muted-foreground text-sm">题目图片缺失</div>
+                                            <div className="text-muted-foreground text-sm">题目内容缺失</div>
                                         )}
                                     </div>
                                 </div>
@@ -267,14 +286,18 @@ export function QuestionModal({
                                         <Eye className="w-4 h-4" /> 参考答案
                                     </div>
                                     <div className="p-4 sm:p-6 flex justify-center">
-                                        {question.answerImg ? (
+                                        {question.answerMd ? (
+                                            <div className="w-full text-left">
+                                                <MarkdownContent content={question.answerMd} />
+                                            </div>
+                                        ) : question.answerImg ? (
                                             <img
                                                 src={question.answerImg}
                                                 alt="答案"
                                                 className="max-w-full h-auto object-contain"
                                             />
                                         ) : (
-                                            <span className="text-muted-foreground text-sm">暂无答案图片</span>
+                                            <span className="text-muted-foreground text-sm">暂无答案内容</span>
                                         )}
                                     </div>
                                 </div>
@@ -287,14 +310,18 @@ export function QuestionModal({
                                         <FileText className="w-4 h-4" /> 详细解析
                                     </div>
                                     <div className="p-4 sm:p-6 flex justify-center">
-                                        {question.analysisImg ? (
+                                        {question.analysisMd ? (
+                                            <div className="w-full text-left">
+                                                <MarkdownContent content={question.analysisMd} />
+                                            </div>
+                                        ) : question.analysisImg ? (
                                             <img
                                                 src={question.analysisImg}
                                                 alt="解析"
                                                 className="max-w-full h-auto object-contain"
                                             />
                                         ) : (
-                                            <span className="text-muted-foreground text-sm">暂无解析图片</span>
+                                            <span className="text-muted-foreground text-sm">暂无解析内容</span>
                                         )}
                                     </div>
                                 </div>
@@ -343,7 +370,7 @@ export function QuestionModal({
                                                 onClick={() => setIsEditingNote(true)}
                                             >
                                                 {noteContent ? (
-                                                    <ReactMarkdown>{noteContent}</ReactMarkdown>
+                                                    <MarkdownContent content={noteContent} />
                                                 ) : (
                                                     <span className="text-muted-foreground/50 italic select-none">点击此处开始记录笔记...</span>
                                                 )}

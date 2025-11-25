@@ -7,7 +7,8 @@
 ```
 🟢 第一阶段：核心功能完善 (Core Polish) - 已完成大部分
 🟡 第二阶段：数据可视化与安全 (Insights & Backup) - 已完成
-🔵 第三阶段：体验增强 (UX Enhancement) - 进行中
+🔵 第三阶段：体验增强 (UX Enhancement) - 已完成
+🟣 第四阶段：架构演进 (Architecture Evolution) - 待开始
 ```
 
 ---
@@ -73,6 +74,8 @@
 - [x] 安装 `next-themes`
 - [x] Navbar 添加切换按钮
 - [x] 全组件语义化颜色适配
+- [ ] 实现题目/答案/解答 白底图片的自动反色或者深色遮罩
+
 
 ### 9. 快捷键系统
 **优先级**: 🟡 中  
@@ -94,10 +97,40 @@
 
 ---
 
+## 🟣 第四阶段：架构演进 (Git-based Headless CMS)
+
+### 11. Markdown + LaTeX 渲染引擎
+**优先级**: 🔥 高
+**预计工时**: 2小时
+
+- [ ] 安装 `remark-math`, `rehype-katex`, `katex`
+- [ ] 更新 `Question` 类型 (支持 `contentMd`, `answerMd`)
+- [ ] 升级 `QuestionModal`: 支持混合渲染 (Markdown 优先，图片兜底)
+- [ ] 引入 `github-markdown-css` 或 Tailwind Typography 优化排版
+
+### 12. 数据结构重构与懒加载
+**优先级**: 🟡 中
+**预计工时**: 4小时
+
+- [ ] 拆分 `questions.json` 为 `index.json` (索引) 和 `papers/*.json` (详情)
+- [ ] 引入 `SWR` 库进行数据请求
+- [ ] 实现真题墙的“骨架屏”加载状态
+- [ ] 实现鼠标悬停预加载 (Preload)
+
+### 13. 题库分离 (Repo Separation)
+**优先级**: 🔵 低 (长期目标)
+
+- [ ] 创建独立的 `question-bank` 仓库
+- [ ] 配置 GitHub Pages / Raw 访问
+- [ ] App 支持配置自定义题库源 URL
+
+---
+
 ## 🎯 近期优先任务 (Next Up)
 
-1. 多维度筛选 (题型、年份)
-2. 快捷键系统完善
+1. **Markdown + LaTeX 渲染引擎**: 让题目支持数学公式
+2. 多维度筛选
+3. 快捷键系统完善
 
 ---
 

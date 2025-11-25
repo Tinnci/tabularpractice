@@ -35,6 +35,12 @@ export interface Question {
   contentImg?: string;  // 题目图片 (主要内容)
   answerImg?: string;   // 答案图片 (纯结果)
   analysisImg?: string; // 解析图片 (详细步骤)
+
+  // 新增：Markdown 内容 (优先渲染)
+  contentMd?: string;
+  answerMd?: string;
+  analysisMd?: string;
+
   videoUrl?: string;    // 视频链接 (B站链接，如 https://www.bilibili.com/video/BV1xxxx?t=120)
 
   // 保留向后兼容

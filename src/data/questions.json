@@ -10,7 +10,10 @@
         "contentImg": "",
         "answerImg": "",
         "analysisImg": "",
-        "videoUrl": "https://www.bilibili.com/video/BV1HQ4y1C7hW/?p=1&t=155"
+        "videoUrl": "https://www.bilibili.com/video/BV1HQ4y1C7hW/?p=1&t=155",
+        "contentMd": "设函数 $f(x) = \\frac{\\ln(1+x)}{x}$，则 $\\lim_{x \\to 0} f(x)$ 等于：\n\n(A) 0\n(B) 1\n(C) 2\n(D) 不存在",
+        "answerMd": "**(B)**",
+        "analysisMd": "利用等价无穷小替换：\n\n当 $x \\to 0$ 时，$\\ln(1+x) \\sim x$。\n\n所以：\n$$\n\\lim_{x \\to 0} \\frac{\\ln(1+x)}{x} = \\lim_{x \\to 0} \\frac{x}{x} = 1\n$$\n\n故选 (B)。"
     },
     {
         "id": "math1-2023-02",
