@@ -113,11 +113,27 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
+/* PWA Window Controls Overlay Utilities */
+.app-region-drag {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.app-region-no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+/* Safe area positioning for WCO */
+.wco-safe-area {
+  padding-left: env(titlebar-area-x, 0);
+  padding-right: calc(100vw - env(titlebar-area-x, 0) - env(titlebar-area-width, 100%));
+  width: 100%;
+}
+
+@media all and (display-mode: standalone) {
+  header {
+    /* Optional: Add extra padding for standalone mode if needed */
+    /* padding-top: env(safe-area-inset-top); */
   }
 }
