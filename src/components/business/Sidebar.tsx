@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Folder, Hash, Layers, ChevronRight } from "lucide-react";
 import { useState, useMemo } from "react";
+import { ProgressOverview } from "./ProgressOverview";
+import questionsData from "@/data/questions.json";
 
 export function Sidebar() {
     const { selectedTagId, setSelectedTagId, currentGroupId } = useProgressStore();
@@ -24,6 +26,9 @@ export function Sidebar() {
         if (currentGroupId.startsWith('politics')) return '政治大纲';
         return '考点目录';
     }, [currentGroupId]);
+
+    // 计算总题数 (这里简单使用总数，后续可以根据科目筛选)
+    const totalQuestions = questionsData.length;
 
     const toggleCategory = (categoryId: string) => {
         setExpandedCategories(prev =>
@@ -111,15 +116,15 @@ export function Sidebar() {
     };
 
     return (
-        <div className="w-64 flex-shrink-0 border-r bg-white h-[calc(100vh-3.5rem)] sticky top-14 hidden md:block">
-            <div className="p-4 border-b bg-slate-50/50">
+        <div className="w-64 flex-shrink-0 border-r bg-white h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col">
+            <div className="p-4 border-b bg-slate-50/50 flex-shrink-0">
                 <h2 className="font-semibold text-lg flex items-center gap-2 text-slate-700">
                     <Layers className="w-5 h-5 text-slate-500" />
                     {sidebarTitle}
                 </h2>
             </div>
 
-            <ScrollArea className="h-[calc(100%-4rem)]">
+            <ScrollArea className="flex-1">
                 <div className="p-4 space-y-1">
                     {/* "全部" 按钮 */}
                     <Button
@@ -143,6 +148,11 @@ export function Sidebar() {
                     )}
                 </div>
             </ScrollArea>
+
+            {/* 底部统计区 */}
+            <div className="p-4 border-t bg-slate-50/50 flex-shrink-0">
+                <ProgressOverview total={totalQuestions} />
+            </div>
         </div>
     );
 }
