@@ -7,6 +7,7 @@ import { PenLine } from "lucide-react"
 interface Props {
     question: Question;
     onClick: () => void;
+    isDimmed?: boolean;
 }
 
 // 状态对应的 Tailwind 颜色类映射
@@ -17,7 +18,7 @@ const statusColors: Record<Status, string> = {
     failed: "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-900",
 }
 
-export function QuestionCard({ question, onClick }: Props) {
+export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
     const status = question.status || 'unanswered';
     const { notes } = useProgressStore();
     const hasNote = !!notes[question.id];
@@ -25,8 +26,11 @@ export function QuestionCard({ question, onClick }: Props) {
     return (
         <Card
             className={cn(
-                "cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg relative",
-                statusColors[status]
+                "cursor-pointer transition-all duration-300 border",
+                statusColors[status],
+                isDimmed
+                    ? "opacity-20 grayscale scale-90 hover:opacity-100 hover:grayscale-0 hover:scale-100"
+                    : "opacity-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/20"
             )}
             onClick={onClick}
         >

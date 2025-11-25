@@ -6,9 +6,10 @@ interface Props {
     papers: Paper[];       // 当前选中的试卷组包含的所有年份试卷
     questions: Question[]; // 所有的题目数据
     onQuestionClick: (id: string) => void;
+    highlightTagId: string | null; // 高亮显示的 Tag ID
 }
 
-export function VerticalExamWall({ papers, questions, onQuestionClick }: Props) {
+export function VerticalExamWall({ papers, questions, onQuestionClick, highlightTagId }: Props) {
     // 1. 将题目绑定到对应的试卷(年份)上
     const questionsByPaperId = questions.reduce((acc, q) => {
         if (!acc[q.paperId]) acc[q.paperId] = [];
@@ -43,6 +44,7 @@ export function VerticalExamWall({ papers, questions, onQuestionClick }: Props) 
                                             key={q.id}
                                             question={q}
                                             onClick={() => onQuestionClick(q.id)}
+                                            isDimmed={!!highlightTagId && !q.tags.includes(highlightTagId)}
                                         />
                                     ))}
 

@@ -119,15 +119,10 @@ export default function Home() {
     }
   ]);
 
-  // 根据 currentPapers 和 selectedTagId 和 filterStatus 筛选出对应的 Questions
+  // 根据 currentPapers 和 filterStatus 筛选出对应的 Questions
   const filteredQuestions = useMemo(() => {
     const currentPaperIds = currentPapers.map(p => p.id);
     let filtered = mergedQuestions.filter(q => currentPaperIds.includes(q.paperId));
-
-    // 知识点筛选
-    if (selectedTagId) {
-      filtered = filtered.filter(q => q.tags.includes(selectedTagId));
-    }
 
     // 状态筛选
     if (filterStatus !== 'all') {
@@ -136,20 +131,28 @@ export default function Home() {
 
     // 题型筛选
     if (filterType !== 'all') {
-      filtered = filtered.filter(q => q.type === filterType);
+      filtered = filtered.filter(q => {
+        if (filterType === 'choice') return q.type === 'choice';
+        if (filterType === 'fill') return q.type === 'fill';
+        if (filterType === 'answer') return q.type === 'answer';
+        return true;
+      });
     }
 
-    // 年份筛选
+    // 年份筛选 (注意：VerticalExamWall 已经按年份分组，这里的筛选主要是为了配合可能的单年份视图，
+    // 或者如果用户只想看某一年的题。目前 VerticalExamWall 会显示所有 currentPapers，
+    // 所以这里的 filterYear 实际上是进一步缩小 currentPapers 的范围，或者直接过滤 questions。
+    // 逻辑上，如果 filterYear 选了，currentPapers 应该也只剩那一年。
+    // 简单起见，这里再过滤一次 questions 也没问题)
     if (filterYear !== 'all') {
-      // filterYear is string, q.paperId needs to be checked against papers
-      // 或者更简单：找到对应年份的 paperIds
+      // 找到对应年份的 paperId
       const targetYear = parseInt(filterYear);
       const targetPaperIds = currentPapers.filter(p => p.year === targetYear).map(p => p.id);
       filtered = filtered.filter(q => targetPaperIds.includes(q.paperId));
     }
 
     return filtered;
-  }, [mergedQuestions, currentPapers, selectedTagId, filterStatus, filterType, filterYear]);
+  }, [mergedQuestions, currentPapers, filterStatus, filterType, filterYear]);
 
   const handleQuestionClick = (id: string) => {
     setSelectedQuestionId(id);
@@ -363,6 +366,7 @@ export default function Home() {
             papers={currentPapers}
             questions={filteredQuestions}
             onQuestionClick={handleQuestionClick}
+            highlightTagId={selectedTagId}
           />
         </div>
       </div>
