@@ -12,6 +12,8 @@ interface ProgressState {
     selectedTagId: string | null;
     // 当前选中的试卷组ID
     currentGroupId: string;
+    // 派生属性：当前科目类型 (math/english/politics)
+    filterSubject: 'math' | 'english' | 'politics';
     // 新增：状态筛选 ('all' 表示不筛选)
     filterStatus: Status | 'all';
     // 新增：题型筛选
@@ -56,6 +58,7 @@ export const useProgressStore = create<ProgressState>()(
             notes: {},
             selectedTagId: null,
             currentGroupId: 'math1', // 默认数学一
+            filterSubject: 'math',
             filterStatus: 'all', // 默认显示全部
             filterType: 'all',
             filterYear: 'all',
@@ -77,7 +80,17 @@ export const useProgressStore = create<ProgressState>()(
 
             setSelectedTagId: (id) => set({ selectedTagId: id }),
 
-            setCurrentGroupId: (id) => set({ currentGroupId: id, selectedTagId: null }), // 切换试卷组时重置知识点筛选
+            setCurrentGroupId: (id) => {
+                let subject: 'math' | 'english' | 'politics' = 'math';
+                if (id.startsWith('english')) subject = 'english';
+                else if (id.startsWith('politics')) subject = 'politics';
+
+                set({
+                    currentGroupId: id,
+                    selectedTagId: null,
+                    filterSubject: subject
+                });
+            },
 
             setFilterStatus: (status) => set({ filterStatus: status }),
 

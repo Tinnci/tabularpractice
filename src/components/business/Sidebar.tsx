@@ -5,147 +5,147 @@ import { getTagsForSubject, type TagNode } from "@/data/subject-tags";
 import { useProgressStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Folder, Hash, Layers, ChevronRight } from "lucide-react";
+import { Folder, Hash, Layers, ChevronRight, PieChart } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ProgressOverview } from "./ProgressOverview";
-// import questionsData from "@/data/questions.json"; // Removed
 import { useQuestions } from "@/hooks/useQuestions";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-// 1. 提取出的通用内容组件
-// 增加了 onSelect 回调，用于移动端点击后自动关闭抽屉
+
 export function SidebarContent({ className, onSelect }: { className?: string, onSelect?: () => void }) {
-    const { selectedTagId, setSelectedTagId, currentGroupId } = useProgressStore();
-    const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+    const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
+    const [isStatsOpen, setIsStatsOpen] = useState(true); // 控制底部统计展开
 
     const currentTags = useMemo(() => {
         return getTagsForSubject(currentGroupId);
     }, [currentGroupId]);
 
     const sidebarTitle = useMemo(() => {
-        if (currentGroupId.startsWith('math')) return '数学考点';
-        if (currentGroupId.startsWith('english')) return '英语题型';
-        if (currentGroupId.startsWith('politics')) return '政治大纲';
+        if (filterSubject === 'math') return '数学考点';
+        if (filterSubject === 'english') return '英语题型';
+        if (filterSubject === 'politics') return '政治大纲';
         return '考点目录';
-    }, [currentGroupId]);
+    }, [filterSubject]);
 
-    // 估算当前科目的总题数 (仅做参考，如果要精确需要遍历)
-    // 这里简单使用总数，后续可以根据科目筛选
     const { questionsIndex } = useQuestions();
     const totalQuestions = questionsIndex.length;
 
-    const toggleCategory = (categoryId: string) => {
-        setExpandedCategories(prev =>
-            prev.includes(categoryId)
-                ? prev.filter(id => id !== categoryId)
-                : [...prev, categoryId]
-        );
-    };
-
-    const renderTagNode = (node: TagNode, level: number = 0) => {
-        const hasChildren = node.children && node.children.length > 0;
-        const isExpanded = expandedCategories.includes(node.id);
+    // 渲染叶子节点 (最终的知识点)
+    const renderLeafNode = (node: TagNode) => {
         const isSelected = selectedTagId === node.id;
-
-        // 处理点击逻辑：如果是叶子节点，选中并触发 onSelect
-        const handleClick = () => {
-            if (hasChildren) {
-                toggleCategory(node.id);
-            } else {
-                setSelectedTagId(node.id);
-                onSelect?.(); // 移动端关闭抽屉
-            }
-        };
-
-        if (level === 0) {
-            return (
-                <div key={node.id} className="pt-4">
-                    <h3 className="mb-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {node.label}
-                    </h3>
-                    <div className="space-y-0.5">
-                        {node.children?.map(child => renderTagNode(child, 1))}
-                    </div>
-                </div>
-            );
-        } else {
-            return (
-                <div key={node.id}>
-                    <Button
-                        variant="ghost"
-                        className={cn(
-                            "w-full justify-start text-sm h-8 px-2 font-normal",
-                            isSelected && !hasChildren && "bg-accent text-accent-foreground font-medium"
-                        )}
-                        onClick={handleClick}
-                    >
-                        {hasChildren && (
-                            <ChevronRight className={cn("mr-1 h-3 w-3 transition-transform", isExpanded && "rotate-90")} />
-                        )}
-                        <Folder className={cn("mr-2 h-3 w-3", isSelected && !hasChildren ? "text-primary" : "text-muted-foreground")} />
-                        <span className="truncate">{node.label}</span>
-                    </Button>
-
-                    {hasChildren && isExpanded && (
-                        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border/50 pl-1">
-                            {node.children?.map(child => (
-                                <Button
-                                    key={child.id}
-                                    variant={selectedTagId === child.id ? "secondary" : "ghost"}
-                                    className={cn(
-                                        "w-full justify-start text-xs h-7 px-2",
-                                        selectedTagId === child.id && "bg-accent text-accent-foreground font-medium"
-                                    )}
-                                    onClick={() => {
-                                        setSelectedTagId(child.id);
-                                        onSelect?.();
-                                    }}
-                                >
-                                    <span className="w-1 h-1 rounded-full bg-muted-foreground mr-2" />
-                                    <span className="truncate">{child.label}</span>
-                                </Button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            );
-        }
+        return (
+            <Button
+                key={node.id}
+                variant="ghost"
+                className={cn(
+                    "w-full justify-start text-sm h-9 pl-9 font-normal relative",
+                    isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground"
+                )}
+                onClick={() => {
+                    setSelectedTagId(node.id);
+                    onSelect?.();
+                }}
+            >
+                {isSelected && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                )}
+                <Folder className={cn("mr-2 h-4 w-4", isSelected ? "text-primary" : "text-muted-foreground/50")} />
+                <span className="truncate">{node.label}</span>
+            </Button>
+        );
     };
 
     return (
         <div className={cn("flex flex-col h-full bg-background", className)}>
             {/* 标题区 */}
-            <div className="p-4 border-b border-border bg-muted/20">
-                <h2 className="font-semibold text-lg flex items-center gap-2 text-foreground">
-                    <Layers className="w-5 h-5 text-muted-foreground" />
+            <div className="p-4 border-b border-border bg-muted/10 shrink-0">
+                <h2 className="font-semibold text-lg flex items-center gap-2 text-foreground tracking-tight">
+                    <Layers className="w-5 h-5 text-primary" />
                     {sidebarTitle}
                 </h2>
             </div>
 
             {/* 滚动列表区 */}
             <ScrollArea className="flex-1">
-                <div className="p-4 space-y-1">
+                <div className="p-3 space-y-1">
                     <Button
                         variant={selectedTagId === null ? "secondary" : "ghost"}
-                        className="w-full justify-start text-foreground font-medium"
+                        className={cn(
+                            "w-full justify-start text-foreground font-medium mb-4",
+                            selectedTagId === null && "bg-accent shadow-sm"
+                        )}
                         onClick={() => { setSelectedTagId(null); onSelect?.(); }}
                     >
                         <Hash className="mr-2 h-4 w-4" />
                         全部题目
                     </Button>
 
-                    {currentTags.map(node => renderTagNode(node, 0))}
+                    {/* 使用 Accordion 实现一级菜单 */}
+                    <Accordion type="multiple" className="w-full space-y-2" defaultValue={currentTags.map(t => t.id)}>
+                        {currentTags.map((category) => (
+                            <AccordionItem key={category.id} value={category.id} className="border-none">
+                                <AccordionTrigger className="py-2 px-2 hover:bg-muted/50 rounded-md text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:no-underline">
+                                    {category.label}
+                                </AccordionTrigger>
+                                <AccordionContent className="pb-0 pt-1">
+                                    <div className="space-y-0.5">
+                                        {category.children?.map(child => {
+                                            // 如果二级菜单还有子级 (三级结构)
+                                            if (child.children && child.children.length > 0) {
+                                                return (
+                                                    <Accordion type="multiple" key={child.id}>
+                                                        <AccordionItem value={child.id} className="border-none">
+                                                            <AccordionTrigger className="py-1.5 px-4 hover:bg-muted/30 rounded-md text-sm font-normal text-foreground hover:no-underline justify-start gap-2">
+                                                                {/* 这里的 Chevron 默认在右侧，可以通过 class 调整 */}
+                                                                <span className="truncate">{child.label}</span>
+                                                            </AccordionTrigger>
+                                                            <AccordionContent>
+                                                                {child.children.map(subChild => renderLeafNode(subChild))}
+                                                            </AccordionContent>
+                                                        </AccordionItem>
+                                                    </Accordion>
+                                                )
+                                            }
+                                            // 二级就是叶子
+                                            return renderLeafNode(child);
+                                        })}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
 
                     {currentTags.length === 0 && (
-                        <div className="text-center py-10 text-muted-foreground text-sm">
+                        <div className="text-center py-10 text-muted-foreground text-xs">
                             <p>暂无目录数据</p>
                         </div>
                     )}
                 </div>
             </ScrollArea>
 
-            {/* 底部统计区 */}
-            <div className="p-4 border-t border-border bg-muted/20">
-                <ProgressOverview total={totalQuestions} />
+            {/* 底部统计区 - 可折叠 */}
+            <div className="border-t border-border bg-muted/10 shrink-0">
+                <Collapsible open={isStatsOpen} onOpenChange={setIsStatsOpen}>
+                    <div className="flex items-center justify-between p-2 px-4">
+                        <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-xs text-muted-foreground hover:text-foreground">
+                                <span className="flex items-center gap-2"><PieChart className="w-3 h-3" /> 刷题进度</span>
+                                <ChevronRight className={cn("w-3 h-3 transition-transform", isStatsOpen && "rotate-90")} />
+                            </Button>
+                        </CollapsibleTrigger>
+                    </div>
+                    <CollapsibleContent>
+                        <div className="px-4 pb-4">
+                            <ProgressOverview total={totalQuestions} />
+                        </div>
+                    </CollapsibleContent>
+                </Collapsible>
             </div>
         </div>
     );
