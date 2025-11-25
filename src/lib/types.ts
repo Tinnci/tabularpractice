@@ -2,6 +2,9 @@
 export type SubjectType = 'unified' | 'self_proposed'; // 统考 | 自命题
 export type Status = 'unanswered' | 'mastered' | 'confused' | 'failed';
 
+// 笔记类型定义
+export type NotesMap = Record<string, string>; // key: questionId, value: markdown content
+
 // 1. 试卷组定义 (核心概念：把一类试卷打包)
 export interface PaperGroup {
   id: string;           // e.g., "math1", "shu-812", "shu-915"

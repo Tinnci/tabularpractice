@@ -1,6 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Question, Status } from "@/lib/types"
+import { useProgressStore } from "@/lib/store"
+import { PenLine } from "lucide-react"
 
 interface Props {
     question: Question;
@@ -17,6 +19,8 @@ const statusColors: Record<Status, string> = {
 
 export function QuestionCard({ question, onClick }: Props) {
     const status = question.status || 'unanswered';
+    const { notes } = useProgressStore();
+    const hasNote = !!notes[question.id];
 
     return (
         <Card
@@ -29,6 +33,14 @@ export function QuestionCard({ question, onClick }: Props) {
             <CardContent className="p-2 flex flex-col items-center justify-center h-24 relative">
                 {/* 这里放缩略图或占位符 */}
                 <div className="text-muted-foreground/30 text-2xl font-bold select-none">?</div>
+
+                {/* 笔记指示器 */}
+                {hasNote && (
+                    <div className="absolute top-1 right-2">
+                        <PenLine className="w-3 h-3 text-orange-500/70" />
+                    </div>
+                )}
+
                 {question.tags.length > 0 && (
                     <div className="absolute bottom-1 right-2 flex gap-1">
                         <div className="w-2 h-2 rounded-full bg-muted-foreground/30" title={question.tags.join(', ')} />

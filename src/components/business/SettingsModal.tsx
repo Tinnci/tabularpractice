@@ -28,15 +28,24 @@ import { Status } from "@/lib/types"
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
     const [importConfirmOpen, setImportConfirmOpen] = useState(false)
-    const [pendingImportData, setPendingImportData] = useState<Record<string, Status> | null>(null)
+    // 更新类型定义以支持新旧两种格式
+    const [pendingImportData, setPendingImportData] = useState<{ progress: Record<string, Status>; notes?: Record<string, string> } | Record<string, Status> | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const { progress, importProgress } = useProgressStore()
+    const { progress, notes, importData } = useProgressStore()
 
     // 导出功能
     const handleExport = () => {
         try {
-            const dataStr = JSON.stringify(progress, null, 2)
+            // 导出包含进度和笔记的完整数据
+            const exportData = {
+                version: 1,
+                timestamp: new Date().toISOString(),
+                progress,
+                notes
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2)
             const blob = new Blob([dataStr], { type: "application/json" })
             const url = URL.createObjectURL(blob)
 
@@ -90,14 +99,32 @@ export function SettingsModal() {
                 const content = event.target?.result as string
                 const parsedData = JSON.parse(content)
 
-                // 简单的数据校验：检查是否为对象，且值是否为合法的 Status
                 if (typeof parsedData !== 'object' || parsedData === null) {
                     throw new Error("Invalid JSON structure")
                 }
 
-                // 检查是否包含有效的进度数据
-                const keys = Object.keys(parsedData)
-                if (keys.length === 0) {
+                // 兼容性处理：检查是否是新版格式
+                let isValid = false;
+                let recordCount = 0;
+
+                if ('progress' in parsedData) {
+                    // 新版格式
+                    const progressKeys = Object.keys(parsedData.progress || {});
+                    if (progressKeys.length > 0) {
+                        isValid = true;
+                        recordCount = progressKeys.length;
+                    }
+                } else {
+                    // 旧版格式 (直接是 progress 对象)
+                    const keys = Object.keys(parsedData);
+                    // 简单的启发式检查：key 看起来像 ID，value 是 Status
+                    if (keys.length > 0) {
+                        isValid = true;
+                        recordCount = keys.length;
+                    }
+                }
+
+                if (!isValid) {
                     toast.warning("文件为空或不包含进度数据")
                     return
                 }
@@ -119,7 +146,7 @@ export function SettingsModal() {
     // 确认导入
     const confirmImport = () => {
         if (pendingImportData) {
-            importProgress(pendingImportData)
+            importData(pendingImportData)
             setImportConfirmOpen(false)
             setPendingImportData(null)
             setOpen(false) // 关闭设置弹窗
@@ -219,7 +246,12 @@ export function SettingsModal() {
                             </p>
                             {pendingImportData && (
                                 <div className="mt-4 p-3 bg-muted rounded text-xs font-mono text-muted-foreground">
-                                    包含记录数: {Object.keys(pendingImportData).length}
+                                    包含记录数: {'progress' in pendingImportData ? Object.keys(pendingImportData.progress || {}).length : Object.keys(pendingImportData).length}
+                                    {'notes' in pendingImportData && pendingImportData.notes && (
+                                        <span className="ml-2">
+                                            (笔记: {Object.keys(pendingImportData.notes).length})
+                                        </span>
+                                    )}
                                 </div>
                             )}
                         </AlertDialogDescription>

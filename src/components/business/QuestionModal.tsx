@@ -14,8 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
-    ChevronLeft, ChevronRight, MonitorPlay
+    ChevronLeft, ChevronRight, MonitorPlay, PenLine
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { useProgressStore } from "@/lib/store";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 interface Props {
     isOpen: boolean;
@@ -28,7 +32,7 @@ interface Props {
     hasNext: boolean;
 }
 
-type ViewType = 'question' | 'answer' | 'analysis' | 'video';
+type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note';
 
 export function QuestionModal({
     isOpen, onClose, question, onUpdateStatus,
@@ -36,6 +40,25 @@ export function QuestionModal({
 }: Props) {
 
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
+
+    // 笔记系统状态
+    const { notes, updateNote } = useProgressStore();
+    const [noteContent, setNoteContent] = useState("");
+    const [isEditingNote, setIsEditingNote] = useState(false);
+
+    // 初始化笔记内容
+    useEffect(() => {
+        if (question) {
+            setNoteContent(notes[question.id] || "");
+        }
+    }, [question, notes]);
+
+    // 自动保存笔记
+    const handleNoteBlur = () => {
+        if (question && noteContent !== notes[question.id]) {
+            updateNote(question.id, noteContent);
+        }
+    };
 
     useEffect(() => {
         if (isOpen && question) {
@@ -160,6 +183,17 @@ export function QuestionModal({
                                 <FileText className="w-3.5 h-3.5" />
                                 <span className="hidden sm:inline">解析</span>
                             </Toggle>
+
+                            <div className="w-px h-3 sm:h-4 bg-border mx-1" />
+
+                            <Toggle
+                                pressed={visibleViews.has('note')}
+                                onPressedChange={() => toggleView('note')}
+                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2 text-orange-600 data-[state=on]:text-orange-600"
+                            >
+                                <PenLine className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">笔记</span>
+                            </Toggle>
                         </div>
                     </div>
 
@@ -261,6 +295,59 @@ export function QuestionModal({
                                             />
                                         ) : (
                                             <span className="text-muted-foreground text-sm">暂无解析图片</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 笔记区域 */}
+                            {visibleViews.has('note') && (
+                                <div className="bg-card rounded-xl border border-orange-200 dark:border-orange-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-orange-700 dark:text-orange-400">
+                                        <div className="flex items-center gap-2">
+                                            <PenLine className="w-4 h-4" /> 个人笔记
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs select-none">
+                                            <span
+                                                className={cn("cursor-pointer transition-colors", isEditingNote ? "text-muted-foreground" : "font-bold")}
+                                                onClick={() => setIsEditingNote(false)}
+                                            >
+                                                预览
+                                            </span>
+                                            <Switch
+                                                checked={isEditingNote}
+                                                onCheckedChange={setIsEditingNote}
+                                                className="scale-75 data-[state=checked]:bg-orange-500"
+                                            />
+                                            <span
+                                                className={cn("cursor-pointer transition-colors", isEditingNote ? "font-bold" : "text-muted-foreground")}
+                                                onClick={() => setIsEditingNote(true)}
+                                            >
+                                                编辑
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-0">
+                                        {isEditingNote ? (
+                                            <textarea
+                                                value={noteContent}
+                                                onChange={(e) => setNoteContent(e.target.value)}
+                                                onBlur={handleNoteBlur}
+                                                placeholder="在此输入 Markdown 笔记... (支持 **加粗**, - 列表, > 引用 等)"
+                                                className="w-full h-64 p-4 resize-y bg-transparent outline-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50"
+                                                autoFocus
+                                            />
+                                        ) : (
+                                            <div
+                                                className="p-4 sm:p-6 prose prose-sm dark:prose-invert max-w-none min-h-[100px] cursor-text"
+                                                onClick={() => setIsEditingNote(true)}
+                                            >
+                                                {noteContent ? (
+                                                    <ReactMarkdown>{noteContent}</ReactMarkdown>
+                                                ) : (
+                                                    <span className="text-muted-foreground/50 italic select-none">点击此处开始记录笔记...</span>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 </div>
