@@ -22,7 +22,8 @@ import {
   SelectLabel
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ListFilter, HelpCircle } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
+import { ListFilter, HelpCircle, Star } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -35,10 +36,20 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function Home() {
   const {
-    progress, updateStatus, selectedTagId, currentGroupId, setCurrentGroupId,
-    filterStatus, setFilterStatus,
-    filterType, setFilterType,
-    filterYear, setFilterYear
+    progress, updateStatus,
+    selectedTagId,
+    currentGroupId,
+    setCurrentGroupId,
+    filterStatus,
+    filterType,
+    filterYear,
+    filterStarred,
+    stars,
+    setSelectedTagId,
+    setFilterStatus,
+    setFilterType,
+    setFilterYear,
+    setFilterStarred
   } = useProgressStore();
 
   const { questionsIndex, isLoading } = useQuestions();
@@ -127,6 +138,11 @@ export default function Home() {
     // 状态筛选
     if (filterStatus !== 'all') {
       filtered = filtered.filter(q => (q.status || 'unanswered') === filterStatus);
+    }
+
+    // 收藏筛选
+    if (filterStarred) {
+      filtered = filtered.filter(q => stars[q.id]);
     }
 
     // 题型筛选

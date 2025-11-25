@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Question, Status } from "@/lib/types"
 import { useProgressStore } from "@/lib/store"
-import { PenLine } from "lucide-react"
+import { PenLine, Star } from "lucide-react"
 
 interface Props {
     question: Question;
@@ -20,8 +20,14 @@ const statusColors: Record<Status, string> = {
 
 export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
     const status = question.status || 'unanswered';
-    const { notes } = useProgressStore();
+    const { notes, stars, toggleStar } = useProgressStore();
     const hasNote = !!notes[question.id];
+    const isStarred = !!stars[question.id];
+
+    const handleStarClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        toggleStar(question.id);
+    };
 
     return (
         <Card
@@ -40,14 +46,26 @@ export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
                     {question.number}
                 </div>
 
+                {/* 收藏按钮 - 右上角 (替代原来的笔记位置，笔记移到旁边) */}
+                <div
+                    className={cn(
+                        "absolute top-1 right-1 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors z-10",
+                        isStarred ? "text-yellow-500" : "text-muted-foreground/20 hover:text-yellow-500/50"
+                    )}
+                    onClick={handleStarClick}
+                    title="收藏题目"
+                >
+                    <Star className={cn("w-3.5 h-3.5", isStarred && "fill-yellow-500")} />
+                </div>
+
                 {/* 简化的内容展示 */}
                 <div className="text-muted-foreground/20 text-lg font-bold select-none">
                     {/* 可以放简短的类型标识，或者干脆留白 */}
                 </div>
 
-                {/* 笔记指示器 */}
+                {/* 笔记指示器 - 移到右下角或者题号旁边 */}
                 {hasNote && (
-                    <div className="absolute top-1 right-1">
+                    <div className="absolute top-1 right-6" title="有笔记">
                         <PenLine className="w-3 h-3 text-orange-500/70" />
                     </div>
                 )}

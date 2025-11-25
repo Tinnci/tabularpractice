@@ -7,6 +7,8 @@ interface ProgressState {
     progress: Record<string, Status>;
     // 核心数据：记录题目ID对应的笔记 (Markdown)
     notes: NotesMap;
+    // 核心数据：记录题目收藏状态
+    stars: Record<string, boolean>;
 
     // 知识点筛选
     selectedTagId: string | null;
@@ -20,11 +22,15 @@ interface ProgressState {
     filterType: 'all' | 'choice' | 'fill' | 'answer';
     // 新增：年份筛选
     filterYear: 'all' | string;
+    // 新增：收藏筛选
+    filterStarred: boolean;
 
     // 动作：更新状态
     updateStatus: (id: string, status: Status) => void;
     // 动作：更新笔记
     updateNote: (id: string, content: string) => void;
+    // 动作：切换收藏
+    toggleStar: (id: string) => void;
 
     // 设置筛选标签
     setSelectedTagId: (id: string | null) => void;
@@ -36,12 +42,14 @@ interface ProgressState {
     setFilterType: (type: 'all' | 'choice' | 'fill' | 'answer') => void;
     // 设置年份筛选
     setFilterYear: (year: 'all' | string) => void;
+    // 设置收藏筛选
+    setFilterStarred: (starred: boolean) => void;
 
     // 动作：获取统计数据
     getStats: () => { mastered: number; confused: number; failed: number; total: number };
 
     // 动作：导入数据 (支持旧版纯进度和新版进度+笔记)
-    importData: (data: { progress: Record<string, Status>; notes?: NotesMap } | Record<string, Status>) => void;
+    importData: (data: { progress: Record<string, Status>; notes?: NotesMap; stars?: Record<string, boolean> } | Record<string, Status>) => void;
 
     // 废弃：保留向后兼容，实际上调用 importData
     importProgress: (newProgress: Record<string, Status>) => void;
@@ -56,17 +64,20 @@ export const useProgressStore = create<ProgressState>()(
         (set, get) => ({
             progress: {},
             notes: {},
+            stars: {},
             selectedTagId: null,
             currentGroupId: 'math1', // 默认数学一
             filterSubject: 'math',
             filterStatus: 'all', // 默认显示全部
             filterType: 'all',
             filterYear: 'all',
+            filterStarred: false,
             repoBaseUrl: '', // 默认为空，使用本地数据
 
             setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),
             setFilterType: (type) => set({ filterType: type }),
             setFilterYear: (year) => set({ filterYear: year }),
+            setFilterStarred: (starred) => set({ filterStarred: starred }),
 
             updateStatus: (id, status) =>
                 set((state) => ({
@@ -77,6 +88,17 @@ export const useProgressStore = create<ProgressState>()(
                 set((state) => ({
                     notes: { ...state.notes, [id]: content }
                 })),
+
+            toggleStar: (id) =>
+                set((state) => {
+                    const newStars = { ...state.stars };
+                    if (newStars[id]) {
+                        delete newStars[id];
+                    } else {
+                        newStars[id] = true;
+                    }
+                    return { stars: newStars };
+                }),
 
             setSelectedTagId: (id) => set({ selectedTagId: id }),
 
@@ -114,7 +136,8 @@ export const useProgressStore = create<ProgressState>()(
                 if (isNewFormat(data)) {
                     set({
                         progress: data.progress,
-                        notes: data.notes || {}
+                        notes: data.notes || {},
+                        stars: (data as any).stars || {} // 兼容性处理
                     });
                 } else {
                     // 旧版格式，直接是 progress 对象

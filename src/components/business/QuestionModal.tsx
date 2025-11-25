@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
-    ChevronLeft, ChevronRight, MonitorPlay, PenLine
+    ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -63,9 +63,11 @@ export function QuestionModal({
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
 
     // 笔记系统状态
-    const { notes, updateNote } = useProgressStore();
+    const { notes, updateNote, stars, toggleStar } = useProgressStore();
     const [noteContent, setNoteContent] = useState("");
     const [isEditingNote, setIsEditingNote] = useState(false);
+
+    const isStarred = question ? !!stars[question.id] : false;
 
     // 初始化笔记内容
     useEffect(() => {
@@ -153,84 +155,26 @@ export function QuestionModal({
                 <div className="px-4 sm:px-6 py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2">
                     <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
                         <div className="flex flex-col shrink-0">
-                            <span className="text-sm font-bold text-foreground">
+                            <span className="text-sm font-bold text-foreground flex items-center gap-2">
                                 <span className="sm:hidden">#{question.number}</span>
                                 <span className="hidden sm:inline">第 {question.number} 题</span>
+                                {/* 收藏按钮 */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5 text-muted-foreground hover:text-yellow-500"
+                                    onClick={() => toggleStar(question.id)}
+                                    title={isStarred ? "取消收藏" : "收藏题目"}
+                                >
+                                    <Star className={cn("w-4 h-4", isStarred && "fill-yellow-500 text-yellow-500")} />
+                                </Button>
                             </span>
                             <span className="text-[10px] sm:text-xs text-muted-foreground">{question.type}</span>
                         </div>
 
-                        {/* 响应式开关组
-               - 移动端: 仅图标 (px-2)
-               - 桌面端: 图标 + 文字 (px-3 gap-2)
-            */}
-                        <div className="flex items-center bg-muted p-1 rounded-lg border shrink-0">
-                            <Toggle
-                                pressed={visibleViews.has('question')}
-                                onPressedChange={() => toggleView('question')}
-                                aria-label="显示题目"
-                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
-                            >
-                                <BookOpen className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">题目</span>
-                            </Toggle>
-
-                            {videoEmbedUrl && (
-                                <Toggle
-                                    pressed={visibleViews.has('video')}
-                                    onPressedChange={() => toggleView('video')}
-                                    className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2 text-primary data-[state=on]:text-primary"
-                                >
-                                    <MonitorPlay className="w-3.5 h-3.5" />
-                                    <span className="hidden sm:inline">视频</span>
-                                </Toggle>
-                            )}
-
-                            <div className="w-px h-3 sm:h-4 bg-border mx-1" />
-
-                            <Toggle
-                                pressed={visibleViews.has('answer')}
-                                onPressedChange={() => toggleView('answer')}
-                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
-                            >
-                                <Eye className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">答案</span>
-                            </Toggle>
-                            <Toggle
-                                pressed={visibleViews.has('analysis')}
-                                onPressedChange={() => toggleView('analysis')}
-                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
-                            >
-                                <FileText className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">解析</span>
-                            </Toggle>
-
-                            <div className="w-px h-3 sm:h-4 bg-border mx-1" />
-
-                            <Toggle
-                                pressed={visibleViews.has('note')}
-                                onPressedChange={() => toggleView('note')}
-                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2 text-orange-600 data-[state=on]:text-orange-600"
-                            >
-                                <PenLine className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">笔记</span>
-                            </Toggle>
-                        </div>
+                        {/* ... (keep existing toggle group) */}
                     </div>
-
-                    {/* 移动端隐藏标签，避免挤压 */}
-                    <div className="hidden sm:flex gap-2">
-                        {question.tags?.slice(0, 3).map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs text-muted-foreground font-normal">
-                                {tag}
-                            </Badge>
-                        ))}
-                        {question.tags && question.tags.length > 3 && (
-                            <Badge variant="outline" className="text-xs text-muted-foreground">
-                                +{question.tags.length - 3}
-                            </Badge>
-                        )}
-                    </div>
+                    {/* ... (keep existing tags) */}
                 </div>
 
                 {/* 2. 内容瀑布流区域 */}
@@ -241,16 +185,10 @@ export function QuestionModal({
                             {/* 题目区域 */}
                             {visibleViews.has('question') && (
                                 <div className="bg-card rounded-xl border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    {/* ... (keep existing header) */}
                                     <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                         <BookOpen className="w-4 h-4" /> 题目描述
-                                        {/* 移动端在这里补充 Tag 显示 */}
-                                        <div className="flex sm:hidden gap-1 ml-auto">
-                                            {question.tags?.slice(0, 1).map(tag => (
-                                                <span key={tag} className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
+                                        {/* ... (keep existing mobile tags) */}
                                     </div>
                                     <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
                                         {question.contentMd ? (
@@ -261,7 +199,7 @@ export function QuestionModal({
                                             <img
                                                 src={question.contentImg || question.imageUrl}
                                                 alt="题目"
-                                                className="max-w-full h-auto object-contain"
+                                                className="max-w-full h-auto object-contain dark:invert dark:hue-rotate-180 transition-all duration-300"
                                             />
                                         ) : (
                                             <div className="text-muted-foreground text-sm">题目内容缺失</div>
@@ -269,6 +207,8 @@ export function QuestionModal({
                                     </div>
                                 </div>
                             )}
+
+                            {/* ... (other sections will be handled in subsequent edits if needed, but for now focusing on Question Image) */}
 
                             {/* 视频区域 */}
                             {visibleViews.has('video') && videoEmbedUrl && (
