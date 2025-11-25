@@ -10,16 +10,16 @@ import { useState, useMemo } from "react";
 import { ProgressOverview } from "./ProgressOverview";
 import questionsData from "@/data/questions.json";
 
-export function Sidebar() {
+// 1. 提取出的通用内容组件
+// 增加了 onSelect 回调，用于移动端点击后自动关闭抽屉
+export function SidebarContent({ className, onSelect }: { className?: string, onSelect?: () => void }) {
     const { selectedTagId, setSelectedTagId, currentGroupId } = useProgressStore();
     const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
-    // 根据当前试卷组ID动态获取知识点树
     const currentTags = useMemo(() => {
         return getTagsForSubject(currentGroupId);
     }, [currentGroupId]);
 
-    // 根据 groupId 生成标题
     const sidebarTitle = useMemo(() => {
         if (currentGroupId.startsWith('math')) return '数学考点';
         if (currentGroupId.startsWith('english')) return '英语题型';
@@ -27,7 +27,8 @@ export function Sidebar() {
         return '考点目录';
     }, [currentGroupId]);
 
-    // 计算总题数 (这里简单使用总数，后续可以根据科目筛选)
+    // 估算当前科目的总题数 (仅做参考，如果要精确需要遍历)
+    // 这里简单使用总数，后续可以根据科目筛选
     const totalQuestions = questionsData.length;
 
     const toggleCategory = (categoryId: string) => {
@@ -38,14 +39,22 @@ export function Sidebar() {
         );
     };
 
-    // 递归渲染函数
     const renderTagNode = (node: TagNode, level: number = 0) => {
         const hasChildren = node.children && node.children.length > 0;
         const isExpanded = expandedCategories.includes(node.id);
         const isSelected = selectedTagId === node.id;
 
+        // 处理点击逻辑：如果是叶子节点，选中并触发 onSelect
+        const handleClick = () => {
+            if (hasChildren) {
+                toggleCategory(node.id);
+            } else {
+                setSelectedTagId(node.id);
+                onSelect?.(); // 移动端关闭抽屉
+            }
+        };
+
         if (level === 0) {
-            // 一级分类 (如 "高等数学")
             return (
                 <div key={node.id} className="pt-4">
                     <h3 className="mb-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -56,43 +65,26 @@ export function Sidebar() {
                     </div>
                 </div>
             );
-        } else if (level === 1) {
-            // 二级分类 (如 "函数、极限、连续")
+        } else {
             return (
                 <div key={node.id}>
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full justify-start text-sm h-8 px-2",
-                            isSelected && !hasChildren && "bg-accent font-medium"
+                            "w-full justify-start text-sm h-8 px-2 font-normal",
+                            isSelected && !hasChildren && "bg-accent text-accent-foreground font-medium"
                         )}
-                        onClick={() => {
-                            if (hasChildren) {
-                                toggleCategory(node.id);
-                            } else {
-                                // 二级本身就是叶子节点 (如英语的"完形填空")
-                                setSelectedTagId(node.id);
-                            }
-                        }}
+                        onClick={handleClick}
                     >
                         {hasChildren && (
-                            <ChevronRight
-                                className={cn(
-                                    "mr-1 h-3 w-3 transition-transform",
-                                    isExpanded && "rotate-90"
-                                )}
-                            />
+                            <ChevronRight className={cn("mr-1 h-3 w-3 transition-transform", isExpanded && "rotate-90")} />
                         )}
-                        <Folder className={cn(
-                            "mr-2 h-3 w-3",
-                            isSelected && !hasChildren ? "text-primary" : "text-muted-foreground"
-                        )} />
+                        <Folder className={cn("mr-2 h-3 w-3", isSelected && !hasChildren ? "text-primary" : "text-muted-foreground")} />
                         <span className="truncate">{node.label}</span>
                     </Button>
 
-                    {/* 三级子项 */}
                     {hasChildren && isExpanded && (
-                        <div className="ml-4 mt-0.5 space-y-0.5">
+                        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border/50 pl-1">
                             {node.children?.map(child => (
                                 <Button
                                     key={child.id}
@@ -101,7 +93,10 @@ export function Sidebar() {
                                         "w-full justify-start text-xs h-7 px-2",
                                         selectedTagId === child.id && "bg-accent text-accent-foreground font-medium"
                                     )}
-                                    onClick={() => setSelectedTagId(child.id)}
+                                    onClick={() => {
+                                        setSelectedTagId(child.id);
+                                        onSelect?.();
+                                    }}
                                 >
                                     <span className="w-1 h-1 rounded-full bg-muted-foreground mr-2" />
                                     <span className="truncate">{child.label}</span>
@@ -112,47 +107,53 @@ export function Sidebar() {
                 </div>
             );
         }
-        return null;
     };
 
     return (
-        <div className="w-64 flex-shrink-0 border-r bg-background h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col">
-            <div className="p-4 border-b bg-muted/50 flex-shrink-0">
+        <div className={cn("flex flex-col h-full bg-background", className)}>
+            {/* 标题区 */}
+            <div className="p-4 border-b border-border bg-muted/20">
                 <h2 className="font-semibold text-lg flex items-center gap-2 text-foreground">
                     <Layers className="w-5 h-5 text-muted-foreground" />
                     {sidebarTitle}
                 </h2>
             </div>
 
+            {/* 滚动列表区 */}
             <ScrollArea className="flex-1">
                 <div className="p-4 space-y-1">
-                    {/* "全部" 按钮 */}
                     <Button
                         variant={selectedTagId === null ? "secondary" : "ghost"}
-                        className="w-full justify-start"
-                        onClick={() => setSelectedTagId(null)}
+                        className="w-full justify-start text-foreground font-medium"
+                        onClick={() => { setSelectedTagId(null); onSelect?.(); }}
                     >
                         <Hash className="mr-2 h-4 w-4" />
                         全部题目
                     </Button>
 
-                    {/* 渲染当前科目的知识点树 */}
                     {currentTags.map(node => renderTagNode(node, 0))}
 
-                    {/* 空状态提示 */}
                     {currentTags.length === 0 && (
                         <div className="text-center py-10 text-muted-foreground text-sm">
-                            <p>暂无该科目目录数据</p>
-                            <p className="text-xs mt-2">请在 subject-tags.ts 中添加</p>
+                            <p>暂无目录数据</p>
                         </div>
                     )}
                 </div>
             </ScrollArea>
 
             {/* 底部统计区 */}
-            <div className="p-4 border-t bg-muted/50 flex-shrink-0">
+            <div className="p-4 border-t border-border bg-muted/20">
                 <ProgressOverview total={totalQuestions} />
             </div>
+        </div>
+    );
+}
+
+// 2. Desktop Sidebar (保持原样，但内部调用 SidebarContent)
+export function Sidebar() {
+    return (
+        <div className="w-64 flex-shrink-0 border-r border-border h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col">
+            <SidebarContent />
         </div>
     );
 }
