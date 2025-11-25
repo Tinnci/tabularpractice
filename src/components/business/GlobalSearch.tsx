@@ -13,17 +13,18 @@ import { Search, BookOpen, Calendar, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState, useMemo } from "react"
 import { useProgressStore } from "@/lib/store"
-import questionsData from "@/data/questions.json"
+
 import papersData from "@/data/papers.json"
 import paperGroupsData from "@/data/paperGroups.json"
 import { Question, Paper, PaperGroup } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 
 interface Props {
+    questions: Question[];
     onQuestionSelect: (id: string) => void;
 }
 
-export function GlobalSearch({ onQuestionSelect }: Props) {
+export function GlobalSearch({ questions, onQuestionSelect }: Props) {
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState("")
     const { progress } = useProgressStore()
@@ -45,7 +46,7 @@ export function GlobalSearch({ onQuestionSelect }: Props) {
         const papers = papersData as Paper[];
         const groups = paperGroupsData as PaperGroup[];
 
-        return (questionsData as Question[]).map(q => {
+        return questions.map(q => {
             const paper = papers.find(p => p.id === q.paperId);
             const group = paper ? groups.find(g => g.id === paper.groupId) : null;
 

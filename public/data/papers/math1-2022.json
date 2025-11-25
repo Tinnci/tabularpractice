@@ -1,0 +1,29 @@
+{
+  "paperId": "math1-2022",
+  "questions": {
+    "math1-2022-01": {
+      "id": "math1-2022-01",
+      "paperId": "math1-2022",
+      "number": 1,
+      "type": "choice",
+      "tags": [
+        "sequence-convergence"
+      ],
+      "contentImg": "",
+      "answerImg": "",
+      "analysisImg": ""
+    },
+    "math1-2022-02": {
+      "id": "math1-2022-02",
+      "paperId": "math1-2022",
+      "number": 2,
+      "type": "choice",
+      "tags": [
+        "taylor-formula"
+      ],
+      "contentImg": "",
+      "answerImg": "",
+      "analysisImg": ""
+    }
+  }
+}

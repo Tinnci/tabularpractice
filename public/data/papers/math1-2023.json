@@ -1,0 +1,58 @@
+{
+  "paperId": "math1-2023",
+  "questions": {
+    "math1-2023-01": {
+      "id": "math1-2023-01",
+      "paperId": "math1-2023",
+      "number": 1,
+      "type": "choice",
+      "tags": [
+        "limit-calculation"
+      ],
+      "contentImg": "",
+      "answerImg": "",
+      "analysisImg": "",
+      "videoUrl": "https://www.bilibili.com/video/BV1HQ4y1C7hW/?p=1&t=155",
+      "contentMd": "设函数 $f(x) = \\frac{\\ln(1+x)}{x}$，则 $\\lim_{x \\to 0} f(x)$ 等于：\n\n(A) 0\n(B) 1\n(C) 2\n(D) 不存在",
+      "answerMd": "**(B)**",
+      "analysisMd": "利用等价无穷小替换：\n\n当 $x \\to 0$ 时，$\\ln(1+x) \\sim x$。\n\n所以：\n$$\n\\lim_{x \\to 0} \\frac{\\ln(1+x)}{x} = \\lim_{x \\to 0} \\frac{x}{x} = 1\n$$\n\n故选 (B)。"
+    },
+    "math1-2023-02": {
+      "id": "math1-2023-02",
+      "paperId": "math1-2023",
+      "number": 2,
+      "type": "choice",
+      "tags": [
+        "derivative-calculation"
+      ],
+      "contentImg": "",
+      "answerImg": "",
+      "analysisImg": "",
+      "videoUrl": "https://www.bilibili.com/video/BV1HQ4y1C7hW/?p=1&t=280"
+    },
+    "math1-2023-03": {
+      "id": "math1-2023-03",
+      "paperId": "math1-2023",
+      "number": 3,
+      "type": "choice",
+      "tags": [
+        "definite-integral-calculation"
+      ],
+      "contentImg": "",
+      "answerImg": "",
+      "analysisImg": ""
+    },
+    "math1-2023-04": {
+      "id": "math1-2023-04",
+      "paperId": "math1-2023",
+      "number": 4,
+      "type": "choice",
+      "tags": [
+        "matrix-operation"
+      ],
+      "contentImg": "",
+      "answerImg": "",
+      "analysisImg": ""
+    }
+  }
+}

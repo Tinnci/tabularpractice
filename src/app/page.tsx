@@ -6,7 +6,8 @@ import { QuestionModal } from "@/components/business/QuestionModal";
 import { GlobalSearch } from "@/components/business/GlobalSearch";
 import paperGroupsData from "@/data/paperGroups.json";
 import papersData from "@/data/papers.json";
-import questionsData from "@/data/questions.json";
+// import questionsData from "@/data/questions.json"; // Removed
+import { useQuestions, usePaperDetail } from "@/hooks/useQuestions";
 import { Question, Status, Paper, PaperGroup } from "@/lib/types";
 import { useState, useEffect, useMemo } from "react";
 import { useProgressStore } from "@/lib/store";
@@ -23,24 +24,34 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ListFilter } from "lucide-react";
 
 export default function Home() {
-  const { progress, updateStatus, selectedTagId, currentGroupId, setCurrentGroupId, filterStatus, setFilterStatus } = useProgressStore();
+  const {
+    progress, updateStatus, selectedTagId, currentGroupId, setCurrentGroupId,
+    filterStatus, setFilterStatus,
+    filterType, setFilterType,
+    filterYear, setFilterYear
+  } = useProgressStore();
 
-  const [mergedQuestions, setMergedQuestions] = useState<Question[]>([]);
+  const { questionsIndex, isLoading } = useQuestions();
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
 
   // 合并进度状态到题目
-  useEffect(() => {
-    const newQuestions = (questionsData as Question[]).map(q => ({
+  const mergedQuestions = useMemo(() => {
+    return questionsIndex.map(q => ({
       ...q,
       status: progress[q.id] || 'unanswered'
     }));
-    setMergedQuestions(newQuestions);
-  }, [progress]);
+  }, [questionsIndex, progress]);
 
   // 根据 currentGroupId 筛选出对应的 Papers (年份)
   const currentPapers = useMemo(() => {
     return (papersData as Paper[]).filter(p => p.groupId === currentGroupId);
   }, [currentGroupId]);
+
+  // 获取当前试卷组包含的所有年份 (用于筛选下拉框)
+  const availableYears = useMemo(() => {
+    const years = currentPapers.map(p => p.year);
+    return Array.from(new Set(years)).sort((a, b) => b - a);
+  }, [currentPapers]);
 
   // 根据 currentPapers 和 selectedTagId 和 filterStatus 筛选出对应的 Questions
   const filteredQuestions = useMemo(() => {
@@ -52,13 +63,27 @@ export default function Home() {
       filtered = filtered.filter(q => q.tags.includes(selectedTagId));
     }
 
-    // 新增：状态筛选
+    // 状态筛选
     if (filterStatus !== 'all') {
       filtered = filtered.filter(q => (q.status || 'unanswered') === filterStatus);
     }
 
+    // 题型筛选
+    if (filterType !== 'all') {
+      filtered = filtered.filter(q => q.type === filterType);
+    }
+
+    // 年份筛选
+    if (filterYear !== 'all') {
+      // filterYear is string, q.paperId needs to be checked against papers
+      // 或者更简单：找到对应年份的 paperIds
+      const targetYear = parseInt(filterYear);
+      const targetPaperIds = currentPapers.filter(p => p.year === targetYear).map(p => p.id);
+      filtered = filtered.filter(q => targetPaperIds.includes(q.paperId));
+    }
+
     return filtered;
-  }, [mergedQuestions, currentPapers, selectedTagId, filterStatus]);
+  }, [mergedQuestions, currentPapers, selectedTagId, filterStatus, filterType, filterYear]);
 
   const handleQuestionClick = (id: string) => {
     setSelectedQuestionId(id);
@@ -70,7 +95,24 @@ export default function Home() {
     return filteredQuestions.findIndex(q => q.id === selectedQuestionId);
   }, [selectedQuestionId, filteredQuestions]);
 
-  const currentQuestion = filteredQuestions[currentIndex] || null;
+  // 获取当前题目的元数据
+  const selectedQuestionMeta = filteredQuestions[currentIndex] || null;
+
+  // 懒加载详情数据
+  const { paperDetail } = usePaperDetail(selectedQuestionMeta?.paperId || null);
+
+  // 合并详情数据
+  const currentQuestion = useMemo(() => {
+    if (!selectedQuestionMeta) return null;
+
+    // 尝试从 paperDetail 中获取详情，如果还没加载完则使用 meta (可能缺 content)
+    const detail = paperDetail?.questions?.[selectedQuestionMeta.id] || {};
+
+    return {
+      ...selectedQuestionMeta,
+      ...detail
+    } as Question;
+  }, [selectedQuestionMeta, paperDetail]);
 
   // 导航处理函数
   const handleNavigate = (direction: 'prev' | 'next') => {
@@ -122,11 +164,14 @@ export default function Home() {
             <h2 className="text-lg font-semibold text-foreground">真题墙</h2>
 
             {/* 全局搜索 */}
-            <GlobalSearch onQuestionSelect={(id) => setSelectedQuestionId(id)} />
+            <GlobalSearch
+              questions={mergedQuestions}
+              onQuestionSelect={(id) => setSelectedQuestionId(id)}
+            />
 
             {/* 试卷组选择器 */}
             <Select value={currentGroupId} onValueChange={setCurrentGroupId}>
-              <SelectTrigger className="w-[280px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="选择试卷组" />
               </SelectTrigger>
               <SelectContent>
@@ -148,6 +193,34 @@ export default function Home() {
                     ))}
                   </SelectGroup>
                 )}
+              </SelectContent>
+            </Select>
+
+            {/* 年份筛选 */}
+            <Select value={filterYear} onValueChange={setFilterYear}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="年份" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部年份</SelectItem>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* 题型筛选 */}
+            <Select value={filterType} onValueChange={(val) => setFilterType(val as any)}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="题型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部题型</SelectItem>
+                <SelectItem value="choice">选择题</SelectItem>
+                <SelectItem value="fill">填空题</SelectItem>
+                <SelectItem value="answer">解答题</SelectItem>
               </SelectContent>
             </Select>
 

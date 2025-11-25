@@ -1,0 +1,17 @@
+{
+  "paperId": "math1-2021",
+  "questions": {
+    "math1-2021-01": {
+      "id": "math1-2021-01",
+      "paperId": "math1-2021",
+      "number": 1,
+      "type": "choice",
+      "tags": [
+        "limit-parameter"
+      ],
+      "contentImg": "",
+      "answerImg": "",
+      "analysisImg": ""
+    }
+  }
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "math1-2023-01",
+    "paperId": "math1-2023",
+    "number": 1,
+    "type": "choice",
+    "tags": [
+      "limit-calculation"
+    ]
+  },
+  {
+    "id": "math1-2023-02",
+    "paperId": "math1-2023",
+    "number": 2,
+    "type": "choice",
+    "tags": [
+      "derivative-calculation"
+    ]
+  },
+  {
+    "id": "math1-2023-03",
+    "paperId": "math1-2023",
+    "number": 3,
+    "type": "choice",
+    "tags": [
+      "definite-integral-calculation"
+    ]
+  },
+  {
+    "id": "math1-2023-04",
+    "paperId": "math1-2023",
+    "number": 4,
+    "type": "choice",
+    "tags": [
+      "matrix-operation"
+    ]
+  },
+  {
+    "id": "math1-2022-01",
+    "paperId": "math1-2022",
+    "number": 1,
+    "type": "choice",
+    "tags": [
+      "sequence-convergence"
+    ]
+  },
+  {
+    "id": "math1-2022-02",
+    "paperId": "math1-2022",
+    "number": 2,
+    "type": "choice",
+    "tags": [
+      "taylor-formula"
+    ]
+  },
+  {
+    "id": "math1-2021-01",
+    "paperId": "math1-2021",
+    "number": 1,
+    "type": "choice",
+    "tags": [
+      "limit-parameter"
+    ]
+  }
+]

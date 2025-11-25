@@ -14,6 +14,10 @@ interface ProgressState {
     currentGroupId: string;
     // 新增：状态筛选 ('all' 表示不筛选)
     filterStatus: Status | 'all';
+    // 新增：题型筛选
+    filterType: 'all' | 'choice' | 'fill' | 'answer';
+    // 新增：年份筛选
+    filterYear: 'all' | string;
 
     // 动作：更新状态
     updateStatus: (id: string, status: Status) => void;
@@ -26,6 +30,10 @@ interface ProgressState {
     setCurrentGroupId: (id: string) => void;
     // 设置状态筛选
     setFilterStatus: (status: Status | 'all') => void;
+    // 设置题型筛选
+    setFilterType: (type: 'all' | 'choice' | 'fill' | 'answer') => void;
+    // 设置年份筛选
+    setFilterYear: (year: 'all' | string) => void;
 
     // 动作：获取统计数据
     getStats: () => { mastered: number; confused: number; failed: number; total: number };
@@ -35,6 +43,10 @@ interface ProgressState {
 
     // 废弃：保留向后兼容，实际上调用 importData
     importProgress: (newProgress: Record<string, Status>) => void;
+
+    // 自定义题库源 URL
+    repoBaseUrl: string;
+    setRepoBaseUrl: (url: string) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -45,6 +57,13 @@ export const useProgressStore = create<ProgressState>()(
             selectedTagId: null,
             currentGroupId: 'math1', // 默认数学一
             filterStatus: 'all', // 默认显示全部
+            filterType: 'all',
+            filterYear: 'all',
+            repoBaseUrl: '', // 默认为空，使用本地数据
+
+            setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),
+            setFilterType: (type) => set({ filterType: type }),
+            setFilterYear: (year) => set({ filterYear: year }),
 
             updateStatus: (id, status) =>
                 set((state) => ({

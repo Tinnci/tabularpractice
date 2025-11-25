@@ -8,7 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Folder, Hash, Layers, ChevronRight } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ProgressOverview } from "./ProgressOverview";
-import questionsData from "@/data/questions.json";
+// import questionsData from "@/data/questions.json"; // Removed
+import { useQuestions } from "@/hooks/useQuestions";
 
 // 1. 提取出的通用内容组件
 // 增加了 onSelect 回调，用于移动端点击后自动关闭抽屉
@@ -29,7 +30,8 @@ export function SidebarContent({ className, onSelect }: { className?: string, on
 
     // 估算当前科目的总题数 (仅做参考，如果要精确需要遍历)
     // 这里简单使用总数，后续可以根据科目筛选
-    const totalQuestions = questionsData.length;
+    const { questionsIndex } = useQuestions();
+    const totalQuestions = questionsIndex.length;
 
     const toggleCategory = (categoryId: string) => {
         setExpandedCategories(prev =>

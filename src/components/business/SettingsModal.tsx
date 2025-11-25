@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
     Dialog,
     DialogContent,
@@ -32,7 +33,46 @@ export function SettingsModal() {
     const [pendingImportData, setPendingImportData] = useState<{ progress: Record<string, Status>; notes?: Record<string, string> } | Record<string, Status> | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const { progress, notes, importData } = useProgressStore()
+    const { progress, notes, importData, repoBaseUrl, setRepoBaseUrl } = useProgressStore()
+
+    const [repoUrlInput, setRepoUrlInput] = useState(repoBaseUrl)
+    const [isCheckingRepo, setIsCheckingRepo] = useState(false)
+
+    // 验证并保存题库地址
+    const handleSaveRepoUrl = async () => {
+        const url = repoUrlInput.trim();
+
+        if (!url) {
+            setRepoBaseUrl('');
+            toast.success("已恢复默认题库");
+            return;
+        }
+
+        setIsCheckingRepo(true);
+        try {
+            // 尝试请求 index.json 验证有效性
+            const res = await fetch(`${url}/index.json`);
+            if (!res.ok) throw new Error("无法访问 index.json");
+
+            const data = await res.json();
+            if (!Array.isArray(data)) throw new Error("index.json 格式错误");
+
+            setRepoBaseUrl(url);
+            toast.success("题库源配置成功", {
+                description: "已切换到自定义数据源"
+            });
+
+            // 延迟刷新以重新加载数据
+            setTimeout(() => window.location.reload(), 1000);
+        } catch (error) {
+            console.error(error);
+            toast.error("题库验证失败", {
+                description: "请检查 URL 是否正确，并确保 index.json 可访问"
+            });
+        } finally {
+            setIsCheckingRepo(false);
+        }
+    };
 
     // 导出功能
     const handleExport = () => {
@@ -218,6 +258,34 @@ export function SettingsModal() {
                         </div>
                     </div>
 
+                    {/* 题库源配置区块 */}
+                    <div className="space-y-4 pt-4 border-t border-border">
+                        <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                            <Database className="h-4 w-4" />
+                            题库源配置
+                        </h3>
+                        <div className="space-y-2">
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="默认为空 (使用内置题库)"
+                                    value={repoUrlInput}
+                                    onChange={(e) => setRepoUrlInput(e.target.value)}
+                                    className="flex-1 text-sm"
+                                />
+                                <Button
+                                    onClick={handleSaveRepoUrl}
+                                    disabled={isCheckingRepo}
+                                    size="sm"
+                                >
+                                    {isCheckingRepo ? "验证中..." : "保存"}
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                输入 GitHub Raw 地址或自定义 API 地址。例如: <br />
+                                <code className="bg-muted px-1 py-0.5 rounded">https://raw.githubusercontent.com/username/repo/main/data</code>
+                            </p>
+                        </div>
+                    </div>
                     {/* 隐藏的文件输入框 */}
                     <input
                         type="file"
@@ -230,7 +298,7 @@ export function SettingsModal() {
             </Dialog>
 
             {/* 导入确认弹窗 */}
-            <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
+            < AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen} >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
@@ -266,7 +334,7 @@ export function SettingsModal() {
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
-            </AlertDialog>
+            </AlertDialog >
         </>
     )
 }

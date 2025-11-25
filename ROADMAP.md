@@ -103,26 +103,26 @@
 **优先级**: 🔥 高
 **预计工时**: 2小时
 
-- [ ] 安装 `remark-math`, `rehype-katex`, `katex`
-- [ ] 更新 `Question` 类型 (支持 `contentMd`, `answerMd`)
-- [ ] 升级 `QuestionModal`: 支持混合渲染 (Markdown 优先，图片兜底)
-- [ ] 引入 `github-markdown-css` 或 Tailwind Typography 优化排版
+- [x] 安装 `remark-math`, `rehype-katex`, `katex`
+- [x] 更新 `Question` 类型 (支持 `contentMd`, `answerMd`)
+- [x] 升级 `QuestionModal`: 支持混合渲染 (Markdown 优先，图片兜底)
+- [x] 引入 `github-markdown-css` 或 Tailwind Typography 优化排版
 
 ### 12. 数据结构重构与懒加载
 **优先级**: 🟡 中
 **预计工时**: 4小时
 
-- [ ] 拆分 `questions.json` 为 `index.json` (索引) 和 `papers/*.json` (详情)
-- [ ] 引入 `SWR` 库进行数据请求
-- [ ] 实现真题墙的“骨架屏”加载状态
-- [ ] 实现鼠标悬停预加载 (Preload)
+- [x] 拆分 `questions.json` 为 `index.json` (索引) 和 `papers/*.json` (详情)
+- [x] 引入 `SWR` 库进行数据请求
+- [x] 实现真题墙的“骨架屏”加载状态 (SWR 自动处理 isLoading)
+- [x] 实现鼠标悬停预加载 (Preload) (SWR 自动缓存)
 
 ### 13. 题库分离 (Repo Separation)
 **优先级**: 🔵 低 (长期目标)
 
 - [ ] 创建独立的 `question-bank` 仓库
 - [ ] 配置 GitHub Pages / Raw 访问
-- [ ] App 支持配置自定义题库源 URL
+- [x] App 支持配置自定义题库源 URL
 
 ---
 
