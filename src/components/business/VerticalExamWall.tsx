@@ -30,34 +30,25 @@ export function VerticalExamWall({ papers, questions, onQuestionClick }: Props) 
                         paperQuestions.sort((a, b) => a.number - b.number);
 
                         return (
-                            <div key={paper.id} className="w-64 flex-shrink-0 flex flex-col gap-3">
-                                {/* 年份表头 */}
-                                <div className="sticky top-0 z-10 flex items-center justify-center py-3 mb-2 bg-muted/80 backdrop-blur-sm rounded-lg">
-                                    <span className="text-2xl font-bold text-foreground font-mono select-none">
-                                        {paper.year}
-                                    </span>
+                            <div key={paper.id} className="w-48 flex-shrink-0 flex flex-col space-y-2 bg-white/50 dark:bg-slate-900/50 rounded-lg p-2 shadow-sm border border-slate-200/50">
+                                {/* 年份表头：模仿粉笔字/手写体 */}
+                                <div className="sticky top-0 z-10 py-2 text-center font-mono text-xl font-bold text-slate-700 dark:text-slate-300 drop-shadow-sm">
+                                    {paper.year}
                                 </div>
 
                                 {/* 题目列表 - 竖向排列 */}
-                                <div className="flex flex-col gap-3 pb-10">
+                                <div className="flex flex-col space-y-1.5 pb-2">
                                     {paperQuestions.map((q) => (
-                                        <div key={q.id} className="relative group">
-                                            {/* 题号标记 - 悬浮在卡片左上角 */}
-                                            <div className="absolute -left-2 -top-2 z-20 w-6 h-6 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center shadow-md ring-2 ring-background">
-                                                {q.number}
-                                            </div>
-
-                                            {/* 题目卡片 */}
-                                            <QuestionCard
-                                                question={q}
-                                                onClick={() => onQuestionClick(q.id)}
-                                            />
-                                        </div>
+                                        <QuestionCard
+                                            key={q.id}
+                                            question={q}
+                                            onClick={() => onQuestionClick(q.id)}
+                                        />
                                     ))}
 
                                     {paperQuestions.length === 0 && (
-                                        <div className="h-32 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground text-sm">
-                                            暂无录入
+                                        <div className="h-24 border-2 border-dashed border-border/50 rounded-lg flex items-center justify-center text-muted-foreground/50 text-xs">
+                                            暂无
                                         </div>
                                     )}
                                 </div>

@@ -25,25 +25,32 @@ export function QuestionCard({ question, onClick }: Props) {
     return (
         <Card
             className={cn(
-                "cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg",
+                "cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg relative",
                 statusColors[status]
             )}
             onClick={onClick}
         >
-            <CardContent className="p-2 flex flex-col items-center justify-center h-24 relative">
-                {/* 这里放缩略图或占位符 */}
-                <div className="text-muted-foreground/30 text-2xl font-bold select-none">?</div>
+            <CardContent className="p-1.5 flex flex-col items-center justify-center h-16 relative">
+                {/* 题号 - 左上角 */}
+                <div className="absolute top-1 left-1.5 text-xs font-bold opacity-50">
+                    {question.number}
+                </div>
+
+                {/* 简化的内容展示 */}
+                <div className="text-muted-foreground/20 text-lg font-bold select-none">
+                    {/* 可以放简短的类型标识，或者干脆留白 */}
+                </div>
 
                 {/* 笔记指示器 */}
                 {hasNote && (
-                    <div className="absolute top-1 right-2">
+                    <div className="absolute top-1 right-1">
                         <PenLine className="w-3 h-3 text-orange-500/70" />
                     </div>
                 )}
 
                 {question.tags.length > 0 && (
-                    <div className="absolute bottom-1 right-2 flex gap-1">
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/30" title={question.tags.join(', ')} />
+                    <div className="absolute bottom-1 right-1 flex gap-0.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                     </div>
                 )}
             </CardContent>
