@@ -3,6 +3,7 @@
 import { VerticalExamWall } from "@/components/business/VerticalExamWall";
 import { Sidebar } from "@/components/business/Sidebar";
 import { QuestionModal } from "@/components/business/QuestionModal";
+import { GlobalSearch } from "@/components/business/GlobalSearch";
 import paperGroupsData from "@/data/paperGroups.json";
 import papersData from "@/data/papers.json";
 import questionsData from "@/data/questions.json";
@@ -119,6 +120,9 @@ export default function Home() {
         <div className="px-6 py-4 border-b flex items-center justify-between bg-white z-20 shadow-sm">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-slate-900">真题墙</h2>
+
+            {/* 全局搜索 */}
+            <GlobalSearch onQuestionSelect={(id) => setSelectedQuestionId(id)} />
 
             {/* 试卷组选择器 */}
             <Select value={currentGroupId} onValueChange={setCurrentGroupId}>
