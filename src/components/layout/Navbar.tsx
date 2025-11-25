@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { SettingsModal } from "@/components/business/SettingsModal"
 
 export function Navbar() {
     return (
@@ -23,9 +24,7 @@ export function Navbar() {
                     <Link href="/questions" className="transition-colors hover:text-foreground/80 text-foreground">
                         Questions
                     </Link>
-                    <Link href="/settings" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                        Settings
-                    </Link>
+                    <SettingsModal />
                 </nav>
             </div>
         </header>

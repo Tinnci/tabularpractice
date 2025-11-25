@@ -23,6 +23,9 @@ interface ProgressState {
 
     // 动作：获取统计数据
     getStats: () => { mastered: number; confused: number; failed: number; total: number };
+
+    // 动作：导入进度
+    importProgress: (newProgress: Record<string, Status>) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -52,7 +55,9 @@ export const useProgressStore = create<ProgressState>()(
                     failed: values.filter(s => s === 'failed').length,
                     total: values.length
                 };
-            }
+            },
+
+            importProgress: (newProgress) => set({ progress: newProgress }),
         }),
         {
             name: 'tabular-progress-storage',
