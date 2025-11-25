@@ -4,6 +4,7 @@ import { VerticalExamWall } from "@/components/business/VerticalExamWall";
 import { Sidebar } from "@/components/business/Sidebar";
 import { QuestionModal } from "@/components/business/QuestionModal";
 import { GlobalSearch } from "@/components/business/GlobalSearch";
+import { Button } from "@/components/ui/button";
 import paperGroupsData from "@/data/paperGroups.json";
 import papersData from "@/data/papers.json";
 // import questionsData from "@/data/questions.json"; // Removed
@@ -21,7 +22,16 @@ import {
   SelectLabel
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ListFilter } from "lucide-react";
+import { ListFilter, HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import { ShortcutsHelpModal } from "@/components/business/ShortcutsHelpModal";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function Home() {
   const {
@@ -33,6 +43,7 @@ export default function Home() {
 
   const { questionsIndex, isLoading } = useQuestions();
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   // 合并进度状态到题目
   const mergedQuestions = useMemo(() => {
@@ -52,6 +63,61 @@ export default function Home() {
     const years = currentPapers.map(p => p.year);
     return Array.from(new Set(years)).sort((a, b) => b - a);
   }, [currentPapers]);
+
+  // 快捷键逻辑：切换年份
+  const handleYearSwitch = (direction: 'prev' | 'next') => {
+    if (availableYears.length === 0) return;
+
+    const currentYearInt = filterYear === 'all' ? null : parseInt(filterYear);
+    let newYear: string | 'all' = 'all';
+
+    if (currentYearInt === null) {
+      // 如果当前是全部，按 [ (prev) 切换到最近一年
+      if (direction === 'prev') newYear = availableYears[0].toString();
+      // 按 ] (next) 切换到最远一年
+      else newYear = availableYears[availableYears.length - 1].toString();
+    } else {
+      const currentIndex = availableYears.indexOf(currentYearInt);
+      if (currentIndex === -1) return;
+
+      // availableYears 是倒序排列的 (2023, 2022, ...)
+      // prev ([) 应该是去更早的年份 (index + 1)
+      // next (]) 应该是去更晚的年份 (index - 1)
+      // 修正逻辑：通常 [ 是左/上，] 是右/下。
+      // 如果按时间轴：[ = 往过去走 (2022), ] = 往未来走 (2023)
+      // availableYears: [2023, 2022, 2010]
+
+      let newIndex = direction === 'prev' ? currentIndex + 1 : currentIndex - 1;
+
+      if (newIndex < 0) {
+        // 已经是最新的了，再按 ] 切换到 'all'
+        newYear = 'all';
+      } else if (newIndex >= availableYears.length) {
+        // 已经是最老的了，保持不变或循环？保持不变
+        newYear = availableYears[availableYears.length - 1].toString();
+      } else {
+        newYear = availableYears[newIndex].toString();
+      }
+    }
+    setFilterYear(newYear);
+  };
+
+  // 注册全局快捷键
+  useKeyboardShortcuts([
+    {
+      key: '?',
+      shiftKey: true,
+      action: () => setShowShortcutsHelp(true),
+    },
+    {
+      key: '[',
+      action: () => handleYearSwitch('prev'), // 往过去 (更小的年份)
+    },
+    {
+      key: ']',
+      action: () => handleYearSwitch('next'), // 往未来 (更大的年份)
+    }
+  ]);
 
   // 根据 currentPapers 和 selectedTagId 和 filterStatus 筛选出对应的 Questions
   const filteredQuestions = useMemo(() => {
@@ -217,19 +283,30 @@ export default function Home() {
 
             {/* 年份/题型 (次高频) - 在极窄屏幕可能需要隐藏或放入更多菜单 */}
             <div className="flex items-center gap-2 shrink-0">
-              <Select value={filterYear} onValueChange={setFilterYear}>
-                <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
-                  <span>{filterYear === 'all' ? '年份' : filterYear}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部年份</SelectItem>
-                  {availableYears.map(year => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div> {/* Wrap in div because SelectTrigger might not accept ref directly or interfere with TooltipTrigger */}
+                      <Select value={filterYear} onValueChange={setFilterYear}>
+                        <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
+                          <span>{filterYear === 'all' ? '年份' : filterYear}</span>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">全部年份</SelectItem>
+                          {availableYears.map(year => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>快捷键: [ 上一年 / ] 下一年</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
               <Select value={filterType} onValueChange={(val) => setFilterType(val as any)}>
                 <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
@@ -247,6 +324,25 @@ export default function Home() {
 
           {/* 3. 右侧：搜索与统计 */}
           <div className="flex items-center gap-2 shrink-0 order-2 sm:order-3 ml-auto sm:ml-0">
+            {/* 快捷键帮助按钮 */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowShortcutsHelp(true)}
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>快捷键帮助 (?)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <GlobalSearch
               questions={mergedQuestions}
               onQuestionSelect={(id) => setSelectedQuestionId(id)}
@@ -281,6 +377,11 @@ export default function Home() {
         onNext={() => handleNavigate('next')}
         hasPrev={hasPrev}
         hasNext={hasNext}
+      />
+
+      <ShortcutsHelpModal
+        open={showShortcutsHelp}
+        onOpenChange={setShowShortcutsHelp}
       />
     </div>
   );

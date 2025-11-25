@@ -8,6 +8,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Question, Status } from "@/lib/types";
 import { getBilibiliEmbed } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -388,57 +394,96 @@ export function QuestionModal({
                 <div className="p-3 sm:p-4 border-t bg-background grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
 
                     {/* 左侧：上一题 - 移动端仅图标 */}
-                    <Button
-                        variant="ghost"
-                        onClick={onPrev}
-                        disabled={!hasPrev}
-                        size="icon"
-                        className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                        title="快捷键: ←"
-                    >
-                        <ChevronLeft className="w-5 h-5 sm:mr-1" />
-                        <span className="hidden sm:inline">上一题</span>
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    onClick={onPrev}
+                                    disabled={!hasPrev}
+                                    size="icon"
+                                    className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                >
+                                    <ChevronLeft className="w-5 h-5 sm:mr-1" />
+                                    <span className="hidden sm:inline">上一题</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>快捷键: ←</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
 
                     {/* 中间：状态操作按钮 - 移动端紧凑布局 */}
                     <div className="flex justify-center gap-2 sm:gap-3">
-                        <Button
-                            onClick={() => onUpdateStatus(question.id, 'mastered')}
-                            className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
-                        >
-                            <Check className="w-4 h-4" />
-                            <span className="text-xs sm:text-sm">斩</span>
-                        </Button>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={() => onUpdateStatus(question.id, 'mastered')}
+                                        className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
+                                    >
+                                        <Check className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm">斩</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>快捷键: 1</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                        <Button
-                            onClick={() => onUpdateStatus(question.id, 'confused')}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
-                        >
-                            <HelpCircle className="w-4 h-4" />
-                            <span className="text-xs sm:text-sm">懵</span>
-                        </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={() => onUpdateStatus(question.id, 'confused')}
+                                        className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
+                                    >
+                                        <HelpCircle className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm">懵</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>快捷键: 2</p>
+                                </TooltipContent>
+                            </Tooltip>
 
-                        <Button
-                            onClick={() => onUpdateStatus(question.id, 'failed')}
-                            className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
-                        >
-                            <X className="w-4 h-4" />
-                            <span className="text-xs sm:text-sm">崩</span>
-                        </Button>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={() => onUpdateStatus(question.id, 'failed')}
+                                        className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm">崩</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>快捷键: 3</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
 
                     {/* 右侧：下一题 - 移动端仅图标 */}
-                    <Button
-                        variant="ghost"
-                        onClick={onNext}
-                        disabled={!hasNext}
-                        size="icon"
-                        className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                        title="快捷键: →"
-                    >
-                        <span className="hidden sm:inline">下一题</span>
-                        <ChevronRight className="w-5 h-5 sm:ml-1" />
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    onClick={onNext}
+                                    disabled={!hasNext}
+                                    size="icon"
+                                    className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                >
+                                    <span className="hidden sm:inline">下一题</span>
+                                    <ChevronRight className="w-5 h-5 sm:ml-1" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>快捷键: →</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
 
                 </div>
 
