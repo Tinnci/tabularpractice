@@ -1,0 +1,9 @@
+{
+    // TypeScript configuration
+    "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+    "typescript.problems.scope": "all",
+    // Optional: Show build errors in Problems panel
+    "typescript.tsc.autoDetect": "on",
+    // Optional: Enable more aggressive type checking
+    "typescript.tsserver.useSyntaxServer": "auto"
+}
