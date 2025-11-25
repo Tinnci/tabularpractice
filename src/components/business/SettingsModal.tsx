@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -37,6 +37,13 @@ export function SettingsModal() {
 
     const [repoUrlInput, setRepoUrlInput] = useState(repoBaseUrl)
     const [isCheckingRepo, setIsCheckingRepo] = useState(false)
+
+    // 每次打开弹窗时，重置输入框为 store 中的值
+    useEffect(() => {
+        if (open) {
+            setRepoUrlInput(repoBaseUrl);
+        }
+    }, [open, repoBaseUrl]);
 
     // 验证并保存题库地址
     const handleSaveRepoUrl = async () => {
