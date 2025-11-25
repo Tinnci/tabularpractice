@@ -155,7 +155,7 @@ export function SettingsModal() {
                     <div className="grid gap-4 py-4">
                         {/* 数据管理区块 */}
                         <div className="space-y-4">
-                            <h3 className="text-sm font-medium flex items-center gap-2 text-slate-900">
+                            <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
                                 <Database className="h-4 w-4" />
                                 数据管理
                             </h3>
@@ -163,28 +163,28 @@ export function SettingsModal() {
                                 {/* 导出按钮 */}
                                 <Button
                                     variant="outline"
-                                    className="flex flex-col h-24 gap-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                                    className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
                                     onClick={handleExport}
                                 >
-                                    <Download className="h-6 w-6 text-slate-500" />
+                                    <Download className="h-6 w-6 text-muted-foreground" />
                                     <span className="text-sm font-medium">导出进度</span>
-                                    <span className="text-xs text-slate-400 font-normal">备份到本地 JSON</span>
+                                    <span className="text-xs text-muted-foreground font-normal">备份到本地 JSON</span>
                                 </Button>
 
                                 {/* 导入按钮 */}
                                 <Button
                                     variant="outline"
-                                    className="flex flex-col h-24 gap-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                                    className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
                                     onClick={triggerImport}
                                 >
-                                    <Upload className="h-6 w-6 text-slate-500" />
+                                    <Upload className="h-6 w-6 text-muted-foreground" />
                                     <span className="text-sm font-medium">导入进度</span>
-                                    <span className="text-xs text-slate-400 font-normal">恢复备份文件</span>
+                                    <span className="text-xs text-muted-foreground font-normal">恢复备份文件</span>
                                 </Button>
                             </div>
 
-                            <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
-                                <p className="text-xs text-blue-600 leading-relaxed">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-900">
+                                <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
                                     提示：数据存储在浏览器的 LocalStorage 中。为了防止数据丢失（如清理缓存），建议定期导出备份。
                                 </p>
                             </div>
@@ -206,19 +206,19 @@ export function SettingsModal() {
             <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                        <AlertDialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertTriangle className="h-5 w-5" />
                             警告：即将覆盖数据
                         </AlertDialogTitle>
                         <AlertDialogDescription className="space-y-2">
                             <p>
-                                此操作将使用导入文件中的数据<span className="font-bold text-slate-900">完全覆盖</span>您当前的刷题进度。
+                                此操作将使用导入文件中的数据<span className="font-bold text-foreground">完全覆盖</span>您当前的刷题进度。
                             </p>
                             <p>
                                 当前进度将被永久删除且无法撤销。
                             </p>
                             {pendingImportData && (
-                                <div className="mt-4 p-3 bg-slate-100 rounded text-xs font-mono text-slate-600">
+                                <div className="mt-4 p-3 bg-muted rounded text-xs font-mono text-muted-foreground">
                                     包含记录数: {Object.keys(pendingImportData).length}
                                 </div>
                             )}

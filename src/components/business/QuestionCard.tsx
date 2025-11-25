@@ -9,10 +9,10 @@ interface Props {
 
 // 状态对应的 Tailwind 颜色类映射
 const statusColors: Record<Status, string> = {
-    unanswered: "bg-white hover:bg-slate-50 border-slate-200",
-    mastered: "bg-green-100 hover:bg-green-200 border-green-300",
-    confused: "bg-yellow-100 hover:bg-yellow-200 border-yellow-300",
-    failed: "bg-red-100 hover:bg-red-200 border-red-300",
+    unanswered: "bg-card hover:bg-accent border-border",
+    mastered: "bg-green-100 hover:bg-green-200 border-green-300 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:border-green-900",
+    confused: "bg-yellow-100 hover:bg-yellow-200 border-yellow-300 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30 dark:border-yellow-900",
+    failed: "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-900",
 }
 
 export function QuestionCard({ question, onClick }: Props) {
@@ -28,10 +28,10 @@ export function QuestionCard({ question, onClick }: Props) {
         >
             <CardContent className="p-2 flex flex-col items-center justify-center h-24 relative">
                 {/* 这里放缩略图或占位符 */}
-                <div className="text-slate-300 text-2xl font-bold select-none">?</div>
+                <div className="text-muted-foreground/30 text-2xl font-bold select-none">?</div>
                 {question.tags.length > 0 && (
                     <div className="absolute bottom-1 right-2 flex gap-1">
-                        <div className="w-2 h-2 rounded-full bg-slate-300" title={question.tags.join(', ')} />
+                        <div className="w-2 h-2 rounded-full bg-muted-foreground/30" title={question.tags.join(', ')} />
                     </div>
                 )}
             </CardContent>

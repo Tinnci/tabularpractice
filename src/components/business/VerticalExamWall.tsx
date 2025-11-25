@@ -20,7 +20,7 @@ export function VerticalExamWall({ papers, questions, onQuestionClick }: Props) 
     const sortedPapers = [...papers].sort((a, b) => b.year - a.year);
 
     return (
-        <div className="w-full h-full border rounded-xl bg-slate-50/50">
+        <div className="w-full h-full border rounded-xl bg-muted/30">
             <ScrollArea className="w-full h-full whitespace-nowrap">
                 <div className="flex p-4 space-x-4 w-max">
 
@@ -32,8 +32,8 @@ export function VerticalExamWall({ papers, questions, onQuestionClick }: Props) 
                         return (
                             <div key={paper.id} className="w-64 flex-shrink-0 flex flex-col gap-3">
                                 {/* 年份表头 */}
-                                <div className="sticky top-0 z-10 flex items-center justify-center py-3 mb-2 bg-slate-50/80 backdrop-blur-sm">
-                                    <span className="text-2xl font-bold text-slate-700 font-mono select-none">
+                                <div className="sticky top-0 z-10 flex items-center justify-center py-3 mb-2 bg-muted/80 backdrop-blur-sm rounded-lg">
+                                    <span className="text-2xl font-bold text-foreground font-mono select-none">
                                         {paper.year}
                                     </span>
                                 </div>
@@ -43,7 +43,7 @@ export function VerticalExamWall({ papers, questions, onQuestionClick }: Props) 
                                     {paperQuestions.map((q) => (
                                         <div key={q.id} className="relative group">
                                             {/* 题号标记 - 悬浮在卡片左上角 */}
-                                            <div className="absolute -left-2 -top-2 z-20 w-6 h-6 bg-slate-700 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                                            <div className="absolute -left-2 -top-2 z-20 w-6 h-6 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center shadow-md ring-2 ring-background">
                                                 {q.number}
                                             </div>
 
@@ -56,7 +56,7 @@ export function VerticalExamWall({ papers, questions, onQuestionClick }: Props) 
                                     ))}
 
                                     {paperQuestions.length === 0 && (
-                                        <div className="h-32 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-sm">
+                                        <div className="h-32 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground text-sm">
                                             暂无录入
                                         </div>
                                     )}

@@ -48,7 +48,7 @@ export function Sidebar() {
             // 一级分类 (如 "高等数学")
             return (
                 <div key={node.id} className="pt-4">
-                    <h3 className="mb-2 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <h3 className="mb-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {node.label}
                     </h3>
                     <div className="space-y-0.5">
@@ -64,7 +64,7 @@ export function Sidebar() {
                         variant="ghost"
                         className={cn(
                             "w-full justify-start text-sm h-8 px-2",
-                            isSelected && !hasChildren && "bg-slate-100 font-medium"
+                            isSelected && !hasChildren && "bg-accent font-medium"
                         )}
                         onClick={() => {
                             if (hasChildren) {
@@ -85,7 +85,7 @@ export function Sidebar() {
                         )}
                         <Folder className={cn(
                             "mr-2 h-3 w-3",
-                            isSelected && !hasChildren ? "text-blue-500" : "text-slate-400"
+                            isSelected && !hasChildren ? "text-primary" : "text-muted-foreground"
                         )} />
                         <span className="truncate">{node.label}</span>
                     </Button>
@@ -99,11 +99,11 @@ export function Sidebar() {
                                     variant={selectedTagId === child.id ? "secondary" : "ghost"}
                                     className={cn(
                                         "w-full justify-start text-xs h-7 px-2",
-                                        selectedTagId === child.id && "bg-blue-50 text-blue-700 font-medium"
+                                        selectedTagId === child.id && "bg-accent text-accent-foreground font-medium"
                                     )}
                                     onClick={() => setSelectedTagId(child.id)}
                                 >
-                                    <span className="w-1 h-1 rounded-full bg-slate-400 mr-2" />
+                                    <span className="w-1 h-1 rounded-full bg-muted-foreground mr-2" />
                                     <span className="truncate">{child.label}</span>
                                 </Button>
                             ))}
@@ -116,10 +116,10 @@ export function Sidebar() {
     };
 
     return (
-        <div className="w-64 flex-shrink-0 border-r bg-white h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col">
-            <div className="p-4 border-b bg-slate-50/50 flex-shrink-0">
-                <h2 className="font-semibold text-lg flex items-center gap-2 text-slate-700">
-                    <Layers className="w-5 h-5 text-slate-500" />
+        <div className="w-64 flex-shrink-0 border-r bg-background h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col">
+            <div className="p-4 border-b bg-muted/50 flex-shrink-0">
+                <h2 className="font-semibold text-lg flex items-center gap-2 text-foreground">
+                    <Layers className="w-5 h-5 text-muted-foreground" />
                     {sidebarTitle}
                 </h2>
             </div>
@@ -141,7 +141,7 @@ export function Sidebar() {
 
                     {/* 空状态提示 */}
                     {currentTags.length === 0 && (
-                        <div className="text-center py-10 text-slate-400 text-sm">
+                        <div className="text-center py-10 text-muted-foreground text-sm">
                             <p>暂无该科目目录数据</p>
                             <p className="text-xs mt-2">请在 subject-tags.ts 中添加</p>
                         </div>
@@ -150,7 +150,7 @@ export function Sidebar() {
             </ScrollArea>
 
             {/* 底部统计区 */}
-            <div className="p-4 border-t bg-slate-50/50 flex-shrink-0">
+            <div className="p-4 border-t bg-muted/50 flex-shrink-0">
                 <ProgressOverview total={totalQuestions} />
             </div>
         </div>

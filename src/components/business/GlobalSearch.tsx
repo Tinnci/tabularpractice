@@ -94,9 +94,9 @@ export function GlobalSearch({ onQuestionSelect }: Props) {
 
     const getStatusBadge = (questionId: string) => {
         const status = progress[questionId];
-        if (status === 'mastered') return <Badge className="ml-auto bg-green-100 text-green-700 text-xs">已斩</Badge>;
-        if (status === 'confused') return <Badge className="ml-auto bg-yellow-100 text-yellow-700 text-xs">不熟</Badge>;
-        if (status === 'failed') return <Badge className="ml-auto bg-red-100 text-red-700 text-xs">错题</Badge>;
+        if (status === 'mastered') return <Badge className="ml-auto bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs">已斩</Badge>;
+        if (status === 'confused') return <Badge className="ml-auto bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs">不熟</Badge>;
+        if (status === 'failed') return <Badge className="ml-auto bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs">错题</Badge>;
         return null;
     };
 
@@ -105,7 +105,7 @@ export function GlobalSearch({ onQuestionSelect }: Props) {
             {/* 触发按钮 (放在 Navbar) */}
             <Button
                 variant="outline"
-                className="relative h-9 w-full justify-start rounded-lg text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64 bg-white border-slate-200 hover:bg-slate-50"
+                className="relative h-9 w-full justify-start rounded-lg text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64 bg-background border-border hover:bg-muted/50"
                 onClick={() => setOpen(true)}
             >
                 <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -143,16 +143,16 @@ export function GlobalSearch({ onQuestionSelect }: Props) {
                                     }}
                                     className="flex items-center gap-2 py-3"
                                 >
-                                    <BookOpen className="mr-2 h-4 w-4 text-slate-400" />
+                                    <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
 
                                     {/* 年份 */}
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="h-3 w-3 text-slate-400" />
-                                        <span className="font-mono text-sm text-slate-600">{paper?.year}</span>
+                                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                                        <span className="font-mono text-sm text-muted-foreground">{paper?.year}</span>
                                     </div>
 
                                     {/* 题号 */}
-                                    <span className="font-semibold text-slate-900">第 {question.number} 题</span>
+                                    <span className="font-semibold text-foreground">第 {question.number} 题</span>
 
                                     {/* 题型 */}
                                     <Badge variant="outline" className="text-xs">
@@ -161,7 +161,7 @@ export function GlobalSearch({ onQuestionSelect }: Props) {
 
                                     {/* 第一个标签 */}
                                     {question.tags.length > 0 && (
-                                        <div className="flex items-center gap-1 text-xs text-slate-500">
+                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                             <Tag className="h-3 w-3" />
                                             <span className="truncate max-w-[150px]">{question.tags[0]}</span>
                                         </div>

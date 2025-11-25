@@ -106,26 +106,26 @@ export function QuestionModal({
                 <DialogTitle className="sr-only">{`第 ${question.number} 题 · ${question.type}`}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
-                <div className="px-4 sm:px-6 py-3 border-b bg-white flex items-center justify-between z-20 shadow-sm shrink-0 gap-2">
+                <div className="px-4 sm:px-6 py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2">
                     <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
                         <div className="flex flex-col shrink-0">
-                            <span className="text-sm font-bold text-slate-800">
+                            <span className="text-sm font-bold text-foreground">
                                 <span className="sm:hidden">#{question.number}</span>
                                 <span className="hidden sm:inline">第 {question.number} 题</span>
                             </span>
-                            <span className="text-[10px] sm:text-xs text-slate-500">{question.type}</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">{question.type}</span>
                         </div>
 
                         {/* 响应式开关组
                - 移动端: 仅图标 (px-2)
                - 桌面端: 图标 + 文字 (px-3 gap-2)
             */}
-                        <div className="flex items-center bg-slate-100 p-1 rounded-lg border shrink-0">
+                        <div className="flex items-center bg-muted p-1 rounded-lg border shrink-0">
                             <Toggle
                                 pressed={visibleViews.has('question')}
                                 onPressedChange={() => toggleView('question')}
                                 aria-label="显示题目"
-                                className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
+                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
                             >
                                 <BookOpen className="w-3.5 h-3.5" />
                                 <span className="hidden sm:inline">题目</span>
@@ -135,19 +135,19 @@ export function QuestionModal({
                                 <Toggle
                                     pressed={visibleViews.has('video')}
                                     onPressedChange={() => toggleView('video')}
-                                    className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2 text-blue-600 data-[state=on]:text-blue-700"
+                                    className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2 text-primary data-[state=on]:text-primary"
                                 >
                                     <MonitorPlay className="w-3.5 h-3.5" />
                                     <span className="hidden sm:inline">视频</span>
                                 </Toggle>
                             )}
 
-                            <div className="w-px h-3 sm:h-4 bg-slate-300 mx-1" />
+                            <div className="w-px h-3 sm:h-4 bg-border mx-1" />
 
                             <Toggle
                                 pressed={visibleViews.has('answer')}
                                 onPressedChange={() => toggleView('answer')}
-                                className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
+                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
                             >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span className="hidden sm:inline">答案</span>
@@ -155,7 +155,7 @@ export function QuestionModal({
                             <Toggle
                                 pressed={visibleViews.has('analysis')}
                                 onPressedChange={() => toggleView('analysis')}
-                                className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
+                                className="data-[state=on]:bg-background data-[state=on]:shadow-sm h-7 sm:h-8 px-2 sm:px-3 text-xs gap-2"
                             >
                                 <FileText className="w-3.5 h-3.5" />
                                 <span className="hidden sm:inline">解析</span>
@@ -166,12 +166,12 @@ export function QuestionModal({
                     {/* 移动端隐藏标签，避免挤压 */}
                     <div className="hidden sm:flex gap-2">
                         {question.tags?.slice(0, 3).map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs text-slate-500 font-normal">
+                            <Badge key={tag} variant="outline" className="text-xs text-muted-foreground font-normal">
                                 {tag}
                             </Badge>
                         ))}
                         {question.tags && question.tags.length > 3 && (
-                            <Badge variant="outline" className="text-xs text-slate-400">
+                            <Badge variant="outline" className="text-xs text-muted-foreground">
                                 +{question.tags.length - 3}
                             </Badge>
                         )}
@@ -179,25 +179,25 @@ export function QuestionModal({
                 </div>
 
                 {/* 2. 内容瀑布流区域 */}
-                <div className="flex-1 min-h-0 bg-slate-50/50 relative">
+                <div className="flex-1 min-h-0 bg-muted/30 relative">
                     <ScrollArea className="h-full">
                         <div className="p-4 sm:p-6 flex flex-col gap-6 max-w-4xl mx-auto pb-20">
 
                             {/* 题目区域 */}
                             {visibleViews.has('question') && (
-                                <div className="bg-white rounded-xl border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    <div className="bg-slate-50/80 border-b px-4 py-2 flex items-center gap-2 text-sm font-medium text-slate-600">
+                                <div className="bg-card rounded-xl border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                         <BookOpen className="w-4 h-4" /> 题目描述
                                         {/* 移动端在这里补充 Tag 显示 */}
                                         <div className="flex sm:hidden gap-1 ml-auto">
                                             {question.tags?.slice(0, 1).map(tag => (
-                                                <span key={tag} className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">
+                                                <span key={tag} className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
                                                     {tag}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="p-4 flex justify-center bg-white min-h-[150px] items-center">
+                                    <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
                                         {question.contentImg || question.imageUrl ? (
                                             <img
                                                 src={question.contentImg || question.imageUrl}
@@ -205,7 +205,7 @@ export function QuestionModal({
                                                 className="max-w-full h-auto object-contain"
                                             />
                                         ) : (
-                                            <div className="text-slate-300 text-sm">题目图片缺失</div>
+                                            <div className="text-muted-foreground text-sm">题目图片缺失</div>
                                         )}
                                     </div>
                                 </div>
@@ -228,8 +228,8 @@ export function QuestionModal({
 
                             {/* 答案区域 */}
                             {visibleViews.has('answer') && (
-                                <div className="bg-white rounded-xl border border-green-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    <div className="bg-green-50/50 border-b border-green-100 px-4 py-2 flex items-center gap-2 text-sm font-medium text-green-700">
+                                <div className="bg-card rounded-xl border border-green-100 dark:border-green-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
                                         <Eye className="w-4 h-4" /> 参考答案
                                     </div>
                                     <div className="p-4 sm:p-6 flex justify-center">
@@ -240,7 +240,7 @@ export function QuestionModal({
                                                 className="max-w-full h-auto object-contain"
                                             />
                                         ) : (
-                                            <span className="text-slate-400 text-sm">暂无答案图片</span>
+                                            <span className="text-muted-foreground text-sm">暂无答案图片</span>
                                         )}
                                     </div>
                                 </div>
@@ -248,8 +248,8 @@ export function QuestionModal({
 
                             {/* 解析区域 */}
                             {visibleViews.has('analysis') && (
-                                <div className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    <div className="bg-blue-50/50 border-b border-blue-100 px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-700">
+                                <div className="bg-card rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
                                         <FileText className="w-4 h-4" /> 详细解析
                                     </div>
                                     <div className="p-4 sm:p-6 flex justify-center">
@@ -260,7 +260,7 @@ export function QuestionModal({
                                                 className="max-w-full h-auto object-contain"
                                             />
                                         ) : (
-                                            <span className="text-slate-400 text-sm">暂无解析图片</span>
+                                            <span className="text-muted-foreground text-sm">暂无解析图片</span>
                                         )}
                                     </div>
                                 </div>
@@ -271,7 +271,7 @@ export function QuestionModal({
                 </div>
 
                 {/* 3. 底部操作栏 - 响应式优化 */}
-                <div className="p-3 sm:p-4 border-t bg-white grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
+                <div className="p-3 sm:p-4 border-t bg-background grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
 
                     {/* 左侧：上一题 - 移动端仅图标 */}
                     <Button
@@ -279,7 +279,7 @@ export function QuestionModal({
                         onClick={onPrev}
                         disabled={!hasPrev}
                         size="icon"
-                        className="sm:w-auto sm:px-4 text-slate-500 hover:text-slate-900 disabled:opacity-30"
+                        className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                         title="快捷键: ←"
                     >
                         <ChevronLeft className="w-5 h-5 sm:mr-1" />
@@ -319,7 +319,7 @@ export function QuestionModal({
                         onClick={onNext}
                         disabled={!hasNext}
                         size="icon"
-                        className="sm:w-auto sm:px-4 text-slate-500 hover:text-slate-900 disabled:opacity-30"
+                        className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                         title="快捷键: →"
                     >
                         <span className="hidden sm:inline">下一题</span>

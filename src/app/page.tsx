@@ -115,11 +115,11 @@ export default function Home() {
       <Sidebar />
 
       {/* 右侧：主内容区 */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-50">
+      <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
         {/* 顶部工具栏：切换试卷组 */}
-        <div className="px-6 py-4 border-b flex items-center justify-between bg-white z-20 shadow-sm">
+        <div className="px-6 py-4 border-b flex items-center justify-between bg-background z-20 shadow-sm">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold text-slate-900">真题墙</h2>
+            <h2 className="text-lg font-semibold text-foreground">真题墙</h2>
 
             {/* 全局搜索 */}
             <GlobalSearch onQuestionSelect={(id) => setSelectedQuestionId(id)} />
@@ -153,7 +153,7 @@ export default function Home() {
 
             {/* 状态筛选器 */}
             <div className="flex items-center gap-2 border-l pl-4">
-              <ListFilter className="w-4 h-4 text-slate-400" />
+              <ListFilter className="w-4 h-4 text-muted-foreground" />
               <ToggleGroup
                 type="single"
                 value={filterStatus}
@@ -166,13 +166,13 @@ export default function Home() {
                 <ToggleGroupItem value="unanswered" aria-label="未做" className="text-xs">
                   未做
                 </ToggleGroupItem>
-                <ToggleGroupItem value="mastered" aria-label="熟练" className="text-xs text-green-600">
+                <ToggleGroupItem value="mastered" aria-label="熟练" className="text-xs text-green-600 dark:text-green-400">
                   熟练
                 </ToggleGroupItem>
-                <ToggleGroupItem value="confused" aria-label="不熟" className="text-xs text-yellow-600">
+                <ToggleGroupItem value="confused" aria-label="不熟" className="text-xs text-yellow-600 dark:text-yellow-400">
                   不熟
                 </ToggleGroupItem>
-                <ToggleGroupItem value="failed" aria-label="不会" className="text-xs text-red-600">
+                <ToggleGroupItem value="failed" aria-label="不会" className="text-xs text-red-600 dark:text-red-400">
                   不会
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -180,7 +180,7 @@ export default function Home() {
           </div>
 
           {/* 统计信息 */}
-          <div className="text-sm font-mono text-slate-400">
+          <div className="text-sm font-mono text-muted-foreground">
             显示: {filteredQuestions.length} 题 | 已刷: {Object.keys(progress).length} 题
           </div>
         </div>
