@@ -1,6 +1,13 @@
 {
     "name": "TabularPractice",
     "short_name": "Tabular",
+    "description": "开源的真题刷题系统，支持多维度筛选与离线复习。",
+    "id": "/",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "orientation": "portrait",
     "icons": [
         {
             "src": "/icon-192x192.png",
@@ -13,9 +20,20 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff",
-    "display": "standalone",
-    "start_url": "/",
-    "orientation": "portrait"
+    "screenshots": [
+        {
+            "src": "/screenshot-mobile.png",
+            "sizes": "620x1024",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "手机端刷题界面"
+        },
+        {
+            "src": "/screenshot-desktop.png",
+            "sizes": "1024x678",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "桌面端真题墙全览"
+        }
+    ]
 }
