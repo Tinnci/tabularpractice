@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512"><svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="110" fill="#007BFF"></rect>
+
+  <g stroke="white" stroke-width="6" stroke-linecap="square">
+    <line x1="102" y1="80" x2="102" y2="432"></line>
+    <line x1="179" y1="80" x2="179" y2="432"></line>
+    <line x1="256" y1="80" x2="256" y2="432"></line>
+    <line x1="333" y1="80" x2="333" y2="432"></line>
+    <line x1="410" y1="80" x2="410" y2="432"></line>
+    
+    <line x1="80" y1="135" x2="432" y2="135"></line>
+    <line x1="80" y1="195" x2="432" y2="195"></line>
+    <line x1="80" y1="256" x2="432" y2="256"></line>
+    <line x1="80" y1="317" x2="432" y2="317"></line>
+    <line x1="80" y1="377" x2="432" y2="377"></line>
+  </g>
+
+  <polyline points="335 155 195 155 280 256 195 357 335 357" fill="none" stroke="white" stroke-width="45" stroke-linejoin="miter" stroke-linecap="butt"></polyline>
+
+  <rect x="378" y="148" width="48" height="38" fill="white"></rect>
+  
+  <rect x="310" y="202" width="45" height="38" fill="white"></rect>
+  
+  <rect x="145" y="265" width="45" height="40" fill="white"></rect>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style></svg>
