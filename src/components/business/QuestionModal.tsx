@@ -91,7 +91,7 @@ const RemoteImage = ({ src, alt, className }: { src: string, alt: string, classN
                 <img
                     src={finalSrc}
                     alt={alt}
-                    className={cn("max-w-full h-auto object-contain transition-opacity duration-300", loading ? "opacity-0" : "opacity-100")}
+                    className={cn("max-w-full h-auto object-contain transition-opacity duration-300 dark:invert", loading ? "opacity-0" : "opacity-100")}
                     onLoad={() => setLoading(false)}
                     onError={() => { setLoading(false); setError(true); }}
                 />

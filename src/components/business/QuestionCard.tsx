@@ -110,7 +110,7 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
                             src={thumbUrl}
                             alt={`Q${question.number}`}
                             className={cn(
-                                "w-full opacity-90 hover:opacity-100 transition-opacity",
+                                "w-full opacity-90 hover:opacity-100 transition-opacity dark:invert", // 增加 dark:invert
                                 // 统一使用 object-cover 以填满卡片，裁切掉多余部分
                                 heightMode === 'fixed' ? "h-full object-cover" : "h-auto object-cover"
                             )}

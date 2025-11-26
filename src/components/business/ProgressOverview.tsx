@@ -29,9 +29,9 @@ export function ProgressOverview({ total }: { total: number }) {
     }, [progress]);
 
     const data = useMemo(() => [
-        { name: '斩 (熟练)', value: stats.mastered, color: '#16a34a' }, // green-600
-        { name: '懵 (不熟)', value: stats.confused, color: '#eab308' }, // yellow-500
-        { name: '崩 (不会)', value: stats.failed, color: '#dc2626' },   // red-600
+        { name: '斩 (熟练)', value: stats.mastered, color: theme === 'dark' ? '#22c55e' : '#16a34a' }, // green-500 : green-600
+        { name: '懵 (不熟)', value: stats.confused, color: theme === 'dark' ? '#facc15' : '#eab308' }, // yellow-400 : yellow-500
+        { name: '崩 (不会)', value: stats.failed, color: theme === 'dark' ? '#f87171' : '#dc2626' },   // red-400 : red-600
         { name: '未做', value: Math.max(0, total - (stats.mastered + stats.confused + stats.failed)), color: theme === 'dark' ? '#334155' : '#e2e8f0' }, // slate-700 : slate-200
     ], [stats, total, theme]);
 
