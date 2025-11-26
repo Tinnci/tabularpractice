@@ -8,7 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Folder, Hash, Layers, ChevronRight, PieChart } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ProgressOverview } from "./ProgressOverview";
-import { useQuestions } from "@/hooks/useQuestions";
 import {
     Accordion,
     AccordionContent,
@@ -19,6 +18,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 
 import { Question } from "@/lib/types";
+
+import { useContextQuestions } from "@/hooks/useContextQuestions";
 
 export function SidebarContent({ className, onSelect, questions }: { className?: string, onSelect?: () => void, questions?: Question[] }) {
     const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
@@ -35,9 +36,9 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
         return '考点目录';
     }, [filterSubject]);
 
-    const { questionsIndex } = useQuestions();
-    // 使用传入的 questions (上下文感知) 或回退到全部 questionsIndex
-    const displayQuestions = questions || questionsIndex;
+    const { contextQuestions } = useContextQuestions();
+    // 使用传入的 questions (上下文感知) 或回退到 hook 计算的 contextQuestions
+    const displayQuestions = questions || contextQuestions;
 
     // 渲染叶子节点 (最终的知识点)
     const renderLeafNode = (node: TagNode) => {

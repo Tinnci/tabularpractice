@@ -70,6 +70,10 @@ interface ProgressState {
         heightMode: 'fixed' | 'auto';
         compactMode: boolean;
     }>) => void;
+
+    // UI 状态
+    mobileSidebarOpen: boolean;
+    setMobileSidebarOpen: (open: boolean) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -130,6 +134,9 @@ export const useProgressStore = create<ProgressState>()(
             setAppearance: (settings) => set((state) => ({
                 appearance: { ...state.appearance, ...settings }
             })),
+
+            mobileSidebarOpen: false,
+            setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
             // ... existing methods ...
 
@@ -205,7 +212,7 @@ export const useProgressStore = create<ProgressState>()(
             name: 'tabular-progress-storage',
             storage: createJSONStorage(() => localStorage),
             version: 1, // 增加版本号
-            migrate: (persistedState: any, version) => {
+            migrate: (persistedState: unknown, version) => {
                 if (version === 0) {
                     // 迁移逻辑：如果旧版本没有 repoSources 或者没有默认远程源，添加它
                     // 注意：这里 persistedState 是 unknown，需要小心处理

@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { SidebarContent } from "@/components/business/Sidebar";
-import { useState } from "react";
+import { useProgressStore } from "@/lib/store";
 
 export function MobileSidebar() {
-    const [open, setOpen] = useState(false);
+    const { mobileSidebarOpen, setMobileSidebarOpen } = useProgressStore();
 
     return (
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden -ml-2 mr-2">
                     <Menu className="h-5 w-5" />
@@ -26,7 +26,7 @@ export function MobileSidebar() {
                 <SheetDescription className="sr-only">选择章节进行筛选</SheetDescription>
 
                 {/* 复用 SidebarContent，并传入关闭回调 */}
-                <SidebarContent onSelect={() => setOpen(false)} />
+                <SidebarContent onSelect={() => setMobileSidebarOpen(false)} />
 
             </SheetContent>
         </Sheet>
