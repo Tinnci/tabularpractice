@@ -68,6 +68,7 @@ interface ProgressState {
         columnSpacing: number;
         rowSpacing: number;
         heightMode: 'fixed' | 'auto'; // 'fixed': 固定高度, 'auto': 根据图片内容自适应
+        compactMode: boolean; // 紧凑模式：自适应模式下完全去除 padding
     };
     setAppearance: (settings: Partial<{
         cardWidth: number;
@@ -75,6 +76,7 @@ interface ProgressState {
         columnSpacing: number;
         rowSpacing: number;
         heightMode: 'fixed' | 'auto';
+        compactMode: boolean;
     }>) => void;
 }
 
@@ -93,13 +95,14 @@ export const useProgressStore = create<ProgressState>()(
             filterStarred: false,
             repoBaseUrl: '', // 默认为空，使用本地数据
 
-            // 默认外观设置
+            // 默认外观设置：自适应、紧凑、最小间距
             appearance: {
                 cardWidth: 192, // w-48 = 12rem = 192px
-                cardHeight: 64, // h-16 = 4rem = 64px (内容区域) -> 实际卡片高度会更高
-                columnSpacing: 16, // space-x-4 = 1rem = 16px
-                rowSpacing: 6, // space-y-1.5 = 0.375rem = 6px
-                heightMode: 'fixed', // 默认固定高度模式
+                cardHeight: 64, // h-16 = 4rem = 64px (固定模式下使用)
+                columnSpacing: 0, // 默认最小年份间距
+                rowSpacing: 0, // 默认最小题目间距
+                heightMode: 'auto', // 默认自适应高度模式
+                compactMode: true, // 默认紧凑模式
             },
 
             setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),

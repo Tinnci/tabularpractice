@@ -217,7 +217,7 @@ export function SettingsModal() {
                         设置
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[800px] max-h-[85vh]">
                     <DialogHeader>
                         <DialogTitle>设置</DialogTitle>
                         <DialogDescription>
@@ -225,46 +225,78 @@ export function SettingsModal() {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="grid gap-4 py-4">
-                        {/* 数据管理区块 */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
-                                <Database className="h-4 w-4" />
-                                数据管理
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                {/* 导出按钮 */}
-                                <Button
-                                    variant="outline"
-                                    className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
-                                    onClick={handleExport}
-                                >
-                                    <Download className="h-6 w-6 text-muted-foreground" />
-                                    <span className="text-sm font-medium">导出进度</span>
-                                    <span className="text-xs text-muted-foreground font-normal">备份到本地 JSON</span>
-                                </Button>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-4 max-h-[calc(85vh-120px)] overflow-y-auto pr-2">
+                        {/* 左栏：数据管理 + 题库源配置 */}
+                        <div className="space-y-6">
+                            {/* 数据管理区块 */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                                    <Database className="h-4 w-4" />
+                                    数据管理
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* 导出按钮 */}
+                                    <Button
+                                        variant="outline"
+                                        className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
+                                        onClick={handleExport}
+                                    >
+                                        <Download className="h-6 w-6 text-muted-foreground" />
+                                        <span className="text-sm font-medium">导出进度</span>
+                                        <span className="text-xs text-muted-foreground font-normal">备份到本地 JSON</span>
+                                    </Button>
 
-                                {/* 导入按钮 */}
-                                <Button
-                                    variant="outline"
-                                    className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
-                                    onClick={triggerImport}
-                                >
-                                    <Upload className="h-6 w-6 text-muted-foreground" />
-                                    <span className="text-sm font-medium">导入进度</span>
-                                    <span className="text-xs text-muted-foreground font-normal">恢复备份文件</span>
-                                </Button>
+                                    {/* 导入按钮 */}
+                                    <Button
+                                        variant="outline"
+                                        className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
+                                        onClick={triggerImport}
+                                    >
+                                        <Upload className="h-6 w-6 text-muted-foreground" />
+                                        <span className="text-sm font-medium">导入进度</span>
+                                        <span className="text-xs text-muted-foreground font-normal">恢复备份文件</span>
+                                    </Button>
+                                </div>
+
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-900">
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
+                                        提示：数据存储在浏览器的 LocalStorage 中。为了防止数据丢失（如清理缓存），建议定期导出备份。
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-900">
-                                <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
-                                    提示：数据存储在浏览器的 LocalStorage 中。为了防止数据丢失（如清理缓存），建议定期导出备份。
-                                </p>
+                            {/* 题库源配置区块 */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                                    <Database className="h-4 w-4" />
+                                    题库源配置
+                                </h3>
+                                <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="默认为空 (使用内置题库)"
+                                            value={repoUrlInput}
+                                            onChange={(e) => setRepoUrlInput(e.target.value)}
+                                            className="flex-1 text-sm"
+                                        />
+                                        <Button
+                                            onClick={handleSaveRepoUrl}
+                                            disabled={isCheckingRepo}
+                                            size="sm"
+                                        >
+                                            {isCheckingRepo ? "验证中..." : "保存"}
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        输入 GitHub Raw 地址或自定义 API 地址。例如: <br />
+                                        <code className="bg-muted px-1 py-0.5 rounded">https://raw.githubusercontent.com/username/repo/main/data</code>
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* 偏好设置区块 */}
-                        <div className="space-y-4 pt-4 border-t border-border">
+                        {/* 右栏：偏好设置 */}
+                        <div className="space-y-4">
                             <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
                                 <Settings className="h-4 w-4" />
                                 偏好设置
@@ -341,6 +373,23 @@ export function SettingsModal() {
                                     />
                                 </div>
 
+                                {/* 紧凑模式切换 */}
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <label className="text-xs font-medium leading-none">
+                                            紧凑模式
+                                        </label>
+                                        <p className="text-xs text-muted-foreground">
+                                            完全去除卡片内边距（仅自适应模式）
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={useProgressStore(state => state.appearance.compactMode)}
+                                        onCheckedChange={(checked) => useProgressStore.getState().setAppearance({ compactMode: checked })}
+                                        disabled={useProgressStore(state => state.appearance.heightMode) !== 'auto'}
+                                    />
+                                </div>
+
                                 {/* 列间距 (年份间距) */}
                                 <div className="space-y-1.5">
                                     <div className="flex justify-between text-xs">
@@ -375,35 +424,6 @@ export function SettingsModal() {
                                     />
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* 题库源配置区块 */}
-                    <div className="space-y-4 pt-4 border-t border-border">
-                        <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
-                            <Database className="h-4 w-4" />
-                            题库源配置
-                        </h3>
-                        <div className="space-y-2">
-                            <div className="flex gap-2">
-                                <Input
-                                    placeholder="默认为空 (使用内置题库)"
-                                    value={repoUrlInput}
-                                    onChange={(e) => setRepoUrlInput(e.target.value)}
-                                    className="flex-1 text-sm"
-                                />
-                                <Button
-                                    onClick={handleSaveRepoUrl}
-                                    disabled={isCheckingRepo}
-                                    size="sm"
-                                >
-                                    {isCheckingRepo ? "验证中..." : "保存"}
-                                </Button>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                输入 GitHub Raw 地址或自定义 API 地址。例如: <br />
-                                <code className="bg-muted px-1 py-0.5 rounded">https://raw.githubusercontent.com/username/repo/main/data</code>
-                            </p>
                         </div>
                     </div>
                     {/* 隐藏的文件输入框 */}

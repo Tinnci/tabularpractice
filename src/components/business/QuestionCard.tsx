@@ -10,6 +10,7 @@ interface Props {
     isDimmed?: boolean;
     height?: number;
     heightMode?: 'fixed' | 'auto';
+    compactMode?: boolean;
 }
 
 // 状态对应的 Tailwind 颜色类映射
@@ -20,7 +21,7 @@ const statusColors: Record<Status, string> = {
     failed: "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-900",
 }
 
-export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
+export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed', compactMode = false }: Props) {
     const status = question.status || 'unanswered';
     const { notes, stars, toggleStar, repoBaseUrl } = useProgressStore();
     const hasNote = !!notes[question.id];
@@ -45,6 +46,13 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
 
     const thumbUrl = getImageUrl(question.contentImgThumb);
 
+    // 计算 padding：紧凑模式下且自适应高度时为 0，否则根据模式选择
+    const getPaddingClass = () => {
+        if (heightMode === 'auto' && compactMode) return 'p-0';
+        if (heightMode === 'auto') return 'p-0.5';
+        return 'p-1.5';
+    };
+
     return (
         <Card
             className={cn(
@@ -58,7 +66,8 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
         >
             <CardContent
                 className={cn(
-                    "p-1.5 flex flex-col items-center justify-center relative",
+                    "flex flex-col items-center justify-center relative",
+                    getPaddingClass(),
                     heightMode === 'auto' ? "h-auto" : ""
                 )}
                 style={heightMode === 'fixed' ? { height: `${height}px` } : undefined}
