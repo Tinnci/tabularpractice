@@ -1,15 +1,17 @@
 "use client";
 
 import { useProgressStore } from "@/lib/store";
-import { Question } from "@/lib/types";
+import { Question, Status } from "@/lib/types";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useMemo } from "react";
+import { cn } from "@/lib/utils";
 
 export function ProgressOverview({ questions }: { questions: Question[] }) {
     const { theme } = useTheme();
-    const { progress, setFilterStatus } = useProgressStore();
+    const progressStore = useProgressStore();
+    const { progress, setFilterStatus, filterStatus } = progressStore;
 
     // 2. 处理 Hydration Mismatch: 确保只在客户端渲染
     const [mounted, setMounted] = useState(false);
@@ -51,10 +53,18 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
     const handleFilterClick = (status: string) => {
         // 映射 status 字符串到 Status 类型或 'all'/'unanswered'
         // 注意：这里 status 来自 data 中的 status 字段
-        if (status === 'unanswered') {
-            setFilterStatus('unanswered');
+
+        // 如果当前已经选中了该状态，则取消筛选 (重置为 'all')
+        // 注意：我们需要获取当前的 filterStatus。由于它在 store 中，我们已经在组件开头解构了。
+        // 但是我们需要确保 status 字符串与 store 中的 filterStatus 类型匹配。
+        // store 中的 filterStatus 类型是 Status | 'all' | 'unanswered'
+
+        const targetStatus = status === 'unanswered' ? 'unanswered' : status as Status;
+
+        if (progressStore.filterStatus === targetStatus) {
+            setFilterStatus('all');
         } else {
-            setFilterStatus(status as any);
+            setFilterStatus(targetStatus);
         }
     };
 
@@ -91,9 +101,22 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 stroke="none"
                                 onClick={(data) => handleFilterClick(data.status)}
                             >
-                                {data.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" />
-                                ))}
+                                {data.map((entry, index) => {
+                                    // 视觉反馈：如果当前有筛选状态，且不是 'all'，则将非选中的扇区变淡
+                                    const isActive = filterStatus === entry.status;
+                                    const isDimmed = filterStatus !== 'all' && !isActive;
+
+                                    return (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.color}
+                                            cursor="pointer"
+                                            opacity={isDimmed ? 0.3 : 1}
+                                            stroke={isActive ? theme === 'dark' ? '#fff' : '#000' : 'none'}
+                                            strokeWidth={isActive ? 2 : 0}
+                                        />
+                                    );
+                                })}
                             </Pie>
                             <Tooltip
                                 contentStyle={{
@@ -118,7 +141,10 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                 {/* 文字详情 - 可点击筛选 */}
                 <div className="grid grid-cols-1 gap-y-1.5 text-xs flex-1">
                     <div
-                        className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group"
+                        className={cn(
+                            "flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                            filterStatus === 'mastered' && "bg-muted font-medium"
+                        )}
                         onClick={() => handleFilterClick('mastered')}
                     >
                         <div className="flex items-center gap-1.5">
@@ -128,7 +154,10 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         <span className="font-mono font-bold text-foreground">{stats.mastered}</span>
                     </div>
                     <div
-                        className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group"
+                        className={cn(
+                            "flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                            filterStatus === 'confused' && "bg-muted font-medium"
+                        )}
                         onClick={() => handleFilterClick('confused')}
                     >
                         <div className="flex items-center gap-1.5">
@@ -138,7 +167,10 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         <span className="font-mono font-bold text-foreground">{stats.confused}</span>
                     </div>
                     <div
-                        className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group"
+                        className={cn(
+                            "flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                            filterStatus === 'failed' && "bg-muted font-medium"
+                        )}
                         onClick={() => handleFilterClick('failed')}
                     >
                         <div className="flex items-center gap-1.5">
@@ -148,7 +180,10 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         <span className="font-mono font-bold text-foreground">{stats.failed}</span>
                     </div>
                     <div
-                        className="flex items-center justify-between pt-1 border-t border-border cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group"
+                        className={cn(
+                            "flex items-center justify-between pt-1 border-t border-border cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                            filterStatus === 'unanswered' && "bg-muted font-medium"
+                        )}
                         onClick={() => handleFilterClick('unanswered')}
                     >
                         <div className="flex items-center gap-1.5">

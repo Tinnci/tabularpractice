@@ -135,20 +135,10 @@ export default function Home() {
     }
   ]);
 
-  // 根据 currentPapers 和 filterStatus 筛选出对应的 Questions
-  const filteredQuestions = useMemo(() => {
+  // 1. 第一层：上下文筛选 (用于统计，不包含状态筛选)
+  const contextQuestions = useMemo(() => {
     const currentPaperIds = currentPapers.map(p => p.id);
     let filtered = mergedQuestions.filter(q => currentPaperIds.includes(q.paperId));
-
-    // 状态筛选
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(q => (q.status || 'unanswered') === filterStatus);
-    }
-
-    // 收藏筛选
-    if (filterStarred) {
-      filtered = filtered.filter(q => stars[q.id]);
-    }
 
     // 题型筛选
     if (filterType !== 'all') {
@@ -160,20 +150,32 @@ export default function Home() {
       });
     }
 
-    // 年份筛选 (注意：VerticalExamWall 已经按年份分组，这里的筛选主要是为了配合可能的单年份视图，
-    // 或者如果用户只想看某一年的题。目前 VerticalExamWall 会显示所有 currentPapers，
-    // 所以这里的 filterYear 实际上是进一步缩小 currentPapers 的范围，或者直接过滤 questions。
-    // 逻辑上，如果 filterYear 选了，currentPapers 应该也只剩那一年。
-    // 简单起见，这里再过滤一次 questions 也没问题)
+    // 年份筛选
     if (filterYear !== 'all') {
-      // 找到对应年份的 paperId
       const targetYear = parseInt(filterYear);
       const targetPaperIds = currentPapers.filter(p => p.year === targetYear).map(p => p.id);
       filtered = filtered.filter(q => targetPaperIds.includes(q.paperId));
     }
 
     return filtered;
-  }, [mergedQuestions, currentPapers, filterStatus, filterType, filterYear, filterStarred, stars]);
+  }, [mergedQuestions, currentPapers, filterType, filterYear]);
+
+  // 2. 第二层：视图筛选 (用于列表展示，包含状态筛选)
+  const filteredQuestions = useMemo(() => {
+    let filtered = contextQuestions;
+
+    // 状态筛选
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(q => (q.status || 'unanswered') === filterStatus);
+    }
+
+    // 收藏筛选
+    if (filterStarred) {
+      filtered = filtered.filter(q => stars[q.id]);
+    }
+
+    return filtered;
+  }, [contextQuestions, filterStatus, filterStarred, stars]);
 
   const handleQuestionClick = (id: string) => {
     setSelectedQuestionId(id);
@@ -280,7 +282,7 @@ export default function Home() {
     <div className="flex min-h-[calc(100vh-3.5rem)]">
 
       {/* 左侧：侧边栏 */}
-      <Sidebar questions={filteredQuestions} />
+      <Sidebar questions={contextQuestions} />
 
       {/* 右侧：主内容区 */}
       <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
