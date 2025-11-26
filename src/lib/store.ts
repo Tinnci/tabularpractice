@@ -17,6 +17,8 @@ interface ProgressState {
     notes: NotesMap;
     // 核心数据：记录题目收藏状态
     stars: Record<string, boolean>;
+    // 核心数据：记录每日刷题活动
+    history: Record<string, number>;
 
     // 知识点筛选
     selectedTagId: string | null;
@@ -80,6 +82,7 @@ export const useProgressStore = create<ProgressState>()(
     persist(
         (set, get) => ({
             progress: {},
+            history: {},
             notes: {},
             stars: {},
             selectedTagId: null,
@@ -138,12 +141,27 @@ export const useProgressStore = create<ProgressState>()(
             mobileSidebarOpen: false,
             setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
-            // ... existing methods ...
-
             updateStatus: (id, status) =>
-                set((state) => ({
-                    progress: { ...state.progress, [id]: status }
-                })),
+                set((state) => {
+                    // 只有当状态从未做变为已做，或者状态改变时才记录活动？
+                    // 简单起见，只要有状态更新操作，就算一次活动 (Activity)
+                    // 或者更严格一点：只有变成 mastered/confused/failed 才算
+
+                    const today = new Date().toISOString().split('T')[0];
+                    const currentCount = state.history[today] || 0;
+
+                    // 只有当新状态不是 unanswered 时才增加计数
+                    // 并且防止重复刷同一题刷量？目前暂不处理去重，每次操作都算活跃度
+                    const newHistory = { ...state.history };
+                    if (status !== 'unanswered') {
+                        newHistory[today] = currentCount + 1;
+                    }
+
+                    return {
+                        progress: { ...state.progress, [id]: status },
+                        history: newHistory
+                    };
+                }),
 
             updateNote: (id, content) =>
                 set((state) => ({

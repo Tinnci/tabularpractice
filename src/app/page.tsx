@@ -8,6 +8,8 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useTheme } from "next-themes";
 
+import { ActivityHeatmap } from "@/components/business/ActivityHeatmap";
+
 export default function DashboardPage() {
   const { total, subjects } = useDashboardStats();
   const { theme } = useTheme();
@@ -161,6 +163,11 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* 底部：热力图 */}
+      <div className="mt-8 p-4 border rounded-xl bg-card/50 shadow-sm">
+        <ActivityHeatmap />
       </div>
     </div>
   );
