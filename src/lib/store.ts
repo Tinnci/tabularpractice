@@ -190,15 +190,35 @@ export const useProgressStore = create<ProgressState>()(
             importData: (data) => {
                 // 检查是否是新版格式 (包含 progress 字段)
                 // 使用类型断言来帮助 TypeScript 推断
-                const isNewFormat = (d: unknown): d is { progress: Record<string, Status>; notes?: NotesMap; stars?: Record<string, boolean> } => {
+                const isNewFormat = (d: unknown): d is {
+                    progress: Record<string, Status>;
+                    notes?: NotesMap;
+                    stars?: Record<string, boolean>;
+                    repoSources?: RepoSource[];
+                } => {
                     return typeof d === 'object' && d !== null && 'progress' in d;
                 };
 
                 if (isNewFormat(data)) {
-                    set({
-                        progress: data.progress,
-                        notes: data.notes || {},
-                        stars: data.stars || {}
+                    set((state) => {
+                        // 合并 repoSources: 保留现有的，添加备份中不存在的
+                        // 或者完全覆盖？通常备份恢复意味着"回到那个状态"。
+                        // 但考虑到 repoSources 是配置，我们采用"合并去重"策略比较安全，
+                        // 防止用户不小心覆盖掉了当前新加的源。
+
+                        let newRepoSources = state.repoSources;
+                        if (data.repoSources && Array.isArray(data.repoSources)) {
+                            const existingUrls = new Set(state.repoSources.map(s => s.url));
+                            const uniqueNewSources = data.repoSources.filter(s => !existingUrls.has(s.url));
+                            newRepoSources = [...state.repoSources, ...uniqueNewSources];
+                        }
+
+                        return {
+                            progress: data.progress,
+                            notes: data.notes || {},
+                            stars: data.stars || {},
+                            repoSources: newRepoSources
+                        };
                     });
                 } else {
                     // 旧版格式，直接是 progress 对象

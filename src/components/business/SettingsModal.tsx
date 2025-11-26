@@ -22,7 +22,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Settings, Download, Upload, Database, AlertTriangle } from "lucide-react"
-import { useProgressStore } from "@/lib/store"
+import { useProgressStore, type RepoSource } from "@/lib/store"
 import { toast } from "sonner"
 import { Status } from "@/lib/types"
 
@@ -31,7 +31,12 @@ import { Switch } from "@/components/ui/switch"
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
     const [importConfirmOpen, setImportConfirmOpen] = useState(false)
-    const [pendingImportData, setPendingImportData] = useState<{ progress: Record<string, Status>; notes?: Record<string, string> } | Record<string, Status> | null>(null)
+    const [pendingImportData, setPendingImportData] = useState<{
+        progress: Record<string, Status>;
+        notes?: Record<string, string>;
+        stars?: Record<string, boolean>;
+        repoSources?: RepoSource[];
+    } | Record<string, Status> | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const {
@@ -82,10 +87,12 @@ export function SettingsModal() {
     const handleExport = () => {
         try {
             const exportData = {
-                version: 1,
+                version: 2, // 升级版本号
                 timestamp: new Date().toISOString(),
                 progress,
-                notes
+                notes,
+                stars: useProgressStore.getState().stars,
+                repoSources: useProgressStore.getState().repoSources
             };
 
             const dataStr = JSON.stringify(exportData, null, 2)
@@ -105,7 +112,7 @@ export function SettingsModal() {
             URL.revokeObjectURL(url)
 
             toast.success("备份文件已下载", {
-                description: `文件名为 ${filename}`,
+                description: `包含进度、笔记、收藏和题库源配置`,
             })
         } catch (error) {
             console.error("Export failed:", error)
@@ -489,12 +496,19 @@ export function SettingsModal() {
                                 当前进度将被永久删除且无法撤销。
                             </p>
                             {pendingImportData && (
-                                <div className="mt-4 p-3 bg-muted rounded text-xs font-mono text-muted-foreground">
-                                    包含记录数: {'progress' in pendingImportData ? Object.keys(pendingImportData.progress || {}).length : Object.keys(pendingImportData).length}
+                                <div className="mt-4 p-3 bg-muted rounded text-xs font-mono text-muted-foreground space-y-1">
+                                    <div>包含记录数: {'progress' in pendingImportData ? Object.keys(pendingImportData.progress || {}).length : Object.keys(pendingImportData).length}</div>
+
                                     {'notes' in pendingImportData && pendingImportData.notes && (
-                                        <span className="ml-2">
-                                            (笔记: {Object.keys(pendingImportData.notes).length})
-                                        </span>
+                                        <div>笔记: {Object.keys(pendingImportData.notes).length}</div>
+                                    )}
+
+                                    {'stars' in pendingImportData && pendingImportData.stars && (
+                                        <div>收藏: {Object.keys(pendingImportData.stars).length}</div>
+                                    )}
+
+                                    {'repoSources' in pendingImportData && pendingImportData.repoSources && (
+                                        <div>题库源: {pendingImportData.repoSources.length} (将合并)</div>
                                     )}
                                 </div>
                             )}
