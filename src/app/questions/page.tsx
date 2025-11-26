@@ -33,7 +33,9 @@ import { ShortcutsHelpModal } from "@/components/business/ShortcutsHelpModal";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useSearchParams } from "next/navigation";
 
-export default function Home() {
+import { Suspense } from "react";
+
+function QuestionsContent() {
   const {
     progress, updateStatus,
     selectedTagId,
@@ -477,5 +479,13 @@ export default function Home() {
         onOpenChange={setShowShortcutsHelp}
       />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <QuestionsContent />
+    </Suspense>
   );
 }

@@ -108,25 +108,27 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={activeSubjects}
-                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-                layout="vertical"
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme === 'dark' ? '#333' : '#eee'} />
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                <Tooltip
-                  cursor={{ fill: theme === 'dark' ? '#333' : '#f4f4f5' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                />
-                <Legend />
-                <Bar dataKey="mastered" name="已斩" stackId="a" fill="#16a34a" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="confused" name="懵圈" stackId="a" fill="#eab308" />
-                <Bar dataKey="failed" name="崩盘" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-full w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={activeSubjects}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme === 'dark' ? '#333' : '#eee'} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    cursor={{ fill: theme === 'dark' ? '#333' : '#f4f4f5' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="mastered" name="已斩" stackId="a" fill="#16a34a" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="confused" name="懵圈" stackId="a" fill="#eab308" />
+                  <Bar dataKey="failed" name="崩盘" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
