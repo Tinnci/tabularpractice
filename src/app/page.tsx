@@ -10,7 +10,7 @@ import { useQuestions, usePaperGroups, usePaperDetail } from "@/hooks/useQuestio
 import { Question, Status, PaperGroup } from "@/lib/types";
 import { useState, useEffect, useMemo } from "react";
 import { useProgressStore } from "@/lib/store";
-import { derivePapersFromQuestions, cn } from "@/lib/utils";
+import { derivePapersFromQuestions } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ import {
   SelectLabel
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { HelpCircle, Database } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -42,17 +42,13 @@ export default function Home() {
     filterType,
     filterYear,
     filterStarred,
-    filterSubject,
     stars,
     setFilterStatus,
     setFilterType,
     setFilterYear,
-    repoBaseUrl,
-    setRepoBaseUrl,
-    repoSources,
   } = useProgressStore();
 
-  const { questionsIndex, isLoading: isQuestionsLoading } = useQuestions();
+  const { questionsIndex } = useQuestions();
   const { paperGroups: remotePaperGroups } = usePaperGroups();
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -242,7 +238,7 @@ export default function Home() {
     const unified = (paperGroupsData as PaperGroup[]).filter(g => g.type === 'unified');
     const selfProposed = (paperGroupsData as PaperGroup[]).filter(g => g.type === 'self_proposed');
     return { unified, selfProposed };
-  }, []);
+  }, [paperGroupsData]);
 
   // 图片预加载逻辑：自动预加载下一题的图片
   useEffect(() => {
@@ -251,7 +247,7 @@ export default function Home() {
     const nextQuestion = filteredQuestions[currentIndex + 1];
     if (!nextQuestion) return;
 
-    const preloadImage = (url?: string) => {
+    const preloadImage = (url?: string, sourceUrl?: string) => {
       // 检查省流量模式
       if (useProgressStore.getState().lowDataMode) return;
 
@@ -259,9 +255,10 @@ export default function Home() {
       // 处理远程路径
       let finalUrl = url;
       if (!url.startsWith('http') && !url.startsWith('data:')) {
-        const repoBaseUrl = useProgressStore.getState().repoBaseUrl;
-        if (repoBaseUrl) {
-          const cleanBase = repoBaseUrl.replace(/\/$/, '');
+        // 优先使用题目自带的 sourceUrl，否则尝试使用全局 repoBaseUrl (兼容旧逻辑)
+        const base = sourceUrl || useProgressStore.getState().repoBaseUrl;
+        if (base) {
+          const cleanBase = base.replace(/\/$/, '');
           const cleanPath = url.startsWith('/') ? url : `/${url}`;
           finalUrl = `${cleanBase}${cleanPath}`;
         }
@@ -272,9 +269,9 @@ export default function Home() {
     };
 
     // 预加载题目、答案、解析图片
-    preloadImage(nextQuestion.contentImg || nextQuestion.imageUrl);
-    preloadImage(nextQuestion.answerImg);
-    preloadImage(nextQuestion.analysisImg);
+    preloadImage(nextQuestion.contentImg || nextQuestion.imageUrl, nextQuestion.sourceUrl);
+    preloadImage(nextQuestion.answerImg, nextQuestion.sourceUrl);
+    preloadImage(nextQuestion.analysisImg, nextQuestion.sourceUrl);
 
     // console.log(`[Preload] Prefetching images for next question: ${nextQuestion.number}`);
   }, [currentIndex, filteredQuestions]);
@@ -295,35 +292,7 @@ export default function Home() {
           <div className="flex items-center gap-3 shrink-0">
             <h2 className="text-lg font-semibold text-foreground whitespace-nowrap hidden sm:block">真题墙</h2>
 
-            {/* 题库源选择器 - 仅当有自定义源时显示 */}
-            {(useProgressStore.getState().repoSources?.length > 0) && (
-              <Select
-                value={useProgressStore.getState().repoBaseUrl || "default"}
-                onValueChange={(val) => {
-                  const url = val === "default" ? "" : val;
-                  useProgressStore.getState().setRepoBaseUrl(url);
-                  // 简单粗暴：刷新页面以重新加载数据
-                  setTimeout(() => window.location.reload(), 100);
-                }}
-              >
-                <SelectTrigger className="w-[110px] h-9 text-xs border-dashed sm:border-solid bg-muted/30">
-                  <div className="flex items-center gap-1 truncate">
-                    <Database className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <span className="truncate">
-                      {useProgressStore.getState().repoBaseUrl
-                        ? useProgressStore.getState().repoSources.find(s => s.url === useProgressStore.getState().repoBaseUrl)?.name || "自定义"
-                        : "内置题库"}
-                    </span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">内置默认题库</SelectItem>
-                  {useProgressStore.getState().repoSources.map(s => (
-                    <SelectItem key={s.id} value={s.url}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+
 
             {/* 试卷组选择器 - 稍微调窄一点 */}
             <Select value={currentGroupId} onValueChange={setCurrentGroupId}>

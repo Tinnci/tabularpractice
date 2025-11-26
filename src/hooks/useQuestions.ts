@@ -1,26 +1,79 @@
 import useSWR from 'swr';
 import { useProgressStore } from '@/lib/store';
-import { Question, Tag, PaperDetail } from '@/lib/types';
+import { Question, Tag, PaperDetail, PaperGroup } from '@/lib/types';
 
-// 这是一个通用的 fetcher
-const fetcher = (url: string) => fetch(url).then((res) => {
-    if (!res.ok) throw new Error('Network response was not ok');
-    return res.json();
-});
+
+
+// 多源 fetcher
+const multiSourceFetcher = async (urls: string[]) => {
+    const promises = urls.map(async (baseUrl) => {
+        // 空字符串代表本地源 /data
+        const target = baseUrl ? baseUrl : '/data';
+        try {
+            const res = await fetch(`${target}/index.json`);
+            if (!res.ok) return [];
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                return data.map((item: Question) => ({ ...item, sourceUrl: baseUrl }));
+            }
+            return [];
+        } catch (e) {
+            console.error(`Failed to fetch from ${target}`, e);
+            return [];
+        }
+    });
+
+    const results = await Promise.all(promises);
+    // 合并所有结果
+    return results.flat();
+};
+
+// 多源 PaperGroups fetcher
+const multiSourcePaperGroupsFetcher = async (urls: string[]) => {
+    const promises = urls.map(async (baseUrl) => {
+        const target = baseUrl ? baseUrl : '/data';
+        try {
+            const res = await fetch(`${target}/paperGroups.json`);
+            if (!res.ok) return [];
+            return await res.json();
+        } catch {
+            // 某些源可能没有 paperGroups.json，这是允许的
+            return [];
+        }
+    });
+
+    const results = await Promise.all(promises);
+    const allGroups = results.flat() as PaperGroup[];
+
+    // 去重：如果多个源有相同的 ID，保留第一个
+    const uniqueGroups = new Map<string, PaperGroup>();
+    allGroups.forEach(group => {
+        if (!uniqueGroups.has(group.id)) {
+            uniqueGroups.set(group.id, group);
+        }
+    });
+
+    return Array.from(uniqueGroups.values());
+};
 
 export function useQuestions() {
-    const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
+    const repoSources = useProgressStore(state => state.repoSources);
 
-    // 如果没配置远程 URL，默认使用本地 public/data (空字符串时)
-    // 注意：Next.js 中访问 public 文件夹直接用 /data 即可
-    const baseUrl = repoBaseUrl || '/data';
+    // 获取所有启用的源 URL
+    // 如果 repoSources 为空（旧数据），回退到 [''] (本地源)
+    const enabledUrls = (repoSources && repoSources.length > 0)
+        ? repoSources.filter(s => s.enabled).map(s => s.url)
+        : [''];
+
+    // 如果没有启用的源，默认启用本地源
+    if (enabledUrls.length === 0) enabledUrls.push('');
 
     const { data, error, isLoading } = useSWR<Question[]>(
-        `${baseUrl}/index.json`,
-        fetcher,
+        ['questions-index', ...enabledUrls], // Key 包含所有 URL，变化时自动重刷
+        () => multiSourceFetcher(enabledUrls),
         {
-            revalidateOnFocus: false, // 避免切窗口时频繁请求
-            dedupingInterval: 60000,  // 1分钟内不重复请求
+            revalidateOnFocus: false,
+            dedupingInterval: 60000,
         }
     );
 
@@ -32,12 +85,35 @@ export function useQuestions() {
 }
 
 export function usePaperDetail(paperId: string | null) {
-    const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
-    const baseUrl = repoBaseUrl || '/data';
+    // 试卷详情目前比较复杂，因为不知道这个 paperId 属于哪个源
+    // 简单的做法是：尝试从所有启用的源 fetch，直到成功
+    // 或者，我们在 questionsIndex 里应该包含 sourceUrl 信息？
+    // 暂时简化：遍历所有源尝试 fetch
+
+    const repoSources = useProgressStore(state => state.repoSources);
+    const enabledUrls = (repoSources && repoSources.length > 0)
+        ? repoSources.filter(s => s.enabled).map(s => s.url)
+        : [''];
+    if (enabledUrls.length === 0) enabledUrls.push('');
+
+    const fetchPaperDetail = async () => {
+        if (!paperId) return null;
+
+        for (const baseUrl of enabledUrls) {
+            const target = baseUrl ? baseUrl : '/data';
+            try {
+                const res = await fetch(`${target}/papers/${paperId}/index.json`);
+                if (res.ok) return await res.json();
+            } catch {
+                continue;
+            }
+        }
+        throw new Error("Paper not found in any active source");
+    };
 
     const { data, error, isLoading } = useSWR<PaperDetail>(
-        paperId ? `${baseUrl}/papers/${paperId}/index.json` : null,
-        fetcher,
+        paperId ? ['paper-detail', paperId, ...enabledUrls] : null,
+        fetchPaperDetail,
         {
             revalidateOnFocus: false
         }
@@ -51,15 +127,39 @@ export function usePaperDetail(paperId: string | null) {
 }
 
 export function useTags() {
-    const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
-    const baseUrl = repoBaseUrl || '/data';
+    // Tags 目前通常是通用的，或者每个源都有自己的 tags.json
+    // 简单起见，我们合并所有源的 tags
+    const repoSources = useProgressStore(state => state.repoSources);
+    const enabledUrls = (repoSources && repoSources.length > 0)
+        ? repoSources.filter(s => s.enabled).map(s => s.url)
+        : [''];
+    if (enabledUrls.length === 0) enabledUrls.push('');
+
+    const fetchTags = async () => {
+        const promises = enabledUrls.map(async (baseUrl) => {
+            const target = baseUrl ? baseUrl : '/data';
+            try {
+                const res = await fetch(`${target}/tags.json`);
+                if (!res.ok) return [];
+                return await res.json();
+            } catch { return []; }
+        });
+        const results = await Promise.all(promises);
+        // 去重合并
+        const allTags = results.flat() as Tag[];
+        const uniqueTags = new Map<string, Tag>();
+        allTags.forEach(tag => {
+            if (!uniqueTags.has(tag.id)) uniqueTags.set(tag.id, tag);
+        });
+        return Array.from(uniqueTags.values());
+    };
 
     const { data, error, isLoading } = useSWR<Tag[]>(
-        `${baseUrl}/tags.json`,
-        fetcher,
+        ['tags', ...enabledUrls],
+        fetchTags,
         {
             revalidateOnFocus: false,
-            dedupingInterval: 600000, // 知识点树很少变动，缓存10分钟
+            dedupingInterval: 600000,
         }
     );
 
@@ -71,20 +171,17 @@ export function useTags() {
 }
 
 export function usePaperGroups() {
-    const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
-    // 如果是本地模式，我们希望它 fetch 本地的 /data/paperGroups.json
-    // 注意：在 Next.js public 目录下，路径是 /data/paperGroups.json
-    const baseUrl = repoBaseUrl || '/data';
+    const repoSources = useProgressStore(state => state.repoSources);
+    const enabledUrls = (repoSources && repoSources.length > 0)
+        ? repoSources.filter(s => s.enabled).map(s => s.url)
+        : [''];
+    if (enabledUrls.length === 0) enabledUrls.push('');
 
-    // 我们需要定义 PaperGroup 类型，或者从 types 导入
-    // 这里假设 fetcher 返回的是 PaperGroup[]
-    const { data, error, isLoading } = useSWR<any[]>(
-        `${baseUrl}/paperGroups.json`,
-        fetcher,
+    const { data, error, isLoading } = useSWR<PaperGroup[]>(
+        ['paper-groups', ...enabledUrls],
+        () => multiSourcePaperGroupsFetcher(enabledUrls),
         {
             revalidateOnFocus: false,
-            // 如果 fetch 失败（比如远程源没有这个文件），我们可能需要回退机制
-            // 但 SWR 的 onErrorRetry 可以控制重试
             shouldRetryOnError: false
         }
     );

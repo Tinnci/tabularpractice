@@ -50,6 +50,9 @@ export interface Question {
   // 新增：答案和标签名
   answer?: string;
   tagNames?: string[];
+
+  // 来源 URL (用于多源模式下的资源加载)
+  sourceUrl?: string;
 }
 
 export type Difficulty = 'easy' | 'medium' | 'hard';

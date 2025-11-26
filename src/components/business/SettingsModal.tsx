@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -31,11 +31,13 @@ import { Switch } from "@/components/ui/switch"
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
     const [importConfirmOpen, setImportConfirmOpen] = useState(false)
-    // 更新类型定义以支持新旧两种格式
     const [pendingImportData, setPendingImportData] = useState<{ progress: Record<string, Status>; notes?: Record<string, string> } | Record<string, Status> | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const { progress, notes, importData, repoBaseUrl, setRepoBaseUrl, repoSources, addRepoSource, removeRepoSource } = useProgressStore()
+    const {
+        progress, notes, importData,
+        repoSources, addRepoSource, removeRepoSource, toggleRepoSource
+    } = useProgressStore()
 
     const [newRepoName, setNewRepoName] = useState("")
     const [newRepoUrl, setNewRepoUrl] = useState("")
@@ -53,7 +55,6 @@ export function SettingsModal() {
 
         setIsCheckingRepo(true);
         try {
-            // 尝试请求 index.json 验证有效性
             const res = await fetch(`${url}/index.json`);
             if (!res.ok) throw new Error("无法访问 index.json");
 
@@ -65,7 +66,7 @@ export function SettingsModal() {
             setNewRepoUrl("");
 
             toast.success("题库源添加成功", {
-                description: "您可以点击'使用'按钮切换到该题库"
+                description: "您可以点击开关启用该题库"
             });
         } catch (error) {
             console.error(error);
@@ -80,7 +81,6 @@ export function SettingsModal() {
     // 导出功能
     const handleExport = () => {
         try {
-            // 导出包含进度和笔记的完整数据
             const exportData = {
                 version: 1,
                 timestamp: new Date().toISOString(),
@@ -92,7 +92,6 @@ export function SettingsModal() {
             const blob = new Blob([dataStr], { type: "application/json" })
             const url = URL.createObjectURL(blob)
 
-            // 生成带时间戳的文件名
             const date = new Date()
             const timestamp = date.toISOString().split('T')[0].replace(/-/g, '')
             const filename = `tabular-practice-backup-${timestamp}.json`
@@ -126,7 +125,6 @@ export function SettingsModal() {
         const file = e.target.files?.[0]
         if (!file) return
 
-        // 重置 input value，允许重复选择同一个文件
         e.target.value = ''
 
         if (!file.name.endsWith('.json')) {
@@ -146,22 +144,13 @@ export function SettingsModal() {
                     throw new Error("Invalid JSON structure")
                 }
 
-                // 兼容性处理：检查是否是新版格式
                 let isValid = false;
-
                 if ('progress' in parsedData) {
-                    // 新版格式
                     const progressKeys = Object.keys(parsedData.progress || {});
-                    if (progressKeys.length > 0) {
-                        isValid = true;
-                    }
+                    if (progressKeys.length > 0) isValid = true;
                 } else {
-                    // 旧版格式 (直接是 progress 对象)
                     const keys = Object.keys(parsedData);
-                    // 简单的启发式检查：key 看起来像 ID，value 是 Status
-                    if (keys.length > 0) {
-                        isValid = true;
-                    }
+                    if (keys.length > 0) isValid = true;
                 }
 
                 if (!isValid) {
@@ -169,7 +158,6 @@ export function SettingsModal() {
                     return
                 }
 
-                // 暂存数据并打开确认框
                 setPendingImportData(parsedData)
                 setImportConfirmOpen(true)
 
@@ -189,13 +177,12 @@ export function SettingsModal() {
             importData(pendingImportData)
             setImportConfirmOpen(false)
             setPendingImportData(null)
-            setOpen(false) // 关闭设置弹窗
+            setOpen(false)
 
             toast.success("导入成功", {
                 description: "刷题进度已恢复，页面即将刷新...",
             })
 
-            // 延迟刷新页面以确保状态更新
             setTimeout(() => {
                 window.location.reload()
             }, 1500)
@@ -229,7 +216,6 @@ export function SettingsModal() {
                                     数据管理
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
-                                    {/* 导出按钮 */}
                                     <Button
                                         variant="outline"
                                         className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
@@ -240,7 +226,6 @@ export function SettingsModal() {
                                         <span className="text-xs text-muted-foreground font-normal">备份到本地 JSON</span>
                                     </Button>
 
-                                    {/* 导入按钮 */}
                                     <Button
                                         variant="outline"
                                         className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
@@ -266,58 +251,36 @@ export function SettingsModal() {
                                     题库源配置
                                 </h3>
 
-                                {/* 当前使用的源 */}
-                                <div className="p-3 bg-muted/50 rounded-md border border-border">
-                                    <div className="text-xs text-muted-foreground mb-1">当前使用:</div>
-                                    <div className="text-sm font-medium truncate" title={repoBaseUrl || "内置默认题库"}>
-                                        {repoBaseUrl ? (
-                                            repoSources?.find(s => s.url === repoBaseUrl)?.name || repoBaseUrl
-                                        ) : (
-                                            "内置默认题库"
-                                        )}
-                                    </div>
-                                    {repoBaseUrl && (
-                                        <Button
-                                            variant="link"
-                                            className="h-auto p-0 text-xs text-muted-foreground hover:text-primary mt-1"
-                                            onClick={() => {
-                                                setRepoBaseUrl('');
-                                                toast.success("已恢复默认题库");
-                                                setTimeout(() => window.location.reload(), 500);
-                                            }}
-                                        >
-                                            恢复默认
-                                        </Button>
-                                    )}
+                                <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-100 dark:border-blue-900">
+                                    您可以同时启用多个题库源，系统将自动合并所有题目。
                                 </div>
 
                                 {/* 已保存的源列表 */}
                                 <div className="space-y-2">
                                     <div className="text-xs font-medium text-muted-foreground">已保存的源</div>
-                                    {repoSources?.length > 0 ? (
-                                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
-                                            {repoSources.map(source => (
-                                                <div key={source.id} className="flex items-center justify-between p-2 rounded-md border border-border bg-card hover:bg-accent/50 transition-colors group">
-                                                    <div className="flex-1 min-w-0 mr-2">
-                                                        <div className="text-sm font-medium truncate">{source.name}</div>
-                                                        <div className="text-xs text-muted-foreground truncate" title={source.url}>{source.url}</div>
+                                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                                        {repoSources?.map(source => (
+                                            <div key={source.id} className="flex items-center justify-between p-3 rounded-md border border-border bg-card hover:bg-accent/30 transition-colors">
+                                                <div className="flex-1 min-w-0 mr-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium truncate">{source.name}</span>
+                                                        {source.isBuiltin && <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">内置</span>}
                                                     </div>
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Button
-                                                            size="sm"
-                                                            variant={repoBaseUrl === source.url ? "secondary" : "ghost"}
-                                                            className="h-7 px-2 text-xs"
-                                                            onClick={() => {
-                                                                if (repoBaseUrl !== source.url) {
-                                                                    setRepoBaseUrl(source.url);
-                                                                    toast.success(`已切换到: ${source.name}`);
-                                                                    setTimeout(() => window.location.reload(), 500);
-                                                                }
-                                                            }}
-                                                            disabled={repoBaseUrl === source.url}
-                                                        >
-                                                            {repoBaseUrl === source.url ? "使用中" : "使用"}
-                                                        </Button>
+                                                    <div className="text-xs text-muted-foreground truncate" title={source.url}>
+                                                        {source.url || "本地数据目录"}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <Switch
+                                                        checked={source.enabled}
+                                                        onCheckedChange={(checked) => {
+                                                            toggleRepoSource(source.id, checked);
+                                                            toast.success(`${checked ? '启用' : '禁用'}: ${source.name}`);
+                                                            // 延迟刷新以重新加载数据
+                                                            setTimeout(() => window.location.reload(), 800);
+                                                        }}
+                                                    />
+                                                    {!source.isBuiltin && (
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
@@ -327,13 +290,11 @@ export function SettingsModal() {
                                                             <span className="sr-only">删除</span>
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
                                                         </Button>
-                                                    </div>
+                                                    )}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-xs text-muted-foreground text-center py-2">暂无保存的题库源</div>
-                                    )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 {/* 添加新源 */}
@@ -513,7 +474,7 @@ export function SettingsModal() {
             </Dialog>
 
             {/* 导入确认弹窗 */}
-            < AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen} >
+            <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
@@ -549,7 +510,7 @@ export function SettingsModal() {
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
-            </AlertDialog >
+            </AlertDialog>
         </>
     )
 }
