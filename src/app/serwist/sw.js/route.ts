@@ -1,10 +1,11 @@
 import { createSerwistRoute } from "@serwist/turbopack";
 import type { NextRequest } from "next/server";
-import nextConfig from "../../../../next.config";
 
+// Pass an empty config to avoid validation errors
+// Serwist doesn't need the full Next.js config
 const { GET: originalGet } = createSerwistRoute({
     swSrc: "src/app/sw.ts",
-    nextConfig,
+    nextConfig: {},
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
