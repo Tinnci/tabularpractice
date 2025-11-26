@@ -18,6 +18,72 @@
         "name": "2021年考研数学一真题"
     },
     {
+        "id": "math1-2020",
+        "groupId": "math1",
+        "year": 2020,
+        "name": "2020年考研数学一真题"
+    },
+    {
+        "id": "math1-2019",
+        "groupId": "math1",
+        "year": 2019,
+        "name": "2019年考研数学一真题"
+    },
+    {
+        "id": "math1-2018",
+        "groupId": "math1",
+        "year": 2018,
+        "name": "2018年考研数学一真题"
+    },
+    {
+        "id": "math1-2017",
+        "groupId": "math1",
+        "year": 2017,
+        "name": "2017年考研数学一真题"
+    },
+    {
+        "id": "math1-2016",
+        "groupId": "math1",
+        "year": 2016,
+        "name": "2016年考研数学一真题"
+    },
+    {
+        "id": "math1-2015",
+        "groupId": "math1",
+        "year": 2015,
+        "name": "2015年考研数学一真题"
+    },
+    {
+        "id": "math1-2014",
+        "groupId": "math1",
+        "year": 2014,
+        "name": "2014年考研数学一真题"
+    },
+    {
+        "id": "math1-2013",
+        "groupId": "math1",
+        "year": 2013,
+        "name": "2013年考研数学一真题"
+    },
+    {
+        "id": "math1-2012",
+        "groupId": "math1",
+        "year": 2012,
+        "name": "2012年考研数学一真题"
+    },
+    {
+        "id": "math1-2011",
+        "groupId": "math1",
+        "year": 2011,
+        "name": "2011年考研数学一真题"
+    },
+    {
+        "id": "math1-2010",
+        "groupId": "math1",
+        "year": 2010,
+        "name": "2010年考研数学一真题"
+    },
+    {
         "id": "math2-2023",
         "groupId": "math2",
         "year": 2023,

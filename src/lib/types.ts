@@ -45,6 +45,10 @@ export interface Question {
 
   // 保留向后兼容
   imageUrl?: string;    // 废弃，使用 contentImg
+
+  // 新增：答案和标签名
+  answer?: string;
+  tagNames?: string[];
 }
 
 export type Difficulty = 'easy' | 'medium' | 'hard';

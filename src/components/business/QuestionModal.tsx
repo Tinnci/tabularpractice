@@ -172,9 +172,63 @@ export function QuestionModal({
                             <span className="text-[10px] sm:text-xs text-muted-foreground">{question.type}</span>
                         </div>
 
-                        {/* ... (keep existing toggle group) */}
+                        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
+                            {videoEmbedUrl && (
+                                <Toggle
+                                    size="sm"
+                                    pressed={visibleViews.has('video')}
+                                    onPressedChange={() => toggleView('video')}
+                                    className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                    aria-label="Toggle video"
+                                >
+                                    <MonitorPlay className="h-4 w-4 sm:mr-1" />
+                                    <span className="hidden sm:inline text-xs">视频</span>
+                                </Toggle>
+                            )}
+                            <Toggle
+                                size="sm"
+                                pressed={visibleViews.has('answer')}
+                                onPressedChange={() => toggleView('answer')}
+                                className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                aria-label="Toggle answer"
+                            >
+                                <Eye className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline text-xs">答案</span>
+                            </Toggle>
+                            <Toggle
+                                size="sm"
+                                pressed={visibleViews.has('analysis')}
+                                onPressedChange={() => toggleView('analysis')}
+                                className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                aria-label="Toggle analysis"
+                            >
+                                <FileText className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline text-xs">解析</span>
+                            </Toggle>
+                            <Toggle
+                                size="sm"
+                                pressed={visibleViews.has('note')}
+                                onPressedChange={() => toggleView('note')}
+                                className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                aria-label="Toggle note"
+                            >
+                                <PenLine className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline text-xs">笔记</span>
+                            </Toggle>
+                        </div>
                     </div>
-                    {/* ... (keep existing tags) */}
+                    {/* 标签 (桌面端显示) */}
+                    <div className="hidden sm:flex items-center gap-2 flex-wrap">
+                        {(question.tagNames || question.tags).map((tag, index) => (
+                            <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs font-normal text-muted-foreground bg-muted/30 whitespace-normal text-left h-auto py-0.5"
+                            >
+                                {tag}
+                            </Badge>
+                        ))}
+                    </div>
                 </div>
 
                 {/* 2. 内容瀑布流区域 */}
@@ -197,7 +251,22 @@ export function QuestionModal({
                                             </div>
                                         ) : (question.contentImg || question.imageUrl) ? (
                                             <img
-                                                src={question.contentImg || question.imageUrl}
+                                                src={(() => {
+                                                    const imgUrl = question.contentImg || question.imageUrl;
+                                                    if (!imgUrl) return '';
+                                                    if (imgUrl.startsWith('http') || imgUrl.startsWith('data:')) return imgUrl;
+                                                    // 如果配置了远程题库，且图片是相对路径，则拼接远程地址
+                                                    const { repoBaseUrl } = useProgressStore.getState();
+                                                    console.log('[ImageDebug] Original:', imgUrl, 'RepoBase:', repoBaseUrl);
+                                                    if (repoBaseUrl) {
+                                                        const cleanBase = repoBaseUrl.replace(/\/$/, '');
+                                                        const cleanPath = imgUrl.startsWith('/') ? imgUrl : `/${imgUrl}`;
+                                                        const finalUrl = `${cleanBase}${cleanPath}`;
+                                                        console.log('[ImageDebug] Resolved:', finalUrl);
+                                                        return finalUrl;
+                                                    }
+                                                    return imgUrl;
+                                                })()}
                                                 alt="题目"
                                                 className="max-w-full h-auto object-contain dark:invert dark:hue-rotate-180 transition-all duration-300"
                                             />
@@ -238,10 +307,25 @@ export function QuestionModal({
                                             </div>
                                         ) : question.answerImg ? (
                                             <img
-                                                src={question.answerImg}
+                                                src={(() => {
+                                                    const imgUrl = question.answerImg;
+                                                    if (!imgUrl) return '';
+                                                    if (imgUrl.startsWith('http') || imgUrl.startsWith('data:')) return imgUrl;
+                                                    const { repoBaseUrl } = useProgressStore.getState();
+                                                    if (repoBaseUrl) {
+                                                        const cleanBase = repoBaseUrl.replace(/\/$/, '');
+                                                        const cleanPath = imgUrl.startsWith('/') ? imgUrl : `/${imgUrl}`;
+                                                        return `${cleanBase}${cleanPath}`;
+                                                    }
+                                                    return imgUrl;
+                                                })()}
                                                 alt="答案"
                                                 className="max-w-full h-auto object-contain"
                                             />
+                                        ) : question.answer ? (
+                                            <div className="text-2xl font-bold text-green-600 dark:text-green-400 py-4">
+                                                {question.answer}
+                                            </div>
                                         ) : (
                                             <span className="text-muted-foreground text-sm">暂无答案内容</span>
                                         )}
@@ -262,7 +346,21 @@ export function QuestionModal({
                                             </div>
                                         ) : question.analysisImg ? (
                                             <img
-                                                src={question.analysisImg}
+                                                src={(() => {
+                                                    const imgUrl = question.analysisImg;
+                                                    if (!imgUrl) return '';
+                                                    if (imgUrl.startsWith('http') || imgUrl.startsWith('data:')) return imgUrl;
+                                                    const { repoBaseUrl } = useProgressStore.getState();
+                                                    console.log('[AnalysisDebug] Original:', imgUrl, 'RepoBase:', repoBaseUrl);
+                                                    if (repoBaseUrl) {
+                                                        const cleanBase = repoBaseUrl.replace(/\/$/, '');
+                                                        const cleanPath = imgUrl.startsWith('/') ? imgUrl : `/${imgUrl}`;
+                                                        const finalUrl = `${cleanBase}${cleanPath}`;
+                                                        console.log('[AnalysisDebug] Resolved:', finalUrl);
+                                                        return finalUrl;
+                                                    }
+                                                    return imgUrl;
+                                                })()}
                                                 alt="解析"
                                                 className="max-w-full h-auto object-contain"
                                             />

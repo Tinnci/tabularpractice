@@ -27,3 +27,50 @@ export function getBilibiliEmbed(url: string): string | null {
   // 高画质 + 禁用弹幕
   return `//player.bilibili.com/player.html?bvid=${bvid}&page=${page}&high_quality=1&danmaku=0${time}`;
 }
+
+import { Question, Paper, PaperGroup } from "@/lib/types";
+
+export function derivePapersFromQuestions(questions: Question[], groups: PaperGroup[]): Paper[] {
+  const papersMap = new Map<string, Paper>();
+
+  questions.forEach(q => {
+    if (!q.paperId) return;
+    if (papersMap.has(q.paperId)) return;
+
+    // 尝试从 paperId 解析年份 (假设格式为 math1-2023)
+    // 或者从 q.year 获取 (如果存在)
+    // 注意：Question 类型定义里目前没有 year，但 index.json 数据里有
+    // 我们需要扩展 Question 类型或者这里做个断言/临时处理
+    let year = 0;
+    // @ts-ignore
+    if (q.year) {
+      // @ts-ignore
+      year = parseInt(q.year);
+    } else {
+      const match = q.paperId.match(/-(\d{4})/);
+      if (match) {
+        year = parseInt(match[1]);
+      }
+    }
+
+    // 查找对应的 group
+    // 假设 groupId 可以从 paperId 前缀推断，或者 q.category
+    // math1-2023 -> math1
+    // @ts-ignore
+    const groupId = q.category || q.paperId.split('-').slice(0, -1).join('-');
+
+    const group = groups.find(g => g.id === groupId);
+    const groupName = group ? group.name : groupId;
+
+    if (year > 0) {
+      papersMap.set(q.paperId, {
+        id: q.paperId,
+        groupId: groupId,
+        year: year,
+        name: `${year}年${groupName}真题`
+      });
+    }
+  });
+
+  return Array.from(papersMap.values()).sort((a, b) => b.year - a.year);
+}

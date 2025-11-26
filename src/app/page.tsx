@@ -12,6 +12,7 @@ import { useQuestions, usePaperDetail } from "@/hooks/useQuestions";
 import { Question, Status, Paper, PaperGroup } from "@/lib/types";
 import { useState, useEffect, useMemo } from "react";
 import { useProgressStore } from "@/lib/store";
+import { derivePapersFromQuestions } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -56,6 +57,11 @@ export default function Home() {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
+  // 动态生成 papers 列表
+  const allPapers = useMemo(() => {
+    return derivePapersFromQuestions(questionsIndex, paperGroupsData as PaperGroup[]);
+  }, [questionsIndex]);
+
   // 合并进度状态到题目
   const mergedQuestions = useMemo(() => {
     return questionsIndex.map(q => ({
@@ -66,8 +72,8 @@ export default function Home() {
 
   // 根据 currentGroupId 筛选出对应的 Papers (年份)
   const currentPapers = useMemo(() => {
-    return (papersData as Paper[]).filter(p => p.groupId === currentGroupId);
-  }, [currentGroupId]);
+    return allPapers.filter(p => p.groupId === currentGroupId);
+  }, [currentGroupId, allPapers]);
 
   // 获取当前试卷组包含的所有年份 (用于筛选下拉框)
   const availableYears = useMemo(() => {
