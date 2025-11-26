@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link"
 import { SettingsModal } from "@/components/business/SettingsModal"
 import { ModeToggle } from "@/components/mode-toggle"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 export function Navbar() {
+    const pathname = usePathname();
     return (
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 app-region-drag">
             {/* WCO Safe Area Wrapper */}
@@ -32,10 +37,10 @@ export function Navbar() {
                     </Link>
 
                     <nav className="flex items-center space-x-6 text-sm font-medium ml-auto app-region-no-drag">
-                        <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                        <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
                             Dashboard
                         </Link>
-                        <Link href="/questions" className="transition-colors hover:text-foreground/80 text-foreground">
+                        <Link href="/questions" className={cn("transition-colors hover:text-foreground/80", pathname.startsWith("/questions") ? "text-foreground" : "text-foreground/60")}>
                             Questions
                         </Link>
                         <SettingsModal />
