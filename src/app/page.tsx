@@ -21,7 +21,7 @@ import {
   SelectLabel
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, Database } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -286,6 +286,36 @@ export default function Home() {
           {/* 1. 左侧：核心上下文 (标题 + 试卷组) */}
           <div className="flex items-center gap-3 shrink-0">
             <h2 className="text-lg font-semibold text-foreground whitespace-nowrap hidden sm:block">真题墙</h2>
+
+            {/* 题库源选择器 - 仅当有自定义源时显示 */}
+            {(useProgressStore.getState().repoSources?.length > 0) && (
+              <Select
+                value={useProgressStore.getState().repoBaseUrl || "default"}
+                onValueChange={(val) => {
+                  const url = val === "default" ? "" : val;
+                  useProgressStore.getState().setRepoBaseUrl(url);
+                  // 简单粗暴：刷新页面以重新加载数据
+                  setTimeout(() => window.location.reload(), 100);
+                }}
+              >
+                <SelectTrigger className="w-[110px] h-9 text-xs border-dashed sm:border-solid bg-muted/30">
+                  <div className="flex items-center gap-1 truncate">
+                    <Database className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="truncate">
+                      {useProgressStore.getState().repoBaseUrl
+                        ? useProgressStore.getState().repoSources.find(s => s.url === useProgressStore.getState().repoBaseUrl)?.name || "自定义"
+                        : "内置题库"}
+                    </span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">内置默认题库</SelectItem>
+                  {useProgressStore.getState().repoSources.map(s => (
+                    <SelectItem key={s.id} value={s.url}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             {/* 试卷组选择器 - 稍微调窄一点 */}
             <Select value={currentGroupId} onValueChange={setCurrentGroupId}>

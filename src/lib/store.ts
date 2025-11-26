@@ -2,6 +2,12 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { Status, NotesMap } from './types'
 
+export interface RepoSource {
+    id: string;
+    name: string;
+    url: string;
+}
+
 interface ProgressState {
     // 核心数据：记录题目ID对应的状态
     progress: Record<string, Status>;
@@ -54,13 +60,19 @@ interface ProgressState {
     // 废弃：保留向后兼容，实际上调用 importData
     importProgress: (newProgress: Record<string, Status>) => void;
 
-    // 自定义题库源 URL
+    // 自定义题库源 URL (当前生效的)
     repoBaseUrl: string;
     setRepoBaseUrl: (url: string) => void;
+
+    // 多题库源管理
+    repoSources: RepoSource[];
+    addRepoSource: (name: string, url: string) => void;
+    removeRepoSource: (id: string) => void;
 
     // 省流量模式
     lowDataMode: boolean;
     setLowDataMode: (enabled: boolean) => void;
+
     // 外观设置
     appearance: {
         cardWidth: number;
@@ -94,6 +106,7 @@ export const useProgressStore = create<ProgressState>()(
             filterYear: 'all',
             filterStarred: false,
             repoBaseUrl: '', // 默认为空，使用本地数据
+            repoSources: [], // 默认为空数组
 
             // 默认外观设置：自适应、紧凑、最小间距
             appearance: {
@@ -109,6 +122,18 @@ export const useProgressStore = create<ProgressState>()(
             setFilterType: (type) => set({ filterType: type }),
             setFilterYear: (year) => set({ filterYear: year }),
             setFilterStarred: (starred) => set({ filterStarred: starred }),
+
+            // 多题库源操作实现
+            addRepoSource: (name, url) => set((state) => ({
+                repoSources: [
+                    ...(state.repoSources || []),
+                    { id: crypto.randomUUID(), name, url }
+                ]
+            })),
+
+            removeRepoSource: (id) => set((state) => ({
+                repoSources: (state.repoSources || []).filter(s => s.id !== id)
+            })),
 
             // 省流量模式
             lowDataMode: false,

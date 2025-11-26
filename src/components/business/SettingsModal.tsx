@@ -35,25 +35,19 @@ export function SettingsModal() {
     const [pendingImportData, setPendingImportData] = useState<{ progress: Record<string, Status>; notes?: Record<string, string> } | Record<string, Status> | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const { progress, notes, importData, repoBaseUrl, setRepoBaseUrl } = useProgressStore()
+    const { progress, notes, importData, repoBaseUrl, setRepoBaseUrl, repoSources, addRepoSource, removeRepoSource } = useProgressStore()
 
-    const [repoUrlInput, setRepoUrlInput] = useState(repoBaseUrl)
+    const [newRepoName, setNewRepoName] = useState("")
+    const [newRepoUrl, setNewRepoUrl] = useState("")
     const [isCheckingRepo, setIsCheckingRepo] = useState(false)
 
-    // 每次打开弹窗时，重置输入框为 store 中的值
-    useEffect(() => {
-        if (open) {
-            setRepoUrlInput(repoBaseUrl);
-        }
-    }, [open, repoBaseUrl]);
+    // 验证并添加新题库源
+    const handleAddSource = async () => {
+        const name = newRepoName.trim();
+        const url = newRepoUrl.trim();
 
-    // 验证并保存题库地址
-    const handleSaveRepoUrl = async () => {
-        const url = repoUrlInput.trim();
-
-        if (!url) {
-            setRepoBaseUrl('');
-            toast.success("已恢复默认题库");
+        if (!name || !url) {
+            toast.error("请填写名称和 URL");
             return;
         }
 
@@ -66,13 +60,13 @@ export function SettingsModal() {
             const data = await res.json();
             if (!Array.isArray(data)) throw new Error("index.json 格式错误");
 
-            setRepoBaseUrl(url);
-            toast.success("题库源配置成功", {
-                description: "已切换到自定义数据源"
-            });
+            addRepoSource(name, url);
+            setNewRepoName("");
+            setNewRepoUrl("");
 
-            // 延迟刷新以重新加载数据
-            setTimeout(() => window.location.reload(), 1000);
+            toast.success("题库源添加成功", {
+                description: "您可以点击'使用'按钮切换到该题库"
+            });
         } catch (error) {
             console.error(error);
             toast.error("题库验证失败", {
@@ -271,25 +265,106 @@ export function SettingsModal() {
                                     <Database className="h-4 w-4" />
                                     题库源配置
                                 </h3>
-                                <div className="space-y-2">
-                                    <div className="flex gap-2">
-                                        <Input
-                                            placeholder="默认为空 (使用内置题库)"
-                                            value={repoUrlInput}
-                                            onChange={(e) => setRepoUrlInput(e.target.value)}
-                                            className="flex-1 text-sm"
-                                        />
+
+                                {/* 当前使用的源 */}
+                                <div className="p-3 bg-muted/50 rounded-md border border-border">
+                                    <div className="text-xs text-muted-foreground mb-1">当前使用:</div>
+                                    <div className="text-sm font-medium truncate" title={repoBaseUrl || "内置默认题库"}>
+                                        {repoBaseUrl ? (
+                                            repoSources?.find(s => s.url === repoBaseUrl)?.name || repoBaseUrl
+                                        ) : (
+                                            "内置默认题库"
+                                        )}
+                                    </div>
+                                    {repoBaseUrl && (
                                         <Button
-                                            onClick={handleSaveRepoUrl}
-                                            disabled={isCheckingRepo}
-                                            size="sm"
+                                            variant="link"
+                                            className="h-auto p-0 text-xs text-muted-foreground hover:text-primary mt-1"
+                                            onClick={() => {
+                                                setRepoBaseUrl('');
+                                                toast.success("已恢复默认题库");
+                                                setTimeout(() => window.location.reload(), 500);
+                                            }}
                                         >
-                                            {isCheckingRepo ? "验证中..." : "保存"}
+                                            恢复默认
                                         </Button>
+                                    )}
+                                </div>
+
+                                {/* 已保存的源列表 */}
+                                <div className="space-y-2">
+                                    <div className="text-xs font-medium text-muted-foreground">已保存的源</div>
+                                    {repoSources?.length > 0 ? (
+                                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                                            {repoSources.map(source => (
+                                                <div key={source.id} className="flex items-center justify-between p-2 rounded-md border border-border bg-card hover:bg-accent/50 transition-colors group">
+                                                    <div className="flex-1 min-w-0 mr-2">
+                                                        <div className="text-sm font-medium truncate">{source.name}</div>
+                                                        <div className="text-xs text-muted-foreground truncate" title={source.url}>{source.url}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            size="sm"
+                                                            variant={repoBaseUrl === source.url ? "secondary" : "ghost"}
+                                                            className="h-7 px-2 text-xs"
+                                                            onClick={() => {
+                                                                if (repoBaseUrl !== source.url) {
+                                                                    setRepoBaseUrl(source.url);
+                                                                    toast.success(`已切换到: ${source.name}`);
+                                                                    setTimeout(() => window.location.reload(), 500);
+                                                                }
+                                                            }}
+                                                            disabled={repoBaseUrl === source.url}
+                                                        >
+                                                            {repoBaseUrl === source.url ? "使用中" : "使用"}
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
+                                                            onClick={() => removeRepoSource(source.id)}
+                                                        >
+                                                            <span className="sr-only">删除</span>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-muted-foreground text-center py-2">暂无保存的题库源</div>
+                                    )}
+                                </div>
+
+                                {/* 添加新源 */}
+                                <div className="pt-2 border-t border-border space-y-2">
+                                    <div className="text-xs font-medium text-muted-foreground">添加新源</div>
+                                    <div className="grid gap-2">
+                                        <Input
+                                            placeholder="名称 (例如: 数学一真题)"
+                                            value={newRepoName}
+                                            onChange={(e) => setNewRepoName(e.target.value)}
+                                            className="h-8 text-sm"
+                                        />
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="URL (GitHub Raw 或 API)"
+                                                value={newRepoUrl}
+                                                onChange={(e) => setNewRepoUrl(e.target.value)}
+                                                className="flex-1 h-8 text-sm"
+                                            />
+                                            <Button
+                                                onClick={handleAddSource}
+                                                disabled={isCheckingRepo || !newRepoName || !newRepoUrl}
+                                                size="sm"
+                                                className="h-8"
+                                            >
+                                                {isCheckingRepo ? "验证..." : "添加"}
+                                            </Button>
+                                        </div>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        输入 GitHub Raw 地址或自定义 API 地址。例如: <br />
-                                        <code className="bg-muted px-1 py-0.5 rounded">https://raw.githubusercontent.com/username/repo/main/data</code>
+                                        提示: URL 应指向包含 index.json 的目录
                                     </p>
                                 </div>
                             </div>
