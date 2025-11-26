@@ -87,9 +87,10 @@ export const useProgressStore = create<ProgressState>()(
             filterStarred: false,
             repoBaseUrl: '',
 
-            // 初始化时确保包含内置源
+            // 初始化时确保包含内置源和默认远程源
             repoSources: [
-                { id: 'local', name: '内置题库', url: '', enabled: true, isBuiltin: true }
+                { id: 'local', name: '内置题库', url: '', enabled: true, isBuiltin: true },
+                { id: 'default-remote', name: '题库1 (GitHub)', url: 'https://raw.githubusercontent.com/Tinnci/tabularpractice-data/main', enabled: true, isBuiltin: false }
             ],
 
             appearance: {
@@ -203,6 +204,29 @@ export const useProgressStore = create<ProgressState>()(
         {
             name: 'tabular-progress-storage',
             storage: createJSONStorage(() => localStorage),
+            version: 1, // 增加版本号
+            migrate: (persistedState: any, version) => {
+                if (version === 0) {
+                    // 迁移逻辑：如果旧版本没有 repoSources 或者没有默认远程源，添加它
+                    // 注意：这里 persistedState 是 unknown，需要小心处理
+                    const state = persistedState as ProgressState;
+                    const defaultRemote = { id: 'default-remote', name: '官方题库 (GitHub)', url: 'https://raw.githubusercontent.com/Tinnci/tabularpractice-data/main', enabled: true, isBuiltin: false };
+
+                    let newRepoSources = state.repoSources || [{ id: 'local', name: '内置题库', url: '', enabled: true, isBuiltin: true }];
+
+                    // 检查是否已存在（避免重复添加）
+                    const hasDefaultRemote = newRepoSources.some(s => s.url === defaultRemote.url);
+                    if (!hasDefaultRemote) {
+                        newRepoSources = [...newRepoSources, defaultRemote];
+                    }
+
+                    return {
+                        ...state,
+                        repoSources: newRepoSources
+                    };
+                }
+                return persistedState as ProgressState;
+            },
         }
     )
 )
