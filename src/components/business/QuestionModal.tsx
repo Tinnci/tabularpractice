@@ -87,6 +87,7 @@ const RemoteImage = ({ src, alt, className }: { src: string, alt: string, classN
                     <span>图片加载失败</span>
                 </div>
             ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                     src={finalSrc}
                     alt={alt}
@@ -131,7 +132,7 @@ export function QuestionModal({
         if (isOpen && question) {
             setVisibleViews(new Set(['question']));
         }
-    }, [question?.id, isOpen]);
+    }, [question, isOpen]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (!isOpen) return;

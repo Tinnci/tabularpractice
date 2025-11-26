@@ -63,7 +63,7 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
                 ].filter(Boolean).join(' ').toLowerCase()
             };
         });
-    }, []);
+    }, [questions]);
 
     // 搜索过滤
     const filteredResults = useMemo(() => {

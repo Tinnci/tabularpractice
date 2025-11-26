@@ -6,10 +6,8 @@ import { QuestionModal } from "@/components/business/QuestionModal";
 import { GlobalSearch } from "@/components/business/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import paperGroupsData from "@/data/paperGroups.json";
-import papersData from "@/data/papers.json";
-// import questionsData from "@/data/questions.json"; // Removed
 import { useQuestions, usePaperDetail } from "@/hooks/useQuestions";
-import { Question, Status, Paper, PaperGroup } from "@/lib/types";
+import { Question, Status, PaperGroup } from "@/lib/types";
 import { useState, useEffect, useMemo } from "react";
 import { useProgressStore } from "@/lib/store";
 import { derivePapersFromQuestions } from "@/lib/utils";
@@ -23,8 +21,7 @@ import {
   SelectLabel
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Toggle } from "@/components/ui/toggle";
-import { ListFilter, HelpCircle, Star } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -53,7 +50,7 @@ export default function Home() {
     setFilterStarred
   } = useProgressStore();
 
-  const { questionsIndex, isLoading } = useQuestions();
+  const { questionsIndex, isLoading: _isLoading } = useQuestions();
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
@@ -104,7 +101,7 @@ export default function Home() {
       // 如果按时间轴：[ = 往过去走 (2022), ] = 往未来走 (2023)
       // availableYears: [2023, 2022, 2010]
 
-      let newIndex = direction === 'prev' ? currentIndex + 1 : currentIndex - 1;
+      const newIndex = direction === 'prev' ? currentIndex + 1 : currentIndex - 1;
 
       if (newIndex < 0) {
         // 已经是最新的了，再按 ] 切换到 'all'
@@ -174,7 +171,7 @@ export default function Home() {
     }
 
     return filtered;
-  }, [mergedQuestions, currentPapers, filterStatus, filterType, filterYear]);
+  }, [mergedQuestions, currentPapers, filterStatus, filterType, filterYear, filterStarred, stars]);
 
   const handleQuestionClick = (id: string) => {
     setSelectedQuestionId(id);
@@ -368,7 +365,7 @@ export default function Home() {
                 </Tooltip>
               </TooltipProvider>
 
-              <Select value={filterType} onValueChange={(val) => setFilterType(val as any)}>
+              <Select value={filterType} onValueChange={(val) => setFilterType(val as 'all' | 'choice' | 'fill' | 'answer')}>
                 <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
                   <span>{filterType === 'all' ? '题型' : (filterType === 'choice' ? '选择' : filterType === 'fill' ? '填空' : '解答')}</span>
                 </SelectTrigger>

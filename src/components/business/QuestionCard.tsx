@@ -79,6 +79,7 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64 
                 {/* 缩略图展示 */}
                 <div className="w-full h-full flex items-center justify-center overflow-hidden">
                     {thumbUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                             src={thumbUrl}
                             alt={`Q${question.number}`}

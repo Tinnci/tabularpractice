@@ -154,14 +154,12 @@ export function SettingsModal() {
 
                 // 兼容性处理：检查是否是新版格式
                 let isValid = false;
-                let recordCount = 0;
 
                 if ('progress' in parsedData) {
                     // 新版格式
                     const progressKeys = Object.keys(parsedData.progress || {});
                     if (progressKeys.length > 0) {
                         isValid = true;
-                        recordCount = progressKeys.length;
                     }
                 } else {
                     // 旧版格式 (直接是 progress 对象)
@@ -169,7 +167,6 @@ export function SettingsModal() {
                     // 简单的启发式检查：key 看起来像 ID，value 是 Status
                     if (keys.length > 0) {
                         isValid = true;
-                        recordCount = keys.length;
                     }
                 }
 

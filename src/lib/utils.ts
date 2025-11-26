@@ -39,13 +39,10 @@ export function derivePapersFromQuestions(questions: Question[], groups: PaperGr
 
     // 尝试从 paperId 解析年份 (假设格式为 math1-2023)
     // 或者从 q.year 获取 (如果存在)
-    // 注意：Question 类型定义里目前没有 year，但 index.json 数据里有
-    // 我们需要扩展 Question 类型或者这里做个断言/临时处理
     let year = 0;
-    // @ts-ignore
-    if (q.year) {
-      // @ts-ignore
-      year = parseInt(q.year);
+    const qAny = q as any;
+    if (qAny.year) {
+      year = parseInt(qAny.year);
     } else {
       const match = q.paperId.match(/-(\d{4})/);
       if (match) {
@@ -56,8 +53,7 @@ export function derivePapersFromQuestions(questions: Question[], groups: PaperGr
     // 查找对应的 group
     // 假设 groupId 可以从 paperId 前缀推断，或者 q.category
     // math1-2023 -> math1
-    // @ts-ignore
-    const groupId = q.category || q.paperId.split('-').slice(0, -1).join('-');
+    const groupId = qAny.category || q.paperId.split('-').slice(0, -1).join('-');
 
     const group = groups.find(g => g.id === groupId);
     const groupName = group ? group.name : groupId;
