@@ -52,7 +52,7 @@ interface ProgressState {
     repoSources: RepoSource[];
     addRepoSource: (name: string, url: string) => void;
     removeRepoSource: (id: string) => void;
-    toggleRepoSource: (id: string, enabled: boolean) => void; // 新增
+    toggleRepoSource: (id: string, enabled: boolean) => void;
 
     lowDataMode: boolean;
     setLowDataMode: (enabled: boolean) => void;
@@ -76,6 +76,14 @@ interface ProgressState {
     // UI 状态
     mobileSidebarOpen: boolean;
     setMobileSidebarOpen: (open: boolean) => void;
+
+    // GitHub Sync
+    githubToken: string | null;
+    gistId: string | null;
+    lastSyncedTime: string | null;
+    setGithubToken: (token: string | null) => void;
+    setGistId: (id: string | null) => void;
+    setLastSyncedTime: (time: string | null) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -93,6 +101,14 @@ export const useProgressStore = create<ProgressState>()(
             filterYear: 'all',
             filterStarred: false,
             repoBaseUrl: '',
+
+            // GitHub Sync
+            githubToken: null,
+            gistId: null,
+            lastSyncedTime: null,
+            setGithubToken: (token) => set({ githubToken: token }),
+            setGistId: (id) => set({ gistId: id }),
+            setLastSyncedTime: (time) => set({ lastSyncedTime: time }),
 
             // 初始化时确保包含内置源和默认远程源
             repoSources: [
@@ -143,15 +159,9 @@ export const useProgressStore = create<ProgressState>()(
 
             updateStatus: (id, status) =>
                 set((state) => {
-                    // 只有当状态从未做变为已做，或者状态改变时才记录活动？
-                    // 简单起见，只要有状态更新操作，就算一次活动 (Activity)
-                    // 或者更严格一点：只有变成 mastered/confused/failed 才算
-
                     const today = new Date().toISOString().split('T')[0];
                     const currentCount = state.history[today] || 0;
 
-                    // 只有当新状态不是 unanswered 时才增加计数
-                    // 并且防止重复刷同一题刷量？目前暂不处理去重，每次操作都算活跃度
                     const newHistory = { ...state.history };
                     if (status !== 'unanswered') {
                         newHistory[today] = currentCount + 1;
@@ -219,11 +229,6 @@ export const useProgressStore = create<ProgressState>()(
 
                 if (isNewFormat(data)) {
                     set((state) => {
-                        // 合并 repoSources: 保留现有的，添加备份中不存在的
-                        // 或者完全覆盖？通常备份恢复意味着"回到那个状态"。
-                        // 但考虑到 repoSources 是配置，我们采用"合并去重"策略比较安全，
-                        // 防止用户不小心覆盖掉了当前新加的源。
-
                         let newRepoSources = state.repoSources;
                         if (data.repoSources && Array.isArray(data.repoSources)) {
                             const existingUrls = new Set(state.repoSources.map(s => s.url));
@@ -250,7 +255,7 @@ export const useProgressStore = create<ProgressState>()(
             name: 'tabular-progress-storage',
             storage: createJSONStorage(() => localStorage),
             version: 1, // 增加版本号
-            migrate: (persistedState: unknown, version) => {
+            migrate: (persistedState: unknown, version: number) => {
                 if (version === 0) {
                     // 迁移逻辑：如果旧版本没有 repoSources 或者没有默认远程源，添加它
                     // 注意：这里 persistedState 是 unknown，需要小心处理
