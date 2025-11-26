@@ -6,26 +6,55 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 将B站视频链接转换为可嵌入的iframe地址
+ * 将B站视频链接转换为可嵌入的iframe地址 (优化版)
+ * 使用标准 URL API 解析，增强稳健性
  * @param url B站视频链接，如: https://www.bilibili.com/video/BV1xxxx?t=120&p=1
  * @returns iframe embed URL,  如: //player.bilibili.com/player.html?bvid=BV1xxxx&page=1&t=120
  */
 export function getBilibiliEmbed(url: string): string | null {
-  // 匹配 BV 号
-  const bvMatch = url.match(/(BV\w+)/);
-  if (!bvMatch) return null;
+  try {
+    // 如果 URL 不包含协议头，添加一个默认协议以便 URL 构造器能够解析
+    const urlToParse = url.startsWith('http://') || url.startsWith('https://')
+      ? url
+      : `https://${url}`;
 
-  // 匹配时间戳 (t参数)
-  const tMatch = url.match(/[?&]t=(\d+)/);
-  // 匹配分P (p参数)
-  const pMatch = url.match(/[?&]p=(\d+)/);
+    // 1. 使用标准 URL API 解析，自动处理各种参数拼接和编码问题
+    const urlObj = new URL(urlToParse);
 
-  const bvid = bvMatch[1];
-  const page = pMatch ? pMatch[1] : 1;
-  const time = tMatch ? `&t=${tMatch[1]}` : "";
+    // 2. 智能提取视频 ID (支持 BV 号)
+    // 优先从 pathname 提取，避免查询参数干扰
+    const bvMatch = urlObj.pathname.match(/(BV\w+)/i);
 
-  // 高画质 + 禁用弹幕
-  return `//player.bilibili.com/player.html?bvid=${bvid}&page=${page}&high_quality=1&danmaku=0${time}`;
+    if (!bvMatch) return null;
+
+    const bvid = bvMatch[1];
+
+    // 3. 使用 URLSearchParams 提取并处理查询参数
+    const params = urlObj.searchParams;
+    const page = params.get('p') || '1';
+    const t = params.get('t'); // 获取时间戳
+
+    // 4. 构建标准的 URLSearchParams
+    const embedParams = new URLSearchParams();
+    embedParams.set('bvid', bvid);
+    embedParams.set('page', page);
+    embedParams.set('high_quality', '1');
+    embedParams.set('danmaku', '0');
+
+    // 处理时间跳转
+    if (t) {
+      embedParams.set('t', t);
+      // 注意：某些情况下，为了确保时间跳转生效，可能需要开启自动播放
+      // 但出于用户体验考虑（避免突然发出声音），通常不强制 autoplay=1
+      // 如果发现跳转失效，可以尝试添加 embedParams.set('autoplay', '1');
+    }
+
+    return `//player.bilibili.com/player.html?${embedParams.toString()}`;
+
+  } catch (error) {
+    console.warn("Invalid Bilibili URL:", url, error);
+    return null;
+  }
 }
 
 import { Question, Paper, PaperGroup } from "@/lib/types";
