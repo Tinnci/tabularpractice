@@ -48,3 +48,16 @@ export interface Question {
 }
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
+
+export interface Tag {
+  id: string;
+  name: string;
+  parentId: string | null;
+}
+
+export interface PaperDetail {
+  paperId: string;
+  year: string | number;
+  tags?: string[];
+  questions: Record<string, Question>;
+}

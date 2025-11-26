@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { useProgressStore } from '@/lib/store';
-import { Question } from '@/lib/types';
+import { Question, Tag, PaperDetail } from '@/lib/types';
 
 // 这是一个通用的 fetcher
 const fetcher = (url: string) => fetch(url).then((res) => {
@@ -35,8 +35,8 @@ export function usePaperDetail(paperId: string | null) {
     const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
     const baseUrl = repoBaseUrl || '/data';
 
-    const { data, error, isLoading } = useSWR(
-        paperId ? `${baseUrl}/papers/${paperId}.json` : null,
+    const { data, error, isLoading } = useSWR<PaperDetail>(
+        paperId ? `${baseUrl}/papers/${paperId}/index.json` : null,
         fetcher,
         {
             revalidateOnFocus: false
@@ -45,6 +45,26 @@ export function usePaperDetail(paperId: string | null) {
 
     return {
         paperDetail: data,
+        isLoading,
+        isError: error
+    };
+}
+
+export function useTags() {
+    const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
+    const baseUrl = repoBaseUrl || '/data';
+
+    const { data, error, isLoading } = useSWR<Tag[]>(
+        `${baseUrl}/tags.json`,
+        fetcher,
+        {
+            revalidateOnFocus: false,
+            dedupingInterval: 600000, // 知识点树很少变动，缓存10分钟
+        }
+    );
+
+    return {
+        tags: data || [],
         isLoading,
         isError: error
     };
