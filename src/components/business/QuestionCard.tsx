@@ -52,7 +52,7 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
     return (
         <Card
             className={cn(
-                "cursor-pointer transition-all duration-300 border overflow-hidden", // 添加 overflow-hidden
+                "cursor-pointer transition-all duration-300 border overflow-hidden p-0 gap-0", // 添加 p-0 gap-0 移除默认内边距
                 statusColors[status],
                 isDimmed
                     ? "opacity-20 grayscale scale-90 hover:opacity-100 hover:grayscale-0 hover:scale-100"
