@@ -117,6 +117,7 @@ export function QuestionModal({
     // 初始化笔记内容
     useEffect(() => {
         if (question) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setNoteContent(notes[question.id] || "");
         }
     }, [question, notes]);
@@ -130,6 +131,7 @@ export function QuestionModal({
 
     useEffect(() => {
         if (isOpen && question) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setVisibleViews(new Set(['question']));
         }
     }, [question, isOpen]);

@@ -40,6 +40,7 @@ export function derivePapersFromQuestions(questions: Question[], groups: PaperGr
     // 尝试从 paperId 解析年份 (假设格式为 math1-2023)
     // 或者从 q.year 获取 (如果存在)
     let year = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const qAny = q as any;
     if (qAny.year) {
       year = parseInt(qAny.year);

@@ -43,14 +43,12 @@ export default function Home() {
     filterYear,
     filterStarred,
     stars,
-    setSelectedTagId,
     setFilterStatus,
     setFilterType,
     setFilterYear,
-    setFilterStarred
   } = useProgressStore();
 
-  const { questionsIndex, isLoading: _isLoading } = useQuestions();
+  const { questionsIndex } = useQuestions();
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 

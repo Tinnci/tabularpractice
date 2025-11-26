@@ -14,6 +14,7 @@ export function ProgressOverview({ total }: { total: number }) {
     // 2. 处理 Hydration Mismatch: 确保只在客户端渲染
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 

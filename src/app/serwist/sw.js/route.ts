@@ -7,6 +7,7 @@ const { GET: originalGet } = createSerwistRoute({
     nextConfig,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function GET(req: NextRequest, context: any) {
     return originalGet(req, { ...context, params: Promise.resolve({ path: "sw.js" }) });
 }

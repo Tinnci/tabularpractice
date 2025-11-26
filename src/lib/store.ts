@@ -162,15 +162,15 @@ export const useProgressStore = create<ProgressState>()(
             importData: (data) => {
                 // 检查是否是新版格式 (包含 progress 字段)
                 // 使用类型断言来帮助 TypeScript 推断
-                const isNewFormat = (d: any): d is { progress: Record<string, Status>; notes?: NotesMap } => {
-                    return 'progress' in d && typeof d.progress === 'object';
+                const isNewFormat = (d: unknown): d is { progress: Record<string, Status>; notes?: NotesMap; stars?: Record<string, boolean> } => {
+                    return typeof d === 'object' && d !== null && 'progress' in d;
                 };
 
                 if (isNewFormat(data)) {
                     set({
                         progress: data.progress,
                         notes: data.notes || {},
-                        stars: (data as any).stars || {} // 兼容性处理
+                        stars: data.stars || {}
                     });
                 } else {
                     // 旧版格式，直接是 progress 对象
