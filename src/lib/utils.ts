@@ -29,6 +29,7 @@ export function getBilibiliEmbed(url: string): string | null {
 }
 
 import { Question, Paper, PaperGroup } from "@/lib/types";
+import { type RepoSource } from "@/lib/store";
 
 export function derivePapersFromQuestions(questions: Question[], groups: PaperGroup[]): Paper[] {
   const papersMap = new Map<string, Paper>();
@@ -71,3 +72,46 @@ export function derivePapersFromQuestions(questions: Question[], groups: PaperGr
 
   return Array.from(papersMap.values()).sort((a, b) => b.year - a.year);
 }
+
+/**
+ * 统一的图片URL解析函数
+ * 优先级：1. question.sourceUrl  2. repoBaseUrl  3. repoSources中的远程源
+ */
+export function getImageUrl(
+  url: string | undefined,
+  question?: Question | null,
+  repoBaseUrl?: string,
+  repoSources?: RepoSource[]
+): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+
+  // 1. 优先使用题目自带的 sourceUrl
+  if (question?.sourceUrl) {
+    const cleanBase = question.sourceUrl.replace(/\/$/, '');
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `${cleanBase}${cleanPath}`;
+  }
+
+  // 2. 其次使用全局设置的 repoBaseUrl (兼容旧版)
+  if (repoBaseUrl) {
+    const cleanBase = repoBaseUrl.replace(/\/$/, '');
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `${cleanBase}${cleanPath}`;
+  }
+
+  // 3. 最后尝试查找默认的远程源 (default-remote) 或第一个启用的非内置源
+  if (repoSources && repoSources.length > 0) {
+    const remoteSource = repoSources.find(s => s.id === 'default-remote' && s.enabled)
+      || repoSources.find(s => !s.isBuiltin && s.enabled);
+
+    if (remoteSource?.url) {
+      const cleanBase = remoteSource.url.replace(/\/$/, '');
+      const cleanPath = url.startsWith('/') ? url : `/${url}`;
+      return `${cleanBase}${cleanPath}`;
+    }
+  }
+
+  return url;
+}
+

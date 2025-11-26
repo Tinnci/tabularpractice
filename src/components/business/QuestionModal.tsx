@@ -27,7 +27,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { useProgressStore } from "@/lib/store";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
+import { cn, getImageUrl } from "@/lib/utils";
 
 interface Props {
     isOpen: boolean;
@@ -56,21 +56,14 @@ const MarkdownContent = ({ content }: { content: string }) => (
 );
 
 // 远程图片加载组件
-const RemoteImage = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
+const RemoteImage = ({ src, alt, className, question }: { src: string, alt: string, className?: string, question?: Question | null }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-    const { repoBaseUrl } = useProgressStore.getState();
+    const { repoBaseUrl, repoSources } = useProgressStore.getState();
 
     const finalSrc = useMemo(() => {
-        if (!src) return '';
-        if (src.startsWith('http') || src.startsWith('data:')) return src;
-        if (repoBaseUrl) {
-            const cleanBase = repoBaseUrl.replace(/\/$/, '');
-            const cleanPath = src.startsWith('/') ? src : `/${src}`;
-            return `${cleanBase}${cleanPath}`;
-        }
-        return src;
-    }, [src, repoBaseUrl]);
+        return getImageUrl(src, question, repoBaseUrl, repoSources);
+    }, [src, question, repoBaseUrl, repoSources]);
 
     if (!finalSrc) return null;
 
@@ -181,20 +174,15 @@ export function QuestionModal({
         // 检查省流量模式
         if (useProgressStore.getState().lowDataMode) return;
 
+        const { repoBaseUrl, repoSources } = useProgressStore.getState();
+
         const preload = (url?: string) => {
             if (!url) return;
-            const img = new Image();
-            // 处理远程路径逻辑与 RemoteImage 保持一致
-            if (!url.startsWith('http') && !url.startsWith('data:')) {
-                const repoBaseUrl = useProgressStore.getState().repoBaseUrl;
-                if (repoBaseUrl) {
-                    const cleanBase = repoBaseUrl.replace(/\/$/, '');
-                    const cleanPath = url.startsWith('/') ? url : `/${url}`;
-                    img.src = `${cleanBase}${cleanPath}`;
-                    return;
-                }
+            const finalUrl = getImageUrl(url, question, repoBaseUrl, repoSources);
+            if (finalUrl) {
+                const img = new Image();
+                img.src = finalUrl;
             }
-            img.src = url;
         };
 
         preload(question.answerImg);
@@ -331,6 +319,7 @@ export function QuestionModal({
                                                 <RemoteImage
                                                     src={currentQuestion.contentImg || currentQuestion.imageUrl || ''}
                                                     alt="题目"
+                                                    question={currentQuestion}
                                                 />
                                             ) : (
                                                 <div className="text-muted-foreground text-sm">题目内容缺失</div>
@@ -369,6 +358,7 @@ export function QuestionModal({
                                                 <RemoteImage
                                                     src={currentQuestion.answerImg}
                                                     alt="答案"
+                                                    question={currentQuestion}
                                                 />
                                             ) : currentQuestion.answer ? (
                                                 <div className="text-2xl font-bold text-green-600 dark:text-green-400 py-4">
@@ -396,6 +386,7 @@ export function QuestionModal({
                                                 <RemoteImage
                                                     src={currentQuestion.analysisImg}
                                                     alt="解析"
+                                                    question={currentQuestion}
                                                 />
                                             ) : (
                                                 <span className="text-muted-foreground text-sm">暂无解析内容</span>

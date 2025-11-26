@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 import { Question, Status } from "@/lib/types"
 import { useProgressStore } from "@/lib/store"
 import { PenLine, Star } from "lucide-react"
+import { getImageUrl } from "@/lib/utils"
 
 interface Props {
     question: Question;
@@ -31,38 +32,7 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
         toggleStar(question.id);
     };
 
-    const getImageUrl = (url?: string) => {
-        if (!url) return undefined;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-
-        // 1. 优先使用题目自带的 sourceUrl
-        if (question.sourceUrl) {
-            const cleanBase = question.sourceUrl.replace(/\/$/, '');
-            const cleanPath = url.startsWith('/') ? url : `/${url}`;
-            return `${cleanBase}${cleanPath}`;
-        }
-
-        // 2. 其次使用全局设置的 repoBaseUrl (兼容旧版)
-        if (repoBaseUrl) {
-            const cleanBase = repoBaseUrl.replace(/\/$/, '');
-            const cleanPath = url.startsWith('/') ? url : `/${url}`;
-            return `${cleanBase}${cleanPath}`;
-        }
-
-        // 3. 最后尝试查找默认的远程源 (default-remote) 或第一个启用的非内置源
-        const remoteSource = repoSources.find(s => s.id === 'default-remote' && s.enabled)
-            || repoSources.find(s => !s.isBuiltin && s.enabled);
-
-        if (remoteSource?.url) {
-            const cleanBase = remoteSource.url.replace(/\/$/, '');
-            const cleanPath = url.startsWith('/') ? url : `/${url}`;
-            return `${cleanBase}${cleanPath}`;
-        }
-
-        return url;
-    }
-
-    const thumbUrl = getImageUrl(question.contentImgThumb);
+    const thumbUrl = getImageUrl(question.contentImgThumb, question, repoBaseUrl, repoSources);
 
     // 动态计算 UI 缩放比例，确保在不同高度下协调
     // 基准高度设为 160px，最小缩放 0.6
@@ -129,8 +99,7 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
                             src={thumbUrl}
                             alt={`Q${question.number}`}
                             className={cn(
-                                "w-full opacity-90 hover:opacity-100 transition-opacity dark:invert", // 增加 dark:invert
-                                // 统一使用 object-cover 以填满卡片，裁切掉多余部分
+                                "w-full opacity-90 hover:opacity-100 transition-opacity dark:invert",
                                 heightMode === 'fixed' ? "h-full object-cover" : "h-auto object-cover"
                             )}
                             loading="lazy"
@@ -142,7 +111,7 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
                     )}
                 </div>
 
-                {/* 笔记指示器 - 移到右下角或者题号旁边 */}
+                {/* 笔记指示器 */}
                 {hasNote && (
                     <div className="absolute top-1 right-6 z-10" title="有笔记">
                         <PenLine className="w-3 h-3 text-orange-500/70" />
