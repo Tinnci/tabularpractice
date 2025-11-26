@@ -46,17 +46,13 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
 
     const thumbUrl = getImageUrl(question.contentImgThumb);
 
-    // 计算 padding：紧凑模式下且自适应高度时为 0，否则根据模式选择
-    const getPaddingClass = () => {
-        if (heightMode === 'auto' && compactMode) return 'p-0';
-        if (heightMode === 'auto') return 'p-0.5';
-        return 'p-1.5';
-    };
+    // 计算 padding：始终为 0 以确保图片贴合
+    const getPaddingClass = () => 'p-0';
 
     return (
         <Card
             className={cn(
-                "cursor-pointer transition-all duration-300 border",
+                "cursor-pointer transition-all duration-300 border overflow-hidden", // 添加 overflow-hidden
                 statusColors[status],
                 isDimmed
                     ? "opacity-20 grayscale scale-90 hover:opacity-100 hover:grayscale-0 hover:scale-100"
@@ -66,18 +62,17 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
         >
             <CardContent
                 className={cn(
-                    "flex flex-col items-center justify-center relative",
-                    getPaddingClass(),
+                    "relative !p-0 !pb-0", // 强制移除所有内边距，包括 last-child 的 pb
                     heightMode === 'auto' ? "h-auto" : ""
                 )}
                 style={heightMode === 'fixed' ? { height: `${height}px` } : undefined}
             >
                 {/* 题号 - 左上角 */}
-                <div className="absolute top-1 left-1.5 text-xs font-bold opacity-50 z-10">
+                <div className="absolute top-1 left-1.5 text-xs font-bold opacity-50 z-10 mix-blend-multiply dark:mix-blend-difference">
                     {question.number}
                 </div>
 
-                {/* 收藏按钮 - 右上角 (替代原来的笔记位置，笔记移到旁边) */}
+                {/* 收藏按钮 - 右上角 */}
                 <div
                     className={cn(
                         "absolute top-1 right-1 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors z-10",
@@ -91,7 +86,7 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
 
                 {/* 缩略图展示 */}
                 <div className={cn(
-                    "w-full flex items-center justify-center overflow-hidden",
+                    "w-full overflow-hidden",
                     heightMode === 'fixed' ? "h-full" : ""
                 )}>
                     {thumbUrl ? (
@@ -100,8 +95,9 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
                             src={thumbUrl}
                             alt={`Q${question.number}`}
                             className={cn(
-                                "w-full opacity-80 hover:opacity-100 transition-opacity",
-                                heightMode === 'fixed' ? "h-full object-contain" : "h-auto object-cover"
+                                "w-full opacity-90 hover:opacity-100 transition-opacity",
+                                // 统一使用 object-cover 以填满卡片，裁切掉多余部分
+                                heightMode === 'fixed' ? "h-full object-cover" : "h-auto object-cover"
                             )}
                             loading="lazy"
                         />

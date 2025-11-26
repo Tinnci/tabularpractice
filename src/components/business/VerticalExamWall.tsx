@@ -39,17 +39,17 @@ export function VerticalExamWall({ papers, questions, onQuestionClick, highlight
                         return (
                             <div
                                 key={paper.id}
-                                className="flex-shrink-0 flex flex-col bg-white/50 dark:bg-slate-900/50 rounded-lg p-2 shadow-sm border border-slate-200/50"
+                                className="flex-shrink-0 flex flex-col bg-white/50 dark:bg-slate-900/50 rounded-lg p-1 shadow-sm border border-slate-200/50"
                                 style={{ width: `${appearance.cardWidth}px` }}
                             >
                                 {/* 年份表头：模仿粉笔字/手写体 */}
-                                <div className="sticky top-0 z-10 py-2 text-center font-mono text-xl font-bold text-slate-700 dark:text-slate-300 drop-shadow-sm">
+                                <div className="sticky top-0 z-10 py-1 text-center font-mono text-xl font-bold text-slate-700 dark:text-slate-300 drop-shadow-sm">
                                     {paper.year}
                                 </div>
 
                                 {/* 题目列表 - 竖向排列 */}
                                 <div
-                                    className="flex flex-col pb-2"
+                                    className="flex flex-col pb-1"
                                     style={{ gap: `${appearance.rowSpacing}px` }}
                                 >
                                     {paperQuestions.map((q) => (
