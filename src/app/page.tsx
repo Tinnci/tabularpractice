@@ -9,18 +9,16 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useTheme } from "next-themes";
 
 export default function DashboardPage() {
-  const stats = useDashboardStats();
+  const { total, subjects } = useDashboardStats();
   const { theme } = useTheme();
 
-  const chartData = [
-    { name: '数学', mastered: stats.math.mastered, confused: stats.math.confused, failed: stats.math.failed },
-    { name: '英语', mastered: stats.english.mastered, confused: stats.english.confused, failed: stats.english.failed },
-    { name: '政治', mastered: stats.politics.mastered, confused: stats.politics.confused, failed: stats.politics.failed },
-  ];
+  // 1. 生成图表数据
+  // 过滤掉题目数为 0 的科目
+  const activeSubjects = subjects.filter(s => s.total > 0);
 
-  const totalMastered = stats.total.mastered;
-  const totalFailed = stats.total.failed;
-  const totalConfused = stats.total.confused;
+  const totalMastered = total.mastered;
+  const totalFailed = total.failed;
+  const totalConfused = total.confused;
 
   return (
     <div className="container mx-auto p-6 space-y-8 max-w-7xl">
@@ -105,22 +103,28 @@ export default function DashboardPage() {
         <Card className="col-span-1 lg:col-span-2">
           <CardHeader>
             <CardTitle>学科进度分布</CardTitle>
-            <CardDescription>各科目掌握情况概览</CardDescription>
+            <CardDescription>
+              {activeSubjects.length === 0 ? "暂无题目数据" : "各科目掌握情况概览"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#333' : '#eee'} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
+              <BarChart
+                data={activeSubjects}
+                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                layout="vertical"
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme === 'dark' ? '#333' : '#eee'} />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
                 <Tooltip
                   cursor={{ fill: theme === 'dark' ? '#333' : '#f4f4f5' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />
                 <Legend />
-                <Bar dataKey="mastered" name="已斩" stackId="a" fill="#16a34a" radius={[0, 0, 4, 4]} />
+                <Bar dataKey="mastered" name="已斩" stackId="a" fill="#16a34a" radius={[0, 4, 4, 0]} />
                 <Bar dataKey="confused" name="懵圈" stackId="a" fill="#eab308" />
-                <Bar dataKey="failed" name="崩盘" stackId="a" fill="#dc2626" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="failed" name="崩盘" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -131,24 +135,27 @@ export default function DashboardPage() {
           <Card>
             <CardHeader><CardTitle>专项突破</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <Link href="/questions?subject=math" className="block">
-                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors group">
-                  <span className="font-medium">数学专项</span>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              {activeSubjects.map(subject => (
+                <Link
+                  key={subject.id}
+                  href={`/questions?subject=${subject.id}`}
+                  className="block"
+                >
+                  <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors group">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{subject.name}专项</span>
+                      <span className="text-xs text-muted-foreground">({subject.total}题)</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Link>
+              ))}
+
+              {activeSubjects.length === 0 && (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  还没有添加任何题目
                 </div>
-              </Link>
-              <Link href="/questions?subject=english" className="block">
-                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors group">
-                  <span className="font-medium">英语专项</span>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-              <Link href="/questions?subject=politics" className="block">
-                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors group">
-                  <span className="font-medium">政治专项</span>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
+              )}
             </CardContent>
           </Card>
         </div>

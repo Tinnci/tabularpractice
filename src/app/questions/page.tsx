@@ -51,6 +51,9 @@ export default function Home() {
 
   const { questionsIndex } = useQuestions();
   const { paperGroups: remotePaperGroups } = usePaperGroups();
+  // 优先使用远程加载的试卷组，如果加载中或失败则使用本地数据作为回退
+  const paperGroupsData = (remotePaperGroups || localPaperGroupsData) as PaperGroup[];
+
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
@@ -65,15 +68,20 @@ export default function Home() {
     }
 
     if (subject) {
-      // 假设 store 中有 setFilterSubject，或者我们需要根据 subject 切换 currentGroupId
-      // 这里假设 store 有 setFilterSubject，如果没有则需要添加或适配
-      // useProgressStore 定义中似乎有 filterSubject
-      useProgressStore.setState({ filterSubject: subject as 'math' | 'english' | 'politics' | 'all' });
-    }
-  }, [searchParams, setFilterStatus]);
+      // 动态查找匹配的试卷组
+      // 策略：找到第一个 ID 以 subject 开头的试卷组
+      // 例如：subject='math' -> 匹配 'math1', 'math2' -> 选中 'math1'
+      // 例如：subject='cs' -> 匹配 'cs-408' -> 选中 'cs-408'
+      const targetGroup = paperGroupsData.find(g => g.id.startsWith(subject));
 
-  // 优先使用远程加载的试卷组，如果加载中或失败则使用本地数据作为回退
-  const paperGroupsData = (remotePaperGroups || localPaperGroupsData) as PaperGroup[];
+      if (targetGroup) {
+        // 避免重复设置
+        if (useProgressStore.getState().currentGroupId !== targetGroup.id) {
+          setCurrentGroupId(targetGroup.id);
+        }
+      }
+    }
+  }, [searchParams, setFilterStatus, setCurrentGroupId, paperGroupsData]);
 
   // 动态生成 papers 列表
   const allPapers = useMemo(() => {
