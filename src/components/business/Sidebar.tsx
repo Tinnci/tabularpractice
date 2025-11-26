@@ -18,7 +18,9 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 
-export function SidebarContent({ className, onSelect }: { className?: string, onSelect?: () => void }) {
+import { Question } from "@/lib/types";
+
+export function SidebarContent({ className, onSelect, questions }: { className?: string, onSelect?: () => void, questions?: Question[] }) {
     const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
     const [isStatsOpen, setIsStatsOpen] = useState(true); // 控制底部统计展开
 
@@ -34,7 +36,8 @@ export function SidebarContent({ className, onSelect }: { className?: string, on
     }, [filterSubject]);
 
     const { questionsIndex } = useQuestions();
-    const totalQuestions = questionsIndex.length;
+    // 使用传入的 questions (上下文感知) 或回退到全部 questionsIndex
+    const displayQuestions = questions || questionsIndex;
 
     // 渲染叶子节点 (最终的知识点)
     const renderLeafNode = (node: TagNode) => {
@@ -89,7 +92,7 @@ export function SidebarContent({ className, onSelect }: { className?: string, on
                     </div>
                     <CollapsibleContent>
                         <div className="px-4 pb-4">
-                            <ProgressOverview total={totalQuestions} />
+                            <ProgressOverview questions={displayQuestions} />
                         </div>
                     </CollapsibleContent>
                 </Collapsible>
@@ -157,10 +160,10 @@ export function SidebarContent({ className, onSelect }: { className?: string, on
 }
 
 // 2. Desktop Sidebar (保持原样，但内部调用 SidebarContent)
-export function Sidebar() {
+export function Sidebar({ questions }: { questions?: Question[] }) {
     return (
         <div className="w-64 flex-shrink-0 border-r border-border h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col">
-            <SidebarContent />
+            <SidebarContent questions={questions} />
         </div>
     );
 }
