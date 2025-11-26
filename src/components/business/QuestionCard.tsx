@@ -22,7 +22,7 @@ const statusColors: Record<Status, string> = {
 
 export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
     const status = question.status || 'unanswered';
-    const { notes, stars, toggleStar, repoBaseUrl } = useProgressStore();
+    const { notes, stars, toggleStar, repoBaseUrl, repoSources } = useProgressStore();
     const hasNote = !!notes[question.id];
     const isStarred = !!stars[question.id];
 
@@ -35,11 +35,30 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
         if (!url) return undefined;
         if (url.startsWith('http') || url.startsWith('data:')) return url;
 
+        // 1. 优先使用题目自带的 sourceUrl
+        if (question.sourceUrl) {
+            const cleanBase = question.sourceUrl.replace(/\/$/, '');
+            const cleanPath = url.startsWith('/') ? url : `/${url}`;
+            return `${cleanBase}${cleanPath}`;
+        }
+
+        // 2. 其次使用全局设置的 repoBaseUrl (兼容旧版)
         if (repoBaseUrl) {
             const cleanBase = repoBaseUrl.replace(/\/$/, '');
             const cleanPath = url.startsWith('/') ? url : `/${url}`;
             return `${cleanBase}${cleanPath}`;
         }
+
+        // 3. 最后尝试查找默认的远程源 (default-remote) 或第一个启用的非内置源
+        const remoteSource = repoSources.find(s => s.id === 'default-remote' && s.enabled)
+            || repoSources.find(s => !s.isBuiltin && s.enabled);
+
+        if (remoteSource?.url) {
+            const cleanBase = remoteSource.url.replace(/\/$/, '');
+            const cleanPath = url.startsWith('/') ? url : `/${url}`;
+            return `${cleanBase}${cleanPath}`;
+        }
+
         return url;
     }
 
