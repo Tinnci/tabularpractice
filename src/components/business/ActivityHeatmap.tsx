@@ -1,5 +1,5 @@
 import { useProgressStore } from "@/lib/store";
-import ActivityCalendar from "react-activity-calendar";
+import { ActivityCalendar } from "react-activity-calendar";
 import { useMemo } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
