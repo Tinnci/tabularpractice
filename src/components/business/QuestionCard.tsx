@@ -9,6 +9,7 @@ interface Props {
     onClick: () => void;
     isDimmed?: boolean;
     height?: number;
+    heightMode?: 'fixed' | 'auto';
 }
 
 // 状态对应的 Tailwind 颜色类映射
@@ -19,7 +20,7 @@ const statusColors: Record<Status, string> = {
     failed: "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-900",
 }
 
-export function QuestionCard({ question, onClick, isDimmed = false, height = 64 }: Props) {
+export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
     const status = question.status || 'unanswered';
     const { notes, stars, toggleStar, repoBaseUrl } = useProgressStore();
     const hasNote = !!notes[question.id];
@@ -56,8 +57,11 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64 
             onClick={onClick}
         >
             <CardContent
-                className="p-1.5 flex flex-col items-center justify-center relative"
-                style={{ height: `${height}px` }}
+                className={cn(
+                    "p-1.5 flex flex-col items-center justify-center relative",
+                    heightMode === 'auto' ? "h-auto" : ""
+                )}
+                style={heightMode === 'fixed' ? { height: `${height}px` } : undefined}
             >
                 {/* 题号 - 左上角 */}
                 <div className="absolute top-1 left-1.5 text-xs font-bold opacity-50 z-10">
@@ -77,13 +81,19 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64 
                 </div>
 
                 {/* 缩略图展示 */}
-                <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                <div className={cn(
+                    "w-full flex items-center justify-center overflow-hidden",
+                    heightMode === 'fixed' ? "h-full" : ""
+                )}>
                     {thumbUrl ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                             src={thumbUrl}
                             alt={`Q${question.number}`}
-                            className="w-full h-full object-contain opacity-80 hover:opacity-100 transition-opacity"
+                            className={cn(
+                                "w-full opacity-80 hover:opacity-100 transition-opacity",
+                                heightMode === 'fixed' ? "h-full object-contain" : "h-auto object-cover"
+                            )}
                             loading="lazy"
                         />
                     ) : (

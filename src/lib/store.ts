@@ -67,12 +67,14 @@ interface ProgressState {
         cardHeight: number;
         columnSpacing: number;
         rowSpacing: number;
+        heightMode: 'fixed' | 'auto'; // 'fixed': 固定高度, 'auto': 根据图片内容自适应
     };
     setAppearance: (settings: Partial<{
         cardWidth: number;
         cardHeight: number;
         columnSpacing: number;
         rowSpacing: number;
+        heightMode: 'fixed' | 'auto';
     }>) => void;
 }
 
@@ -97,6 +99,7 @@ export const useProgressStore = create<ProgressState>()(
                 cardHeight: 64, // h-16 = 4rem = 64px (内容区域) -> 实际卡片高度会更高
                 columnSpacing: 16, // space-x-4 = 1rem = 16px
                 rowSpacing: 6, // space-y-1.5 = 0.375rem = 6px
+                heightMode: 'fixed', // 默认固定高度模式
             },
 
             setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),

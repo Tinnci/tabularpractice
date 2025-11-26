@@ -321,6 +321,23 @@ export function SettingsModal() {
                                         className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
                                         value={useProgressStore(state => state.appearance.cardHeight)}
                                         onChange={(e) => useProgressStore.getState().setAppearance({ cardHeight: parseInt(e.target.value) })}
+                                        disabled={useProgressStore(state => state.appearance.heightMode) === 'auto'}
+                                    />
+                                </div>
+
+                                {/* 高度模式切换 */}
+                                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                                    <div className="space-y-0.5">
+                                        <label className="text-xs font-medium leading-none">
+                                            自适应高度
+                                        </label>
+                                        <p className="text-xs text-muted-foreground">
+                                            根据图片内容调整卡片高度
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={useProgressStore(state => state.appearance.heightMode) === 'auto'}
+                                        onCheckedChange={(checked) => useProgressStore.getState().setAppearance({ heightMode: checked ? 'auto' : 'fixed' })}
                                     />
                                 </div>
 

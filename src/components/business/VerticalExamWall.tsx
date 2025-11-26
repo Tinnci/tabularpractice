@@ -59,6 +59,7 @@ export function VerticalExamWall({ papers, questions, onQuestionClick, highlight
                                             onClick={() => onQuestionClick(q.id)}
                                             isDimmed={!!highlightTagId && !q.tags.includes(highlightTagId)}
                                             height={appearance.cardHeight}
+                                            heightMode={appearance.heightMode}
                                         />
                                     ))}
 
