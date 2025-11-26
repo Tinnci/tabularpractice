@@ -272,6 +272,8 @@ export function SettingsModal() {
                                 <Settings className="h-4 w-4" />
                                 偏好设置
                             </h3>
+
+                            {/* 省流量模式 */}
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -285,6 +287,79 @@ export function SettingsModal() {
                                     checked={useProgressStore(state => state.lowDataMode)}
                                     onCheckedChange={(checked) => useProgressStore.getState().setLowDataMode(checked)}
                                 />
+                            </div>
+
+                            {/* 外观设置 */}
+                            <div className="space-y-3 pt-2">
+                                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">外观调整</h4>
+
+                                {/* 卡片宽度 */}
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between text-xs">
+                                        <span>卡片宽度</span>
+                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.cardWidth}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="100"
+                                        max="300"
+                                        step="4"
+                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                        value={useProgressStore(state => state.appearance.cardWidth)}
+                                        onChange={(e) => useProgressStore.getState().setAppearance({ cardWidth: parseInt(e.target.value) })}
+                                    />
+                                </div>
+
+                                {/* 卡片高度 */}
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between text-xs">
+                                        <span>卡片高度</span>
+                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.cardHeight}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="40"
+                                        max="120"
+                                        step="4"
+                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                        value={useProgressStore(state => state.appearance.cardHeight)}
+                                        onChange={(e) => useProgressStore.getState().setAppearance({ cardHeight: parseInt(e.target.value) })}
+                                    />
+                                </div>
+
+                                {/* 列间距 (年份间距) */}
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between text-xs">
+                                        <span>年份间距</span>
+                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.columnSpacing}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="48"
+                                        step="4"
+                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                        value={useProgressStore(state => state.appearance.columnSpacing)}
+                                        onChange={(e) => useProgressStore.getState().setAppearance({ columnSpacing: parseInt(e.target.value) })}
+                                    />
+                                </div>
+
+                                {/* 行间距 (题目间距) */}
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between text-xs">
+                                        <span>题目间距</span>
+                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.rowSpacing}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="24"
+                                        step="2"
+                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                        value={useProgressStore(state => state.appearance.rowSpacing)}
+                                        onChange={(e) => useProgressStore.getState().setAppearance({ rowSpacing: parseInt(e.target.value) })}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

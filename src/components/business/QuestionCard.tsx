@@ -8,6 +8,7 @@ interface Props {
     question: Question;
     onClick: () => void;
     isDimmed?: boolean;
+    height?: number;
 }
 
 // 状态对应的 Tailwind 颜色类映射
@@ -18,7 +19,7 @@ const statusColors: Record<Status, string> = {
     failed: "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-900",
 }
 
-export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
+export function QuestionCard({ question, onClick, isDimmed = false, height = 64 }: Props) {
     const status = question.status || 'unanswered';
     const { notes, stars, toggleStar, repoBaseUrl } = useProgressStore();
     const hasNote = !!notes[question.id];
@@ -54,9 +55,12 @@ export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
             )}
             onClick={onClick}
         >
-            <CardContent className="p-1.5 flex flex-col items-center justify-center h-16 relative">
+            <CardContent
+                className="p-1.5 flex flex-col items-center justify-center relative"
+                style={{ height: `${height}px` }}
+            >
                 {/* 题号 - 左上角 */}
-                <div className="absolute top-1 left-1.5 text-xs font-bold opacity-50">
+                <div className="absolute top-1 left-1.5 text-xs font-bold opacity-50 z-10">
                     {question.number}
                 </div>
 
@@ -90,13 +94,13 @@ export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
 
                 {/* 笔记指示器 - 移到右下角或者题号旁边 */}
                 {hasNote && (
-                    <div className="absolute top-1 right-6" title="有笔记">
+                    <div className="absolute top-1 right-6 z-10" title="有笔记">
                         <PenLine className="w-3 h-3 text-orange-500/70" />
                     </div>
                 )}
 
                 {question.tags.length > 0 && (
-                    <div className="absolute bottom-1 right-1 flex gap-0.5">
+                    <div className="absolute bottom-1 right-1 flex gap-0.5 z-10">
                         <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                     </div>
                 )}

@@ -61,6 +61,19 @@ interface ProgressState {
     // 省流量模式
     lowDataMode: boolean;
     setLowDataMode: (enabled: boolean) => void;
+    // 外观设置
+    appearance: {
+        cardWidth: number;
+        cardHeight: number;
+        columnSpacing: number;
+        rowSpacing: number;
+    };
+    setAppearance: (settings: Partial<{
+        cardWidth: number;
+        cardHeight: number;
+        columnSpacing: number;
+        rowSpacing: number;
+    }>) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -78,6 +91,14 @@ export const useProgressStore = create<ProgressState>()(
             filterStarred: false,
             repoBaseUrl: '', // 默认为空，使用本地数据
 
+            // 默认外观设置
+            appearance: {
+                cardWidth: 192, // w-48 = 12rem = 192px
+                cardHeight: 64, // h-16 = 4rem = 64px (内容区域) -> 实际卡片高度会更高
+                columnSpacing: 16, // space-x-4 = 1rem = 16px
+                rowSpacing: 6, // space-y-1.5 = 0.375rem = 6px
+            },
+
             setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),
             setFilterType: (type) => set({ filterType: type }),
             setFilterYear: (year) => set({ filterYear: year }),
@@ -86,6 +107,10 @@ export const useProgressStore = create<ProgressState>()(
             // 省流量模式
             lowDataMode: false,
             setLowDataMode: (enabled) => set({ lowDataMode: enabled }),
+
+            setAppearance: (settings) => set((state) => ({
+                appearance: { ...state.appearance, ...settings }
+            })),
 
             updateStatus: (id, status) =>
                 set((state) => ({
