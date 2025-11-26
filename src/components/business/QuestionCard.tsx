@@ -10,7 +10,6 @@ interface Props {
     isDimmed?: boolean;
     height?: number;
     heightMode?: 'fixed' | 'auto';
-    compactMode?: boolean;
 }
 
 // 状态对应的 Tailwind 颜色类映射
@@ -21,7 +20,7 @@ const statusColors: Record<Status, string> = {
     failed: "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-900",
 }
 
-export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed', compactMode = false }: Props) {
+export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
     const status = question.status || 'unanswered';
     const { notes, stars, toggleStar, repoBaseUrl } = useProgressStore();
     const hasNote = !!notes[question.id];
@@ -46,13 +45,14 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
 
     const thumbUrl = getImageUrl(question.contentImgThumb);
 
-    // 计算 padding：始终为 0 以确保图片贴合
-    const getPaddingClass = () => 'p-0';
+    // 动态计算 UI 缩放比例，确保在不同高度下协调
+    // 基准高度设为 160px，最小缩放 0.6
+    const uiScale = heightMode === 'fixed' ? Math.max(0.6, Math.min(1, height / 160)) : 1;
 
     return (
         <Card
             className={cn(
-                "cursor-pointer transition-all duration-300 border overflow-hidden p-0 gap-0", // 添加 p-0 gap-0 移除默认内边距
+                "group cursor-pointer transition-all duration-300 border overflow-hidden p-0 gap-0",
                 statusColors[status],
                 isDimmed
                     ? "opacity-20 grayscale scale-90 hover:opacity-100 hover:grayscale-0 hover:scale-100"
@@ -62,26 +62,41 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
         >
             <CardContent
                 className={cn(
-                    "relative !p-0 !pb-0", // 强制移除所有内边距，包括 last-child 的 pb
+                    "relative !p-0 !pb-0",
                     heightMode === 'auto' ? "h-auto" : ""
                 )}
                 style={heightMode === 'fixed' ? { height: `${height}px` } : undefined}
             >
-                {/* 题号 - 左上角 */}
-                <div className="absolute top-1 left-1.5 text-xs font-bold opacity-50 z-10 mix-blend-multiply dark:mix-blend-difference">
+                {/* 题号 - Glassmorphism 胶囊样式 */}
+                <div
+                    className="absolute rounded-md bg-white/90 dark:bg-slate-900/80 backdrop-blur-[2px] px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm z-20 border border-white/20 select-none"
+                    style={{
+                        top: '4%',
+                        left: '4%',
+                        transform: `scale(${uiScale})`,
+                        transformOrigin: 'top left'
+                    }}
+                >
                     {question.number}
                 </div>
 
-                {/* 收藏按钮 - 右上角 */}
+                {/* 收藏按钮 - Glassmorphism 圆形 */}
                 <div
                     className={cn(
-                        "absolute top-1 right-1 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors z-10",
-                        isStarred ? "text-yellow-500" : "text-muted-foreground/20 hover:text-yellow-500/50"
+                        "absolute p-1 rounded-full bg-white/90 dark:bg-slate-900/80 backdrop-blur-[2px] shadow-sm z-20 transition-all duration-200 border border-white/20 cursor-pointer",
+                        "hover:scale-110 hover:bg-white dark:hover:bg-black",
+                        isStarred ? "opacity-100" : "opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0"
                     )}
+                    style={{
+                        top: '4%',
+                        right: '4%',
+                        transform: `scale(${uiScale})`,
+                        transformOrigin: 'top right'
+                    }}
                     onClick={handleStarClick}
                     title="收藏题目"
                 >
-                    <Star className={cn("w-3.5 h-3.5", isStarred && "fill-yellow-500")} />
+                    <Star className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", isStarred ? "fill-yellow-500 text-yellow-500" : "text-slate-400 dark:text-slate-500")} />
                 </div>
 
                 {/* 缩略图展示 */}
