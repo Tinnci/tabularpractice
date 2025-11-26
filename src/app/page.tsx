@@ -5,12 +5,12 @@ import { Sidebar } from "@/components/business/Sidebar";
 import { QuestionModal } from "@/components/business/QuestionModal";
 import { GlobalSearch } from "@/components/business/GlobalSearch";
 import { Button } from "@/components/ui/button";
-import paperGroupsData from "@/data/paperGroups.json";
-import { useQuestions, usePaperDetail } from "@/hooks/useQuestions";
+import localPaperGroupsData from "@/data/paperGroups.json";
+import { useQuestions, usePaperGroups, usePaperDetail } from "@/hooks/useQuestions";
 import { Question, Status, PaperGroup } from "@/lib/types";
 import { useState, useEffect, useMemo } from "react";
 import { useProgressStore } from "@/lib/store";
-import { derivePapersFromQuestions } from "@/lib/utils";
+import { derivePapersFromQuestions, cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -42,20 +42,28 @@ export default function Home() {
     filterType,
     filterYear,
     filterStarred,
+    filterSubject,
     stars,
     setFilterStatus,
     setFilterType,
     setFilterYear,
+    repoBaseUrl,
+    setRepoBaseUrl,
+    repoSources,
   } = useProgressStore();
 
-  const { questionsIndex } = useQuestions();
+  const { questionsIndex, isLoading: isQuestionsLoading } = useQuestions();
+  const { paperGroups: remotePaperGroups } = usePaperGroups();
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
+  // 优先使用远程加载的试卷组，如果加载中或失败则使用本地数据作为回退
+  const paperGroupsData = (remotePaperGroups || localPaperGroupsData) as PaperGroup[];
+
   // 动态生成 papers 列表
   const allPapers = useMemo(() => {
-    return derivePapersFromQuestions(questionsIndex, paperGroupsData as PaperGroup[]);
-  }, [questionsIndex]);
+    return derivePapersFromQuestions(questionsIndex, paperGroupsData);
+  }, [questionsIndex, paperGroupsData]);
 
   // 合并进度状态到题目
   const mergedQuestions = useMemo(() => {

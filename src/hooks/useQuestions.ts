@@ -69,3 +69,29 @@ export function useTags() {
         isError: error
     };
 }
+
+export function usePaperGroups() {
+    const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
+    // 如果是本地模式，我们希望它 fetch 本地的 /data/paperGroups.json
+    // 注意：在 Next.js public 目录下，路径是 /data/paperGroups.json
+    const baseUrl = repoBaseUrl || '/data';
+
+    // 我们需要定义 PaperGroup 类型，或者从 types 导入
+    // 这里假设 fetcher 返回的是 PaperGroup[]
+    const { data, error, isLoading } = useSWR<any[]>(
+        `${baseUrl}/paperGroups.json`,
+        fetcher,
+        {
+            revalidateOnFocus: false,
+            // 如果 fetch 失败（比如远程源没有这个文件），我们可能需要回退机制
+            // 但 SWR 的 onErrorRetry 可以控制重试
+            shouldRetryOnError: false
+        }
+    );
+
+    return {
+        paperGroups: data,
+        isLoading,
+        isError: error
+    };
+}
