@@ -190,7 +190,7 @@ export default function Home() {
   const selectedQuestionMeta = filteredQuestions[currentIndex] || null;
 
   // 懒加载详情数据
-  const { paperDetail } = usePaperDetail(selectedQuestionMeta?.paperId || null);
+  const { paperDetail, isLoading: isPaperLoading } = usePaperDetail(selectedQuestionMeta?.paperId || null);
 
   // 合并详情数据
   const currentQuestion = useMemo(() => {
@@ -240,6 +240,41 @@ export default function Home() {
     const selfProposed = (paperGroupsData as PaperGroup[]).filter(g => g.type === 'self_proposed');
     return { unified, selfProposed };
   }, []);
+
+  // 图片预加载逻辑：自动预加载下一题的图片
+  useEffect(() => {
+    if (currentIndex === -1 || currentIndex >= filteredQuestions.length - 1) return;
+
+    const nextQuestion = filteredQuestions[currentIndex + 1];
+    if (!nextQuestion) return;
+
+    const preloadImage = (url?: string) => {
+      // 检查省流量模式
+      if (useProgressStore.getState().lowDataMode) return;
+
+      if (!url) return;
+      // 处理远程路径
+      let finalUrl = url;
+      if (!url.startsWith('http') && !url.startsWith('data:')) {
+        const repoBaseUrl = useProgressStore.getState().repoBaseUrl;
+        if (repoBaseUrl) {
+          const cleanBase = repoBaseUrl.replace(/\/$/, '');
+          const cleanPath = url.startsWith('/') ? url : `/${url}`;
+          finalUrl = `${cleanBase}${cleanPath}`;
+        }
+      }
+
+      const img = new Image();
+      img.src = finalUrl;
+    };
+
+    // 预加载题目、答案、解析图片
+    preloadImage(nextQuestion.contentImg || nextQuestion.imageUrl);
+    preloadImage(nextQuestion.answerImg);
+    preloadImage(nextQuestion.analysisImg);
+
+    // console.log(`[Preload] Prefetching images for next question: ${nextQuestion.number}`);
+  }, [currentIndex, filteredQuestions]);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]">
@@ -403,6 +438,7 @@ export default function Home() {
         onNext={() => handleNavigate('next')}
         hasPrev={hasPrev}
         hasNext={hasNext}
+        isLoading={isPaperLoading}
       />
 
       <ShortcutsHelpModal

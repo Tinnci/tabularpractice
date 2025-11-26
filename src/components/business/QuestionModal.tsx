@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import {
     Dialog,
     DialogContent,
@@ -20,7 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
-    ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star
+    ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
+    Loader2, ImageOff
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -39,6 +38,7 @@ interface Props {
     onNext: () => void;
     hasPrev: boolean;
     hasNext: boolean;
+    isLoading?: boolean;
 }
 
 type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note';
@@ -55,9 +55,53 @@ const MarkdownContent = ({ content }: { content: string }) => (
     </div>
 );
 
+// 远程图片加载组件
+const RemoteImage = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const { repoBaseUrl } = useProgressStore.getState();
+
+    const finalSrc = useMemo(() => {
+        if (!src) return '';
+        if (src.startsWith('http') || src.startsWith('data:')) return src;
+        if (repoBaseUrl) {
+            const cleanBase = repoBaseUrl.replace(/\/$/, '');
+            const cleanPath = src.startsWith('/') ? src : `/${src}`;
+            return `${cleanBase}${cleanPath}`;
+        }
+        return src;
+    }, [src, repoBaseUrl]);
+
+    if (!finalSrc) return null;
+
+    return (
+        <div className={cn("relative min-h-[100px] flex items-center justify-center bg-muted/10 rounded-lg overflow-hidden", className)}>
+            {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/10 z-10">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+            )}
+            {error ? (
+                <div className="flex flex-col items-center text-muted-foreground text-xs p-4">
+                    <ImageOff className="w-6 h-6 mb-2 opacity-50" />
+                    <span>图片加载失败</span>
+                </div>
+            ) : (
+                <img
+                    src={finalSrc}
+                    alt={alt}
+                    className={cn("max-w-full h-auto object-contain transition-opacity duration-300", loading ? "opacity-0" : "opacity-100")}
+                    onLoad={() => setLoading(false)}
+                    onError={() => { setLoading(false); setError(true); }}
+                />
+            )}
+        </div>
+    )
+}
+
 export function QuestionModal({
     isOpen, onClose, question, onUpdateStatus,
-    onPrev, onNext, hasPrev, hasNext
+    onPrev, onNext, hasPrev, hasNext, isLoading
 }: Props) {
 
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
@@ -127,9 +171,38 @@ export function QuestionModal({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
 
-    if (!question) return null;
+    // 预加载当前题目的答案和解析图片，确保点击切换时秒开
+    useEffect(() => {
+        if (!question) return;
 
-    const videoEmbedUrl = question.videoUrl ? getBilibiliEmbed(question.videoUrl) : null;
+        // 检查省流量模式
+        if (useProgressStore.getState().lowDataMode) return;
+
+        const preload = (url?: string) => {
+            if (!url) return;
+            const img = new Image();
+            // 处理远程路径逻辑与 RemoteImage 保持一致
+            if (!url.startsWith('http') && !url.startsWith('data:')) {
+                const repoBaseUrl = useProgressStore.getState().repoBaseUrl;
+                if (repoBaseUrl) {
+                    const cleanBase = repoBaseUrl.replace(/\/$/, '');
+                    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+                    img.src = `${cleanBase}${cleanPath}`;
+                    return;
+                }
+            }
+            img.src = url;
+        };
+
+        preload(question.answerImg);
+        preload(question.analysisImg);
+    }, [question]);
+
+    if (!question && !isLoading) return null;
+
+    // 如果正在加载，显示加载骨架屏或 Loading 状态，但保持 Dialog 结构
+    const currentQuestion = question || {} as Question;
+    const videoEmbedUrl = currentQuestion.videoUrl ? getBilibiliEmbed(currentQuestion.videoUrl) : null;
 
     const toggleView = (view: ViewType) => {
         const newSet = new Set(visibleViews);
@@ -143,33 +216,29 @@ export function QuestionModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            {/* 响应式 Dialog 尺寸
-        - 移动端: w-screen h-screen rounded-none (全屏)
-        - 桌面端: sm:max-w-5xl sm:h-[95vh] sm:rounded-xl (悬浮大窗)
-      */}
             <DialogContent className="w-screen h-screen sm:max-w-5xl sm:h-[95vh] flex flex-col p-0 gap-0 outline-none rounded-none sm:rounded-xl overflow-hidden">
-                {/* Accessibility: provide a DialogTitle for screen readers (hidden visually) */}
-                <DialogTitle className="sr-only">{`第 ${question.number} 题 · ${question.type}`}</DialogTitle>
+                <DialogTitle className="sr-only">{`第 ${currentQuestion.number} 题`}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
                 <div className="px-4 sm:px-6 py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2">
                     <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
                         <div className="flex flex-col shrink-0">
                             <span className="text-sm font-bold text-foreground flex items-center gap-2">
-                                <span className="sm:hidden">#{question.number}</span>
-                                <span className="hidden sm:inline">第 {question.number} 题</span>
+                                <span className="sm:hidden">#{currentQuestion.number}</span>
+                                <span className="hidden sm:inline">第 {currentQuestion.number} 题</span>
                                 {/* 收藏按钮 */}
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     className="h-5 w-5 text-muted-foreground hover:text-yellow-500"
-                                    onClick={() => toggleStar(question.id)}
+                                    onClick={() => currentQuestion.id && toggleStar(currentQuestion.id)}
                                     title={isStarred ? "取消收藏" : "收藏题目"}
+                                    disabled={isLoading}
                                 >
                                     <Star className={cn("w-4 h-4", isStarred && "fill-yellow-500 text-yellow-500")} />
                                 </Button>
                             </span>
-                            <span className="text-[10px] sm:text-xs text-muted-foreground">{question.type}</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">{currentQuestion.type}</span>
                         </div>
 
                         <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
@@ -219,7 +288,7 @@ export function QuestionModal({
                     </div>
                     {/* 标签 (桌面端显示) */}
                     <div className="hidden sm:flex items-center gap-2 flex-wrap">
-                        {(question.tagNames || question.tags).map((tag, index) => (
+                        {(currentQuestion.tagNames || currentQuestion.tags || []).map((tag, index) => (
                             <Badge
                                 key={index}
                                 variant="outline"
@@ -233,199 +302,161 @@ export function QuestionModal({
 
                 {/* 2. 内容瀑布流区域 */}
                 <div className="flex-1 min-h-0 bg-muted/30 relative">
-                    <ScrollArea className="h-full">
-                        <div className="p-4 sm:p-6 flex flex-col gap-6 max-w-4xl mx-auto pb-20">
-
-                            {/* 题目区域 */}
-                            {visibleViews.has('question') && (
-                                <div className="bg-card rounded-xl border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    {/* ... (keep existing header) */}
-                                    <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                        <BookOpen className="w-4 h-4" /> 题目描述
-                                        {/* ... (keep existing mobile tags) */}
-                                    </div>
-                                    <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
-                                        {question.contentMd ? (
-                                            <div className="w-full p-2">
-                                                <MarkdownContent content={question.contentMd} />
-                                            </div>
-                                        ) : (question.contentImg || question.imageUrl) ? (
-                                            <img
-                                                src={(() => {
-                                                    const imgUrl = question.contentImg || question.imageUrl;
-                                                    if (!imgUrl) return '';
-                                                    if (imgUrl.startsWith('http') || imgUrl.startsWith('data:')) return imgUrl;
-                                                    // 如果配置了远程题库，且图片是相对路径，则拼接远程地址
-                                                    const { repoBaseUrl } = useProgressStore.getState();
-                                                    console.log('[ImageDebug] Original:', imgUrl, 'RepoBase:', repoBaseUrl);
-                                                    if (repoBaseUrl) {
-                                                        const cleanBase = repoBaseUrl.replace(/\/$/, '');
-                                                        const cleanPath = imgUrl.startsWith('/') ? imgUrl : `/${imgUrl}`;
-                                                        const finalUrl = `${cleanBase}${cleanPath}`;
-                                                        console.log('[ImageDebug] Resolved:', finalUrl);
-                                                        return finalUrl;
-                                                    }
-                                                    return imgUrl;
-                                                })()}
-                                                alt="题目"
-                                                className="max-w-full h-auto object-contain dark:invert dark:hue-rotate-180 transition-all duration-300"
-                                            />
-                                        ) : (
-                                            <div className="text-muted-foreground text-sm">题目内容缺失</div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* ... (other sections will be handled in subsequent edits if needed, but for now focusing on Question Image) */}
-
-                            {/* 视频区域 */}
-                            {visibleViews.has('video') && videoEmbedUrl && (
-                                <div className="bg-black rounded-xl border shadow-sm overflow-hidden aspect-video animate-in fade-in slide-in-from-bottom-2 duration-300 ring-2 ring-blue-100">
-                                    <iframe
-                                        src={videoEmbedUrl}
-                                        className="w-full h-full"
-                                        scrolling="no"
-                                        frameBorder="0"
-                                        allowFullScreen
-                                        allow="autoplay; encrypted-media"
-                                        title="视频讲解"
-                                    />
-                                </div>
-                            )}
-
-                            {/* 答案区域 */}
-                            {visibleViews.has('answer') && (
-                                <div className="bg-card rounded-xl border border-green-100 dark:border-green-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
-                                        <Eye className="w-4 h-4" /> 参考答案
-                                    </div>
-                                    <div className="p-4 sm:p-6 flex justify-center">
-                                        {question.answerMd ? (
-                                            <div className="w-full text-left">
-                                                <MarkdownContent content={question.answerMd} />
-                                            </div>
-                                        ) : question.answerImg ? (
-                                            <img
-                                                src={(() => {
-                                                    const imgUrl = question.answerImg;
-                                                    if (!imgUrl) return '';
-                                                    if (imgUrl.startsWith('http') || imgUrl.startsWith('data:')) return imgUrl;
-                                                    const { repoBaseUrl } = useProgressStore.getState();
-                                                    if (repoBaseUrl) {
-                                                        const cleanBase = repoBaseUrl.replace(/\/$/, '');
-                                                        const cleanPath = imgUrl.startsWith('/') ? imgUrl : `/${imgUrl}`;
-                                                        return `${cleanBase}${cleanPath}`;
-                                                    }
-                                                    return imgUrl;
-                                                })()}
-                                                alt="答案"
-                                                className="max-w-full h-auto object-contain"
-                                            />
-                                        ) : question.answer ? (
-                                            <div className="text-2xl font-bold text-green-600 dark:text-green-400 py-4">
-                                                {question.answer}
-                                            </div>
-                                        ) : (
-                                            <span className="text-muted-foreground text-sm">暂无答案内容</span>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 解析区域 */}
-                            {visibleViews.has('analysis') && (
-                                <div className="bg-card rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
-                                        <FileText className="w-4 h-4" /> 详细解析
-                                    </div>
-                                    <div className="p-4 sm:p-6 flex justify-center">
-                                        {question.analysisMd ? (
-                                            <div className="w-full text-left">
-                                                <MarkdownContent content={question.analysisMd} />
-                                            </div>
-                                        ) : question.analysisImg ? (
-                                            <img
-                                                src={(() => {
-                                                    const imgUrl = question.analysisImg;
-                                                    if (!imgUrl) return '';
-                                                    if (imgUrl.startsWith('http') || imgUrl.startsWith('data:')) return imgUrl;
-                                                    const { repoBaseUrl } = useProgressStore.getState();
-                                                    console.log('[AnalysisDebug] Original:', imgUrl, 'RepoBase:', repoBaseUrl);
-                                                    if (repoBaseUrl) {
-                                                        const cleanBase = repoBaseUrl.replace(/\/$/, '');
-                                                        const cleanPath = imgUrl.startsWith('/') ? imgUrl : `/${imgUrl}`;
-                                                        const finalUrl = `${cleanBase}${cleanPath}`;
-                                                        console.log('[AnalysisDebug] Resolved:', finalUrl);
-                                                        return finalUrl;
-                                                    }
-                                                    return imgUrl;
-                                                })()}
-                                                alt="解析"
-                                                className="max-w-full h-auto object-contain"
-                                            />
-                                        ) : (
-                                            <span className="text-muted-foreground text-sm">暂无解析内容</span>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 笔记区域 */}
-                            {visibleViews.has('note') && (
-                                <div className="bg-card rounded-xl border border-orange-200 dark:border-orange-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    <div className="bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-orange-700 dark:text-orange-400">
-                                        <div className="flex items-center gap-2">
-                                            <PenLine className="w-4 h-4" /> 个人笔记
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs select-none">
-                                            <span
-                                                className={cn("cursor-pointer transition-colors", isEditingNote ? "text-muted-foreground" : "font-bold")}
-                                                onClick={() => setIsEditingNote(false)}
-                                            >
-                                                预览
-                                            </span>
-                                            <Switch
-                                                checked={isEditingNote}
-                                                onCheckedChange={setIsEditingNote}
-                                                className="scale-75 data-[state=checked]:bg-orange-500"
-                                            />
-                                            <span
-                                                className={cn("cursor-pointer transition-colors", isEditingNote ? "font-bold" : "text-muted-foreground")}
-                                                onClick={() => setIsEditingNote(true)}
-                                            >
-                                                编辑
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="p-0">
-                                        {isEditingNote ? (
-                                            <textarea
-                                                value={noteContent}
-                                                onChange={(e) => setNoteContent(e.target.value)}
-                                                onBlur={handleNoteBlur}
-                                                placeholder="在此输入 Markdown 笔记... (支持 **加粗**, - 列表, > 引用 等)"
-                                                className="w-full h-64 p-4 resize-y bg-transparent outline-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50"
-                                                autoFocus
-                                            />
-                                        ) : (
-                                            <div
-                                                className="p-4 sm:p-6 prose prose-sm dark:prose-invert max-w-none min-h-[100px] cursor-text"
-                                                onClick={() => setIsEditingNote(true)}
-                                            >
-                                                {noteContent ? (
-                                                    <MarkdownContent content={noteContent} />
-                                                ) : (
-                                                    <span className="text-muted-foreground/50 italic select-none">点击此处开始记录笔记...</span>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
+                    {isLoading ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground z-50 bg-background/50 backdrop-blur-sm">
+                            <Loader2 className="w-8 h-8 animate-spin" />
+                            <span className="text-sm">题目加载中...</span>
                         </div>
-                    </ScrollArea>
+                    ) : (
+                        <ScrollArea className="h-full">
+                            {/* key={currentQuestion.id} 强制 React 在题目切换时重新渲染整个内容区域，
+                                解决"切换下一题但内容未刷新"的问题，并重置图片加载状态 */}
+                            <div key={currentQuestion.id} className="p-4 sm:p-6 flex flex-col gap-6 max-w-4xl mx-auto pb-20 animate-in fade-in duration-300">
+
+                                {/* 题目区域 */}
+                                {visibleViews.has('question') && (
+                                    <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+                                        <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                            <BookOpen className="w-4 h-4" /> 题目描述
+                                        </div>
+                                        <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
+                                            {currentQuestion.contentMd ? (
+                                                <div className="w-full p-2">
+                                                    <MarkdownContent content={currentQuestion.contentMd} />
+                                                </div>
+                                            ) : (currentQuestion.contentImg || currentQuestion.imageUrl) ? (
+                                                <RemoteImage
+                                                    src={currentQuestion.contentImg || currentQuestion.imageUrl || ''}
+                                                    alt="题目"
+                                                />
+                                            ) : (
+                                                <div className="text-muted-foreground text-sm">题目内容缺失</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 视频区域 */}
+                                {visibleViews.has('video') && videoEmbedUrl && (
+                                    <div className="bg-black rounded-xl border shadow-sm overflow-hidden aspect-video ring-2 ring-blue-100">
+                                        <iframe
+                                            src={videoEmbedUrl}
+                                            className="w-full h-full"
+                                            scrolling="no"
+                                            frameBorder="0"
+                                            allowFullScreen
+                                            allow="autoplay; encrypted-media"
+                                            title="视频讲解"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* 答案区域 */}
+                                {visibleViews.has('answer') && (
+                                    <div className="bg-card rounded-xl border border-green-100 dark:border-green-900 shadow-sm overflow-hidden">
+                                        <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+                                            <Eye className="w-4 h-4" /> 参考答案
+                                        </div>
+                                        <div className="p-4 sm:p-6 flex justify-center">
+                                            {currentQuestion.answerMd ? (
+                                                <div className="w-full text-left">
+                                                    <MarkdownContent content={currentQuestion.answerMd} />
+                                                </div>
+                                            ) : currentQuestion.answerImg ? (
+                                                <RemoteImage
+                                                    src={currentQuestion.answerImg}
+                                                    alt="答案"
+                                                />
+                                            ) : currentQuestion.answer ? (
+                                                <div className="text-2xl font-bold text-green-600 dark:text-green-400 py-4">
+                                                    {currentQuestion.answer}
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted-foreground text-sm">暂无答案内容</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 解析区域 */}
+                                {visibleViews.has('analysis') && (
+                                    <div className="bg-card rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm overflow-hidden">
+                                        <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+                                            <FileText className="w-4 h-4" /> 详细解析
+                                        </div>
+                                        <div className="p-4 sm:p-6 flex justify-center">
+                                            {currentQuestion.analysisMd ? (
+                                                <div className="w-full text-left">
+                                                    <MarkdownContent content={currentQuestion.analysisMd} />
+                                                </div>
+                                            ) : currentQuestion.analysisImg ? (
+                                                <RemoteImage
+                                                    src={currentQuestion.analysisImg}
+                                                    alt="解析"
+                                                />
+                                            ) : (
+                                                <span className="text-muted-foreground text-sm">暂无解析内容</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 笔记区域 */}
+                                {visibleViews.has('note') && (
+                                    <div className="bg-card rounded-xl border border-orange-200 dark:border-orange-900 shadow-sm overflow-hidden">
+                                        <div className="bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-orange-700 dark:text-orange-400">
+                                            <div className="flex items-center gap-2">
+                                                <PenLine className="w-4 h-4" /> 个人笔记
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs select-none">
+                                                <span
+                                                    className={cn("cursor-pointer transition-colors", isEditingNote ? "text-muted-foreground" : "font-bold")}
+                                                    onClick={() => setIsEditingNote(false)}
+                                                >
+                                                    预览
+                                                </span>
+                                                <Switch
+                                                    checked={isEditingNote}
+                                                    onCheckedChange={setIsEditingNote}
+                                                    className="scale-75 data-[state=checked]:bg-orange-500"
+                                                />
+                                                <span
+                                                    className={cn("cursor-pointer transition-colors", isEditingNote ? "font-bold" : "text-muted-foreground")}
+                                                    onClick={() => setIsEditingNote(true)}
+                                                >
+                                                    编辑
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="p-0">
+                                            {isEditingNote ? (
+                                                <textarea
+                                                    value={noteContent}
+                                                    onChange={(e) => setNoteContent(e.target.value)}
+                                                    onBlur={handleNoteBlur}
+                                                    placeholder="在此输入 Markdown 笔记... (支持 **加粗**, - 列表, > 引用 等)"
+                                                    className="w-full h-64 p-4 resize-y bg-transparent outline-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50"
+                                                    autoFocus
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="p-4 sm:p-6 prose prose-sm dark:prose-invert max-w-none min-h-[100px] cursor-text"
+                                                    onClick={() => setIsEditingNote(true)}
+                                                >
+                                                    {noteContent ? (
+                                                        <MarkdownContent content={noteContent} />
+                                                    ) : (
+                                                        <span className="text-muted-foreground/50 italic select-none">点击此处开始记录笔记...</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                            </div>
+                        </ScrollArea>
+                    )}
                 </div>
 
                 {/* 3. 底部操作栏 - 响应式优化 */}
@@ -438,7 +469,7 @@ export function QuestionModal({
                                 <Button
                                     variant="ghost"
                                     onClick={onPrev}
-                                    disabled={!hasPrev}
+                                    disabled={!hasPrev || isLoading}
                                     size="icon"
                                     className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
@@ -458,7 +489,8 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => onUpdateStatus(question.id, 'mastered')}
+                                        onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'mastered')}
+                                        disabled={isLoading}
                                         className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
                                     >
                                         <Check className="w-4 h-4" />
@@ -473,7 +505,8 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => onUpdateStatus(question.id, 'confused')}
+                                        onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'confused')}
+                                        disabled={isLoading}
                                         className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
                                     >
                                         <HelpCircle className="w-4 h-4" />
@@ -488,7 +521,8 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => onUpdateStatus(question.id, 'failed')}
+                                        onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'failed')}
+                                        disabled={isLoading}
                                         className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
                                     >
                                         <X className="w-4 h-4" />
@@ -509,7 +543,7 @@ export function QuestionModal({
                                 <Button
                                     variant="ghost"
                                     onClick={onNext}
-                                    disabled={!hasNext}
+                                    disabled={!hasNext || isLoading}
                                     size="icon"
                                     className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >

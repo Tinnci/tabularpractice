@@ -26,6 +26,8 @@ import { useProgressStore } from "@/lib/store"
 import { toast } from "sonner"
 import { Status } from "@/lib/types"
 
+import { Switch } from "@/components/ui/switch"
+
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
     const [importConfirmOpen, setImportConfirmOpen] = useState(false)
@@ -261,6 +263,28 @@ export function SettingsModal() {
                                 <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
                                     提示：数据存储在浏览器的 LocalStorage 中。为了防止数据丢失（如清理缓存），建议定期导出备份。
                                 </p>
+                            </div>
+                        </div>
+
+                        {/* 偏好设置区块 */}
+                        <div className="space-y-4 pt-4 border-t border-border">
+                            <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                                <Settings className="h-4 w-4" />
+                                偏好设置
+                            </h3>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        省流量模式
+                                    </label>
+                                    <p className="text-xs text-muted-foreground">
+                                        开启后将关闭图片的自动预加载功能，仅在查看时加载。
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={useProgressStore(state => state.lowDataMode)}
+                                    onCheckedChange={(checked) => useProgressStore.getState().setLowDataMode(checked)}
+                                />
                             </div>
                         </div>
                     </div>

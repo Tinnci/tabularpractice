@@ -57,6 +57,10 @@ interface ProgressState {
     // 自定义题库源 URL
     repoBaseUrl: string;
     setRepoBaseUrl: (url: string) => void;
+
+    // 省流量模式
+    lowDataMode: boolean;
+    setLowDataMode: (enabled: boolean) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -78,6 +82,10 @@ export const useProgressStore = create<ProgressState>()(
             setFilterType: (type) => set({ filterType: type }),
             setFilterYear: (year) => set({ filterYear: year }),
             setFilterStarred: (starred) => set({ filterStarred: starred }),
+
+            // 省流量模式
+            lowDataMode: false,
+            setLowDataMode: (enabled) => set({ lowDataMode: enabled }),
 
             updateStatus: (id, status) =>
                 set((state) => ({
