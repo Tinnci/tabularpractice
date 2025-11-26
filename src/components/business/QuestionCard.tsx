@@ -20,7 +20,7 @@ const statusColors: Record<Status, string> = {
 
 export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
     const status = question.status || 'unanswered';
-    const { notes, stars, toggleStar } = useProgressStore();
+    const { notes, stars, toggleStar, repoBaseUrl } = useProgressStore();
     const hasNote = !!notes[question.id];
     const isStarred = !!stars[question.id];
 
@@ -28,6 +28,20 @@ export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
         e.stopPropagation();
         toggleStar(question.id);
     };
+
+    const getImageUrl = (url?: string) => {
+        if (!url) return undefined;
+        if (url.startsWith('http') || url.startsWith('data:')) return url;
+
+        if (repoBaseUrl) {
+            const cleanBase = repoBaseUrl.replace(/\/$/, '');
+            const cleanPath = url.startsWith('/') ? url : `/${url}`;
+            return `${cleanBase}${cleanPath}`;
+        }
+        return url;
+    }
+
+    const thumbUrl = getImageUrl(question.contentImgThumb);
 
     return (
         <Card
@@ -58,9 +72,20 @@ export function QuestionCard({ question, onClick, isDimmed = false }: Props) {
                     <Star className={cn("w-3.5 h-3.5", isStarred && "fill-yellow-500")} />
                 </div>
 
-                {/* 简化的内容展示 */}
-                <div className="text-muted-foreground/20 text-lg font-bold select-none">
-                    {/* 可以放简短的类型标识，或者干脆留白 */}
+                {/* 缩略图展示 */}
+                <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                    {thumbUrl ? (
+                        <img
+                            src={thumbUrl}
+                            alt={`Q${question.number}`}
+                            className="w-full h-full object-contain opacity-80 hover:opacity-100 transition-opacity"
+                            loading="lazy"
+                        />
+                    ) : (
+                        <div className="text-muted-foreground/20 text-lg font-bold select-none">
+                            Q{question.number}
+                        </div>
+                    )}
                 </div>
 
                 {/* 笔记指示器 - 移到右下角或者题号旁边 */}

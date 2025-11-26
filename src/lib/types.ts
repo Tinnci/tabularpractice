@@ -33,6 +33,7 @@ export interface Question {
 
   // 新增：更详细的内容字段
   contentImg?: string;  // 题目图片 (主要内容)
+  contentImgThumb?: string; // 题目缩略图 (用于首页预览)
   answerImg?: string;   // 答案图片 (纯结果)
   analysisImg?: string; // 解析图片 (详细步骤)
 
