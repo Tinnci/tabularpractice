@@ -14,12 +14,19 @@ export function DashboardOnboarding({ subjects }: Props) {
 
             {/* 1. Welcome Hero */}
             <div className="text-center space-y-6 py-12">
-                <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
-                    <Sparkles className="w-8 h-8 text-primary" />
+
+                {/* 匹配 Navbar 的 Logo - 放大版 */}
+                <div className="flex justify-center mb-6">
+                    <div className="h-20 w-20 bg-primary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 rotate-3 hover:rotate-6 transition-all duration-300">
+                        <span className="text-primary-foreground font-bold text-3xl tracking-tighter">TP</span>
+                    </div>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-                    欢迎来到 TabularPractice
+
+                {/* 匹配 Navbar 的文字风格 - 放大版 */}
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
+                    Tabular<span className="font-light text-muted-foreground">Practice</span>
                 </h1>
+
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                     您的智能化真题刷题助手。
                     <br />
