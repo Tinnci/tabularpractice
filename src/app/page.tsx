@@ -37,22 +37,22 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 p-10 opacity-5">
             <Trophy className="w-64 h-64" />
           </div>
-          <CardContent className="p-8 flex flex-col justify-center h-full relative z-10">
-            <h1 className="text-4xl font-bold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+          <CardContent className="p-4 sm:p-8 flex flex-col justify-center h-full relative z-10">
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
               准备好迎接挑战了吗？
             </h1>
-            <p className="text-muted-foreground mb-8 text-lg max-w-xl">
+            <p className="text-muted-foreground mb-6 sm:mb-8 text-base sm:text-lg max-w-xl">
               保持节奏，每天进步一点点。你已经斩获了 <span className="font-bold text-foreground">{totalMastered}</span> 道真题。
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Link href="/questions">
-                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
+                <Button size="lg" className="w-full sm:w-auto gap-2 shadow-lg hover:shadow-xl transition-all">
                   <PlayCircle className="w-5 h-5" />
                   继续刷题
                 </Button>
               </Link>
               <Link href="/questions?status=unanswered">
-                <Button size="lg" variant="outline" className="gap-2 bg-background/50 backdrop-blur-sm">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 bg-background/50 backdrop-blur-sm">
                   <Target className="w-5 h-5" />
                   今日目标
                 </Button>
@@ -116,7 +116,7 @@ export default function DashboardPage() {
               {activeSubjects.length === 0 ? "暂无题目数据" : "各科目掌握情况概览"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="h-[350px]">
+          <CardContent className="h-[250px] sm:h-[350px]">
             <div className="h-full w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart

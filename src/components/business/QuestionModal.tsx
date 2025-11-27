@@ -207,12 +207,12 @@ export function QuestionModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="w-screen h-[100dvh] sm:max-w-5xl sm:h-[95vh] flex flex-col p-0 gap-0 outline-none rounded-none sm:rounded-xl overflow-hidden">
+            <DialogContent className="w-screen max-w-[100vw] h-[100dvh] sm:max-w-5xl sm:h-[95vh] flex flex-col p-0 gap-0 outline-none rounded-none sm:rounded-xl overflow-hidden">
                 <DialogTitle className="sr-only">{`第 ${currentQuestion.number} 题`}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
-                <div className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 h-14 sm:h-auto">
-                    <div className="flex items-center gap-2 sm:gap-4 overflow-hidden flex-1">
+                <div className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 h-14 sm:h-auto max-w-[100vw] overflow-hidden">
+                    <div className="flex items-center gap-2 sm:gap-4 overflow-hidden flex-1 min-w-0">
                         <div className="flex flex-col shrink-0">
                             <span className="text-sm font-bold text-foreground flex items-center gap-1 sm:gap-2">
                                 <span className="sm:hidden text-muted-foreground">#</span>

@@ -36,11 +36,11 @@ export function Navbar() {
                         </span>
                     </Link>
 
-                    <nav className="flex items-center space-x-6 text-sm font-medium ml-auto app-region-no-drag">
-                        <Link href="/" className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
+                    <nav className="flex items-center space-x-2 sm:space-x-6 text-sm font-medium ml-auto app-region-no-drag">
+                        <Link href="/" className={cn("transition-colors hover:text-foreground/80 hidden sm:inline-block", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
                             Dashboard
                         </Link>
-                        <Link href="/questions" className={cn("transition-colors hover:text-foreground/80", pathname.startsWith("/questions") ? "text-foreground" : "text-foreground/60")}>
+                        <Link href="/questions" className={cn("transition-colors hover:text-foreground/80 hidden sm:inline-block", pathname.startsWith("/questions") ? "text-foreground" : "text-foreground/60")}>
                             Questions
                         </Link>
                         <SettingsModal />

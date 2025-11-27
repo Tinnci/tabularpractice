@@ -48,7 +48,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                 key={node.id}
                 variant="ghost"
                 className={cn(
-                    "w-full justify-start text-sm h-9 pl-9 font-normal relative",
+                    "w-full justify-start text-sm h-8 md:h-9 pl-9 font-normal relative",
                     isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground"
                 )}
                 onClick={() => {
@@ -73,7 +73,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     return (
         <div className={cn("flex flex-col h-full bg-background", className)}>
             {/* 标题区 */}
-            <div className="p-4 border-b border-border bg-muted/10 shrink-0">
+            <div className="p-3 md:p-4 border-b border-border bg-muted/10 shrink-0">
                 <h2 className="font-semibold text-lg flex items-center gap-2 text-foreground tracking-tight">
                     <Layers className="w-5 h-5 text-primary" />
                     {sidebarTitle}
@@ -83,7 +83,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
             {/* 顶部统计区 - 可折叠 (移到上方) */}
             <div className="border-b border-border bg-muted/5 shrink-0">
                 <Collapsible open={isStatsOpen} onOpenChange={setIsStatsOpen}>
-                    <div className="flex items-center justify-between p-2 px-4">
+                    <div className="flex items-center justify-between p-2 px-3 md:px-4">
                         <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-xs text-muted-foreground hover:text-foreground">
                                 <span className="flex items-center gap-2"><PieChart className="w-3 h-3" /> 刷题进度</span>
@@ -101,11 +101,11 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
 
             {/* 滚动列表区 */}
             <ScrollArea className="flex-1 min-h-0">
-                <div className="p-3 space-y-1 pb-10">
+                <div className="p-2 md:p-3 space-y-1 pb-10">
                     <Button
                         variant={selectedTagId === null ? "secondary" : "ghost"}
                         className={cn(
-                            "w-full justify-start text-foreground font-medium mb-4",
+                            "w-full justify-start text-foreground font-medium mb-2 md:mb-4",
                             selectedTagId === null && "bg-accent shadow-sm"
                         )}
                         onClick={() => { setSelectedTagId(null); onSelect?.(); }}
