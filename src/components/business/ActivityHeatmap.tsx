@@ -1,6 +1,8 @@
 import { useProgressStore } from "@/lib/store";
 import { ActivityCalendar } from "react-activity-calendar";
+import * as React from "react";
 import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function ActivityHeatmap() {
@@ -110,11 +112,19 @@ export function ActivityHeatmap() {
                         }}
                         renderBlock={(block, activity) => (
                             <TooltipProvider>
-                                <Tooltip>
+                                <Tooltip delayDuration={0}>
                                     <TooltipTrigger asChild>
-                                        {block}
+                                        {React.cloneElement(block as React.ReactElement<{ className?: string, style?: React.CSSProperties }>, {
+                                            className: cn(
+                                                "transition-all duration-200 ease-in-out origin-center hover:scale-125 hover:z-10 cursor-pointer",
+                                                // 可选：给有数据的格子加一点阴影，强调“成就感”
+                                                activity.count > 0 ? "hover:drop-shadow-sm" : ""
+                                            ),
+                                            // 修复：SVG 变换可能需要 specific style 覆盖
+                                            style: { ...block.props.style, transformBox: 'fill-box' }
+                                        })}
                                     </TooltipTrigger>
-                                    <TooltipContent>
+                                    <TooltipContent side="top" className="text-xs font-mono">
                                         {activity.date}: {activity.count} 题
                                     </TooltipContent>
                                 </Tooltip>

@@ -107,12 +107,19 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
             {/* 触发按钮 (放在 Navbar) */}
             <Button
                 variant="outline"
-                className="relative h-9 w-9 p-0 xl:w-64 xl:justify-start xl:px-4 xl:py-2 overflow-hidden transition-all duration-300 ease-in-out hover:w-64 hover:justify-start hover:px-4 hover:bg-muted/50 group"
+                // 1. 修改父级容器：添加 active:scale-95 提供点击反馈
+                className="relative h-9 w-9 p-0 xl:w-64 xl:justify-start xl:px-4 xl:py-2 overflow-hidden transition-all duration-300 ease-in-out hover:w-64 hover:justify-start hover:px-4 hover:bg-muted/50 group active:scale-95"
                 onClick={() => setOpen(true)}
             >
-                <Search className="h-4 w-4 shrink-0 opacity-50 xl:mr-2 group-hover:mr-2" />
-                <span className="hidden xl:inline-flex group-hover:inline-flex whitespace-nowrap">搜索题目...</span>
-                <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 xl:flex group-hover:flex">
+                {/* 2. 修改图标：添加 group-hover:-rotate-12 group-hover:scale-110 */}
+                {/* 这会让放大镜在悬停时微微向左旋转并放大，显得很顽皮 */}
+                <Search className="h-4 w-4 shrink-0 opacity-50 xl:mr-2 group-hover:mr-2 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-12 group-hover:text-foreground" />
+
+                <span className="hidden xl:inline-flex group-hover:inline-flex whitespace-nowrap transition-colors duration-300 group-hover:text-foreground">搜索题目...</span>
+
+                {/* 3. 修改 KBD 徽标：添加 translate-x 动画 */}
+                {/* 原本是 hidden -> flex 可能导致布局跳动，建议保持 flex 但控制 opacity 和 position */}
+                <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium xl:flex group-hover:flex transition-all duration-300 opacity-50 group-hover:opacity-100 group-hover:bg-background">
                     <span className="text-xs">⌘</span>K
                 </kbd>
             </Button>
@@ -142,34 +149,45 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
                                         setOpen(false);
                                         setSearch("");
                                     }}
-                                    className="flex items-center gap-2 py-3"
+                                    // 修改 className：
+                                    // 1. group: 为了让子元素响应父级状态
+                                    // 2. aria-selected:bg-accent/50: 稍微调淡背景，把视觉重心让给左侧指示条
+                                    // 3. relative overflow-hidden: 为指示条做准备
+                                    className="flex items-center gap-2 py-3 cursor-pointer aria-selected:bg-accent/50 aria-selected:text-accent-foreground relative overflow-hidden group transition-all duration-200"
                                 >
-                                    <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    {/* 新增：左侧指示条 */}
+                                    {/* 默认在左侧 -4px 的位置 (看不见)，选中时移到 0px (显示) */}
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary transition-transform duration-200 -translate-x-full aria-selected:translate-x-0" />
 
-                                    {/* 年份 */}
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="h-3 w-3 text-muted-foreground" />
-                                        <span className="font-mono text-sm text-muted-foreground">{paper?.year}</span>
-                                    </div>
+                                    {/* 原有内容 - 可以加一点左移效果让避让指示条 */}
+                                    <div className="flex items-center gap-2 flex-1 transition-transform duration-200 aria-selected:translate-x-1">
+                                        <BookOpen className="mr-2 h-4 w-4 text-muted-foreground group-aria-selected:text-primary transition-colors" />
 
-                                    {/* 题号 */}
-                                    <span className="font-semibold text-foreground">第 {question.number} 题</span>
-
-                                    {/* 题型 */}
-                                    <Badge variant="outline" className="text-xs">
-                                        {question.type === 'choice' ? '选择' : question.type === 'fill' ? '填空' : '解答'}
-                                    </Badge>
-
-                                    {/* 第一个标签 */}
-                                    {question.tags.length > 0 && (
-                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                            <Tag className="h-3 w-3" />
-                                            <span className="truncate max-w-[150px]">{question.tags[0]}</span>
+                                        {/* 年份 */}
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                                            <span className="font-mono text-sm text-muted-foreground">{paper?.year}</span>
                                         </div>
-                                    )}
 
-                                    {/* 状态 */}
-                                    {getStatusBadge(question.id)}
+                                        {/* 题号 */}
+                                        <span className="font-semibold text-foreground">第 {question.number} 题</span>
+
+                                        {/* 题型 */}
+                                        <Badge variant="outline" className="text-xs group-aria-selected:border-primary/30 transition-colors">
+                                            {question.type === 'choice' ? '选择' : question.type === 'fill' ? '填空' : '解答'}
+                                        </Badge>
+
+                                        {/* 第一个标签 */}
+                                        {question.tags.length > 0 && (
+                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                <Tag className="h-3 w-3" />
+                                                <span className="truncate max-w-[150px]">{question.tags[0]}</span>
+                                            </div>
+                                        )}
+
+                                        {/* 状态 */}
+                                        {getStatusBadge(question.id)}
+                                    </div>
                                 </CommandItem>
                             ))}
                         </CommandGroup>
