@@ -2,11 +2,16 @@
 
 import { useProgressStore } from "@/lib/store";
 import { Question, Status } from "@/lib/types";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function ProgressOverview({ questions }: { questions: Question[] }) {
     const { theme } = useTheme();
@@ -90,33 +95,60 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                 <div className="md:hidden space-y-1.5">
                     <div className="h-2 w-full flex rounded-full overflow-hidden bg-muted/30">
                         {/* 已斩 */}
-                        <div
-                            className={cn("h-full bg-green-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'mastered' && "brightness-110")}
-                            style={{ width: `${(stats.mastered / total) * 100}%` }}
-                            onClick={() => handleFilterClick('mastered')}
-                            title={`已斩: ${stats.mastered}`}
-                        />
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className={cn("h-full bg-green-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'mastered' && "brightness-110")}
+                                    style={{ width: `${(stats.mastered / total) * 100}%` }}
+                                    onClick={() => handleFilterClick('mastered')}
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>已斩: {stats.mastered} ({Math.round((stats.mastered / total) * 100)}%)</p>
+                            </TooltipContent>
+                        </Tooltip>
+
                         {/* 懵圈 */}
-                        <div
-                            className={cn("h-full bg-yellow-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'confused' && "brightness-110")}
-                            style={{ width: `${(stats.confused / total) * 100}%` }}
-                            onClick={() => handleFilterClick('confused')}
-                            title={`懵圈: ${stats.confused}`}
-                        />
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className={cn("h-full bg-yellow-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'confused' && "brightness-110")}
+                                    style={{ width: `${(stats.confused / total) * 100}%` }}
+                                    onClick={() => handleFilterClick('confused')}
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>懵圈: {stats.confused} ({Math.round((stats.confused / total) * 100)}%)</p>
+                            </TooltipContent>
+                        </Tooltip>
+
                         {/* 崩盘 */}
-                        <div
-                            className={cn("h-full bg-red-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'failed' && "brightness-110")}
-                            style={{ width: `${(stats.failed / total) * 100}%` }}
-                            onClick={() => handleFilterClick('failed')}
-                            title={`崩盘: ${stats.failed}`}
-                        />
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className={cn("h-full bg-red-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'failed' && "brightness-110")}
+                                    style={{ width: `${(stats.failed / total) * 100}%` }}
+                                    onClick={() => handleFilterClick('failed')}
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>崩盘: {stats.failed} ({Math.round((stats.failed / total) * 100)}%)</p>
+                            </TooltipContent>
+                        </Tooltip>
+
                         {/* 剩余 (透明/背景色) */}
-                        <div
-                            className={cn("h-full bg-muted transition-all cursor-pointer hover:opacity-80", filterStatus === 'unanswered' && "bg-muted-foreground/20")}
-                            style={{ width: `${(stats.unanswered / total) * 100}%` }}
-                            onClick={() => handleFilterClick('unanswered')}
-                            title={`未做: ${stats.unanswered}`}
-                        />
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className={cn("h-full bg-muted transition-all cursor-pointer hover:opacity-80", filterStatus === 'unanswered' && "bg-muted-foreground/20")}
+                                    style={{ width: `${(stats.unanswered / total) * 100}%` }}
+                                    onClick={() => handleFilterClick('unanswered')}
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>未做: {stats.unanswered} ({Math.round((stats.unanswered / total) * 100)}%)</p>
+                            </TooltipContent>
+                        </Tooltip>
                     </div>
 
                     {/* 紧凑型数据统计 */}
@@ -185,7 +217,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                         );
                                     })}
                                 </Pie>
-                                <Tooltip
+                                <RechartsTooltip
                                     contentStyle={{
                                         borderRadius: '8px',
                                         backgroundColor: 'hsl(var(--popover))',

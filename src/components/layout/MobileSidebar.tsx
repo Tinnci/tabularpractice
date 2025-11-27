@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Menu, LayoutDashboard, ListTodo } from "lucide-react";
 import Link from "next/link";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { SidebarContent } from "@/components/business/Sidebar";
 import { useProgressStore } from "@/lib/store";
 
@@ -12,12 +17,19 @@ export function MobileSidebar() {
 
     return (
         <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
-            <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden -ml-2 mr-2">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">打开目录</span>
-                </Button>
-            </SheetTrigger>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="md:hidden -ml-2 mr-2">
+                            <Menu className="h-5 w-5" />
+                            <span className="sr-only">打开目录</span>
+                        </Button>
+                    </SheetTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>打开目录</p>
+                </TooltipContent>
+            </Tooltip>
 
             <SheetContent side="left" className="p-0 w-[280px] border-r border-border flex flex-col h-full">
                 {/* Shadcn Sheet (Dialog) 要求必须有 Title 和 Description 以符合无障碍标准。

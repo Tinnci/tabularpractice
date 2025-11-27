@@ -15,6 +15,11 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 
 import { Question } from "@/lib/types";
@@ -44,35 +49,41 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     const renderLeafNode = (node: TagNode) => {
         const isSelected = selectedTagId === node.id;
         return (
-            <Button
-                key={node.id}
-                variant="ghost"
-                className={cn(
-                    "w-full justify-start text-sm h-7 md:h-8 pl-8 font-normal relative group/leaf",
-                    isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground"
-                )}
-                onClick={() => {
-                    if (isSelected) {
-                        setSelectedTagId(null);
-                    } else {
-                        setSelectedTagId(node.id);
-                    }
-                    onSelect?.();
-                }}
-            >
-                {/* 选中指示条 */}
-                {isSelected && (
-                    <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r-full" />
-                )}
+            <Tooltip key={node.id} delayDuration={500}>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        className={cn(
+                            "w-full justify-start text-sm h-7 md:h-8 pl-8 font-normal relative group/leaf",
+                            isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => {
+                            if (isSelected) {
+                                setSelectedTagId(null);
+                            } else {
+                                setSelectedTagId(node.id);
+                            }
+                            onSelect?.();
+                        }}
+                    >
+                        {/* 选中指示条 */}
+                        {isSelected && (
+                            <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r-full" />
+                        )}
 
-                {/* 点状图标 */}
-                <div className={cn(
-                    "mr-2.5 h-1.5 w-1.5 rounded-full transition-all shrink-0",
-                    isSelected ? "bg-primary scale-110" : "bg-muted-foreground/40 group-hover/leaf:bg-muted-foreground/70"
-                )} />
+                        {/* 点状图标 */}
+                        <div className={cn(
+                            "mr-2.5 h-1.5 w-1.5 rounded-full transition-all shrink-0",
+                            isSelected ? "bg-primary scale-110" : "bg-muted-foreground/40 group-hover/leaf:bg-muted-foreground/70"
+                        )} />
 
-                <span className="truncate leading-none">{node.label}</span>
-            </Button>
+                        <span className="truncate leading-none">{node.label}</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-[200px] break-words">
+                    {node.label}
+                </TooltipContent>
+            </Tooltip>
         );
     };
 
@@ -91,10 +102,19 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                 <Collapsible open={isStatsOpen} onOpenChange={setIsStatsOpen}>
                     <div className="flex items-center justify-between p-2 px-3 md:px-4">
                         <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-xs text-muted-foreground hover:text-foreground">
-                                <span className="flex items-center gap-2"><PieChart className="w-3 h-3" /> 刷题进度</span>
-                                <ChevronRight className={cn("w-3 h-3 transition-transform", isStatsOpen && "rotate-90")} />
-                            </Button>
+                            <div className="w-full">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-xs text-muted-foreground hover:text-foreground">
+                                            <span className="flex items-center gap-2"><PieChart className="w-3 h-3" /> 刷题进度</span>
+                                            <ChevronRight className={cn("w-3 h-3 transition-transform", isStatsOpen && "rotate-90")} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{isStatsOpen ? "收起统计" : "展开统计"}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
                         </CollapsibleTrigger>
                     </div>
                     <CollapsibleContent>
