@@ -207,7 +207,7 @@ export function QuestionModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="w-screen h-screen sm:max-w-5xl sm:h-[95vh] flex flex-col p-0 gap-0 outline-none rounded-none sm:rounded-xl overflow-hidden">
+            <DialogContent className="w-screen h-[100dvh] sm:max-w-5xl sm:h-[95vh] flex flex-col p-0 gap-0 outline-none rounded-none sm:rounded-xl overflow-hidden">
                 <DialogTitle className="sr-only">{`第 ${currentQuestion.number} 题`}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
