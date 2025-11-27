@@ -4,6 +4,11 @@ import { Question, Status } from "@/lib/types"
 import { useProgressStore } from "@/lib/store"
 import { PenLine, Star } from "lucide-react"
 import { getImageUrl } from "@/lib/utils"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface Props {
     question: Question;
@@ -74,23 +79,29 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
                 </div>
 
                 {/* 收藏按钮 - Glassmorphism 圆形 */}
-                <div
-                    className={cn(
-                        "absolute p-1 rounded-full bg-white/90 dark:bg-slate-900/80 backdrop-blur-[2px] shadow-sm z-20 transition-all duration-200 border border-white/20 cursor-pointer",
-                        "hover:scale-110 hover:bg-white dark:hover:bg-black",
-                        isStarred ? "opacity-100" : "opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0"
-                    )}
-                    style={{
-                        top: '4%',
-                        right: '4%',
-                        transform: `scale(${uiScale})`,
-                        transformOrigin: 'top right'
-                    }}
-                    onClick={handleStarClick}
-                    title="收藏题目"
-                >
-                    <Star className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", isStarred ? "fill-yellow-500 text-yellow-500" : "text-slate-400 dark:text-slate-500")} />
-                </div>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div
+                            className={cn(
+                                "absolute p-1 rounded-full bg-white/90 dark:bg-slate-900/80 backdrop-blur-[2px] shadow-sm z-20 transition-all duration-200 border border-white/20 cursor-pointer",
+                                "hover:scale-110 hover:bg-white dark:hover:bg-black",
+                                isStarred ? "opacity-100" : "opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0"
+                            )}
+                            style={{
+                                top: '4%',
+                                right: '4%',
+                                transform: `scale(${uiScale})`,
+                                transformOrigin: 'top right'
+                            }}
+                            onClick={handleStarClick}
+                        >
+                            <Star className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", isStarred ? "fill-yellow-500 text-yellow-500" : "text-slate-400 dark:text-slate-500")} />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>收藏题目</p>
+                    </TooltipContent>
+                </Tooltip>
 
                 {/* 缩略图展示 */}
                 <div className={cn(
@@ -117,9 +128,16 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
 
                 {/* 笔记指示器 */}
                 {hasNote && (
-                    <div className="absolute top-1 right-6 z-10" title="有笔记">
-                        <PenLine className="w-3 h-3 text-orange-500/70" />
-                    </div>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="absolute top-1 right-6 z-10">
+                                <PenLine className="w-3 h-3 text-orange-500/70" />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>有笔记</p>
+                        </TooltipContent>
+                    </Tooltip>
                 )}
 
                 {question.tags.length > 0 && (

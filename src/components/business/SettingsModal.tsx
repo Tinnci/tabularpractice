@@ -21,12 +21,17 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw } from "lucide-react"
+import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle } from "lucide-react"
 import { useProgressStore, type RepoSource } from "@/lib/store"
 import { toast } from "sonner"
 import { Status } from "@/lib/types"
 
 import { Switch } from "@/components/ui/switch"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
@@ -345,25 +350,39 @@ export function SettingsModal() {
                                     数据管理
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Button
-                                        variant="outline"
-                                        className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
-                                        onClick={handleExport}
-                                    >
-                                        <Download className="h-6 w-6 text-muted-foreground" />
-                                        <span className="text-sm font-medium">导出进度</span>
-                                        <span className="text-xs text-muted-foreground font-normal">备份到本地 JSON</span>
-                                    </Button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
+                                                onClick={handleExport}
+                                            >
+                                                <Download className="h-6 w-6 text-muted-foreground" />
+                                                <span className="text-sm font-medium">导出进度</span>
+                                                <span className="text-xs text-muted-foreground font-normal">备份到本地 JSON</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>导出为 .json 格式</p>
+                                        </TooltipContent>
+                                    </Tooltip>
 
-                                    <Button
-                                        variant="outline"
-                                        className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
-                                        onClick={triggerImport}
-                                    >
-                                        <Upload className="h-6 w-6 text-muted-foreground" />
-                                        <span className="text-sm font-medium">导入进度</span>
-                                        <span className="text-xs text-muted-foreground font-normal">恢复备份文件</span>
-                                    </Button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
+                                                onClick={triggerImport}
+                                            >
+                                                <Upload className="h-6 w-6 text-muted-foreground" />
+                                                <span className="text-sm font-medium">导入进度</span>
+                                                <span className="text-xs text-muted-foreground font-normal">恢复备份文件</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>支持 .json 格式备份文件</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </div>
 
                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-900">
@@ -382,7 +401,17 @@ export function SettingsModal() {
 
                                 <div className="space-y-3 p-4 border rounded-lg bg-card/50">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-muted-foreground">GitHub Token (需要 Gist 权限)</label>
+                                        <div className="flex items-center gap-1.5">
+                                            <label className="text-xs font-medium text-muted-foreground">GitHub Token</label>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <HelpCircle className="h-3 w-3 text-muted-foreground/70 cursor-help" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>需要具有 Gist 权限的 Personal Access Token</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </div>
                                         <Input
                                             type="password"
                                             value={githubToken || ""}
@@ -455,15 +484,22 @@ export function SettingsModal() {
                                                         }}
                                                     />
                                                     {!source.isBuiltin && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
-                                                            onClick={() => removeRepoSource(source.id)}
-                                                        >
-                                                            <span className="sr-only">删除</span>
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
-                                                        </Button>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
+                                                                    onClick={() => removeRepoSource(source.id)}
+                                                                >
+                                                                    <span className="sr-only">删除</span>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p className="text-red-500">删除此题库源</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
                                                     )}
                                                 </div>
                                             </div>

@@ -6,6 +6,11 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function Navbar() {
     const pathname = usePathname();
@@ -43,7 +48,16 @@ export function Navbar() {
                         <Link href="/questions" className={cn("transition-colors hover:text-foreground/80 hidden sm:inline-block", pathname.startsWith("/questions") ? "text-foreground" : "text-foreground/60")}>
                             Questions
                         </Link>
-                        <SettingsModal />
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div>
+                                    <SettingsModal />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>设置</p>
+                            </TooltipContent>
+                        </Tooltip>
                         <ModeToggle />
                     </nav>
                 </div>
