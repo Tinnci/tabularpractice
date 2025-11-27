@@ -211,11 +211,12 @@ export function QuestionModal({
                 <DialogTitle className="sr-only">{`第 ${currentQuestion.number} 题`}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
-                <div className="px-4 sm:px-6 py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2">
-                    <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
+                <div className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 h-14 sm:h-auto">
+                    <div className="flex items-center gap-2 sm:gap-4 overflow-hidden flex-1">
                         <div className="flex flex-col shrink-0">
-                            <span className="text-sm font-bold text-foreground flex items-center gap-2">
-                                <span className="sm:hidden">#{currentQuestion.number}</span>
+                            <span className="text-sm font-bold text-foreground flex items-center gap-1 sm:gap-2">
+                                <span className="sm:hidden text-muted-foreground">#</span>
+                                <span>{currentQuestion.number}</span>
                                 <span className="hidden sm:inline">第 {currentQuestion.number} 题</span>
                                 {/* 收藏按钮 */}
                                 <Button
@@ -229,16 +230,16 @@ export function QuestionModal({
                                     <Star className={cn("w-4 h-4", isStarred && "fill-yellow-500 text-yellow-500")} />
                                 </Button>
                             </span>
-                            <span className="text-[10px] sm:text-xs text-muted-foreground">{currentQuestion.type}</span>
+                            <span className="hidden sm:inline text-[10px] sm:text-xs text-muted-foreground">{currentQuestion.type}</span>
                         </div>
 
-                        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
+                        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg ml-auto sm:ml-0 overflow-x-auto no-scrollbar">
                             {videoEmbedUrl && (
                                 <Toggle
                                     size="sm"
                                     pressed={visibleViews.has('video')}
                                     onPressedChange={() => toggleView('video')}
-                                    className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                    className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
                                     aria-label="Toggle video"
                                 >
                                     <MonitorPlay className="h-4 w-4 sm:mr-1" />
@@ -249,7 +250,7 @@ export function QuestionModal({
                                 size="sm"
                                 pressed={visibleViews.has('answer')}
                                 onPressedChange={() => toggleView('answer')}
-                                className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
                                 aria-label="Toggle answer"
                             >
                                 <Eye className="h-4 w-4 sm:mr-1" />
@@ -259,7 +260,7 @@ export function QuestionModal({
                                 size="sm"
                                 pressed={visibleViews.has('analysis')}
                                 onPressedChange={() => toggleView('analysis')}
-                                className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
                                 aria-label="Toggle analysis"
                             >
                                 <FileText className="h-4 w-4 sm:mr-1" />
@@ -269,7 +270,7 @@ export function QuestionModal({
                                 size="sm"
                                 pressed={visibleViews.has('note')}
                                 onPressedChange={() => toggleView('note')}
-                                className="h-7 w-7 sm:w-auto sm:px-2 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
                                 aria-label="Toggle note"
                             >
                                 <PenLine className="h-4 w-4 sm:mr-1" />
@@ -302,13 +303,23 @@ export function QuestionModal({
                         <ScrollArea className="h-full">
                             {/* key={currentQuestion.id} 强制 React 在题目切换时重新渲染整个内容区域，
                                 解决"切换下一题但内容未刷新"的问题，并重置图片加载状态 */}
-                            <div key={currentQuestion.id} className="p-4 sm:p-6 flex flex-col gap-6 max-w-4xl mx-auto pb-20 animate-in fade-in duration-300">
+                            <div key={currentQuestion.id} className="p-3 sm:p-6 flex flex-col gap-3 sm:gap-6 max-w-4xl mx-auto pb-20 animate-in fade-in duration-300">
+
+
+                                {/* 移动端标签显示 (桌面端在顶部) */}
+                                <div className="sm:hidden flex flex-wrap gap-1.5 px-0.5 mb-1 opacity-80">
+                                    {(currentQuestion.tagNames || currentQuestion.tags || []).map((tag, index) => (
+                                        <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-muted text-muted-foreground border-0">
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                </div>
 
                                 {/* 题目区域 */}
                                 {visibleViews.has('question') && (
                                     <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                                        <div className="bg-muted/50 border-b px-4 py-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                            <BookOpen className="w-4 h-4" /> 题目描述
+                                        <div className="bg-muted/50 border-b px-3 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                                            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 题目描述
                                         </div>
                                         <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
                                             {currentQuestion.contentMd ? (
@@ -489,7 +500,7 @@ export function QuestionModal({
                 </div>
 
                 {/* 3. 底部操作栏 - 响应式优化 */}
-                <div className="p-3 sm:p-4 border-t bg-background grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
+                <div className="p-2 sm:p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pb-4 border-t bg-background grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
 
                     {/* 左侧：上一题 - 移动端仅图标 */}
                     <TooltipProvider>
@@ -500,9 +511,9 @@ export function QuestionModal({
                                     onClick={onPrev}
                                     disabled={!hasPrev || isLoading}
                                     size="icon"
-                                    className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                    className="h-10 w-10 sm:h-auto sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
-                                    <ChevronLeft className="w-5 h-5 sm:mr-1" />
+                                    <ChevronLeft className="w-6 h-6 sm:w-5 sm:h-5 sm:mr-1" />
                                     <span className="hidden sm:inline">上一题</span>
                                 </Button>
                             </TooltipTrigger>
@@ -520,7 +531,7 @@ export function QuestionModal({
                                     <Button
                                         onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'mastered')}
                                         disabled={isLoading}
-                                        className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
+                                        className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
                                         <Check className="w-4 h-4" />
                                         <span className="text-xs sm:text-sm">斩</span>
@@ -536,7 +547,7 @@ export function QuestionModal({
                                     <Button
                                         onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'confused')}
                                         disabled={isLoading}
-                                        className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
+                                        className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
                                         <HelpCircle className="w-4 h-4" />
                                         <span className="text-xs sm:text-sm">懵</span>
@@ -552,7 +563,7 @@ export function QuestionModal({
                                     <Button
                                         onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'failed')}
                                         disabled={isLoading}
-                                        className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95"
+                                        className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
                                         <X className="w-4 h-4" />
                                         <span className="text-xs sm:text-sm">崩</span>
@@ -574,10 +585,10 @@ export function QuestionModal({
                                     onClick={onNext}
                                     disabled={!hasNext || isLoading}
                                     size="icon"
-                                    className="sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                    className="h-10 w-10 sm:h-auto sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
                                     <span className="hidden sm:inline">下一题</span>
-                                    <ChevronRight className="w-5 h-5 sm:ml-1" />
+                                    <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5 sm:ml-1" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
