@@ -284,7 +284,7 @@ export function QuestionModal({
                             <Badge
                                 key={index}
                                 variant="outline"
-                                className="text-xs font-normal text-muted-foreground bg-muted/30 whitespace-normal text-left h-auto py-0.5"
+                                className="text-xs font-normal text-muted-foreground bg-muted/30 whitespace-normal text-left h-auto py-0.5 hover:rotate-3 hover:scale-105 transition-transform duration-200 origin-bottom-left cursor-default"
                             >
                                 {tag}
                             </Badge>
@@ -309,7 +309,7 @@ export function QuestionModal({
                                 {/* 移动端标签显示 (桌面端在顶部) */}
                                 <div className="sm:hidden flex flex-wrap gap-1.5 px-0.5 mb-1 opacity-80">
                                     {(currentQuestion.tagNames || currentQuestion.tags || []).map((tag, index) => (
-                                        <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-muted text-muted-foreground border-0">
+                                        <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-muted text-muted-foreground border-0 hover:rotate-3 hover:scale-105 transition-transform duration-200 origin-bottom-left cursor-default">
                                             {tag}
                                         </Badge>
                                     ))}
