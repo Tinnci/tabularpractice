@@ -44,7 +44,6 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     const { contextQuestions } = useContextQuestions();
     // 使用传入的 questions (上下文感知) 或回退到 hook 计算的 contextQuestions
     const displayQuestions = questions || contextQuestions;
-
     // 渲染叶子节点 (最终的知识点)
     const renderLeafNode = (node: TagNode) => {
         const isSelected = selectedTagId === node.id;
@@ -54,7 +53,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full justify-start text-sm h-7 md:h-8 pl-8 font-normal relative group/leaf",
+                            "w-full justify-start text-sm h-7 md:h-8 pl-8 font-normal relative group/leaf transition-all duration-200",
                             isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground"
                         )}
                         onClick={() => {
@@ -71,10 +70,12 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                             <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r-full" />
                         )}
 
-                        {/* 点状图标 */}
+                        {/* 点状图标 - 配方3: 父子联动 (Group Hover) + 光晕 */}
                         <div className={cn(
-                            "mr-2.5 h-1.5 w-1.5 rounded-full transition-all shrink-0",
-                            isSelected ? "bg-primary scale-110" : "bg-muted-foreground/40 group-hover/leaf:bg-muted-foreground/70"
+                            "mr-2.5 h-1.5 w-1.5 rounded-full transition-all duration-300 shrink-0",
+                            isSelected
+                                ? "bg-primary scale-125 shadow-[0_0_6px_hsl(var(--primary))]"
+                                : "bg-muted-foreground/40 group-hover/leaf:bg-primary/80 group-hover/leaf:scale-110 group-hover/leaf:shadow-[0_0_4px_hsl(var(--primary)/0.5)]"
                         )} />
 
                         <span className="truncate leading-none">{node.label}</span>

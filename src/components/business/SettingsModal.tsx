@@ -354,7 +354,7 @@ export function SettingsModal() {
                                         <TooltipTrigger asChild>
                                             <Button
                                                 variant="outline"
-                                                className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
+                                                className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                                 onClick={handleExport}
                                             >
                                                 <Download className="h-6 w-6 text-muted-foreground" />
@@ -371,7 +371,7 @@ export function SettingsModal() {
                                         <TooltipTrigger asChild>
                                             <Button
                                                 variant="outline"
-                                                className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-border transition-all"
+                                                className="flex flex-col h-24 gap-2 border-border hover:bg-muted/50 hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                                 onClick={triggerImport}
                                             >
                                                 <Upload className="h-6 w-6 text-muted-foreground" />

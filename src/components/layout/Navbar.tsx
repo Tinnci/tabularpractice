@@ -30,8 +30,8 @@ export function Navbar() {
                         <MobileSidebar />
                     </div>
                     <Link href="/" className="mr-6 flex items-center space-x-2 app-region-no-drag">
-                        {/* 模拟 Logo 图标: 一个简单的方块 */}
-                        <div className="h-6 w-6 bg-primary rounded-md flex items-center justify-center">
+                        {/* 模拟 Logo 图标: 一个简单的方块 - 配方1: 微缩放与弹性 */}
+                        <div className="h-6 w-6 bg-primary rounded-md flex items-center justify-center transition-transform duration-300 hover:scale-110 hover:rotate-6 shadow-sm">
                             <span className="text-primary-foreground font-bold text-xs">TP</span>
                         </div>
 
@@ -42,10 +42,10 @@ export function Navbar() {
                     </Link>
 
                     <nav className="flex items-center space-x-2 sm:space-x-6 text-sm font-medium ml-auto app-region-no-drag">
-                        <Link href="/" className={cn("transition-colors hover:text-foreground/80 hidden sm:inline-block", pathname === "/" ? "text-foreground" : "text-foreground/60")}>
+                        <Link href="/" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname === "/" ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
                             Dashboard
                         </Link>
-                        <Link href="/questions" className={cn("transition-colors hover:text-foreground/80 hidden sm:inline-block", pathname.startsWith("/questions") ? "text-foreground" : "text-foreground/60")}>
+                        <Link href="/questions" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname.startsWith("/questions") ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
                             Questions
                         </Link>
                         <Tooltip>
