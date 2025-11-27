@@ -5,7 +5,7 @@ import { getTagsForSubject, type TagNode } from "@/data/subject-tags";
 import { useProgressStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Folder, Hash, Layers, ChevronRight, PieChart } from "lucide-react";
+import { Folder, Hash, Layers, ChevronRight, PieChart, Circle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ProgressOverview } from "./ProgressOverview";
 import {
@@ -48,11 +48,10 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                 key={node.id}
                 variant="ghost"
                 className={cn(
-                    "w-full justify-start text-sm h-8 md:h-9 pl-9 font-normal relative",
-                    isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground"
+                    "w-full justify-start text-sm h-7 md:h-8 pl-8 font-normal relative group/leaf",
+                    isSelected ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground"
                 )}
                 onClick={() => {
-                    // ✨ Toggle 逻辑：如果已选中，则取消选中；否则选中
                     if (isSelected) {
                         setSelectedTagId(null);
                     } else {
@@ -61,11 +60,18 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                     onSelect?.();
                 }}
             >
+                {/* 选中指示条 */}
                 {isSelected && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                    <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r-full" />
                 )}
-                <Folder className={cn("mr-2 h-4 w-4", isSelected ? "text-primary" : "text-muted-foreground/50")} />
-                <span className="truncate">{node.label}</span>
+
+                {/* 点状图标 */}
+                <div className={cn(
+                    "mr-2.5 h-1.5 w-1.5 rounded-full transition-all shrink-0",
+                    isSelected ? "bg-primary scale-110" : "bg-muted-foreground/40 group-hover/leaf:bg-muted-foreground/70"
+                )} />
+
+                <span className="truncate leading-none">{node.label}</span>
             </Button>
         );
     };
@@ -127,13 +133,16 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                                             // 如果二级菜单还有子级 (三级结构)
                                             if (child.children && child.children.length > 0) {
                                                 return (
-                                                    <Accordion type="multiple" key={child.id}>
-                                                        <AccordionItem value={child.id} className="border-none">
-                                                            <AccordionTrigger className="py-1.5 px-4 hover:bg-muted/30 rounded-md text-sm font-normal text-foreground hover:no-underline justify-start gap-2">
-                                                                {/* 这里的 Chevron 默认在右侧，可以通过 class 调整 */}
+                                                    <Accordion type="multiple" key={child.id} defaultValue={[child.id]}>
+                                                        <AccordionItem value={child.id} className="border-none relative">
+                                                            {/* 连接线 */}
+                                                            <div className="absolute left-2.5 top-8 bottom-2 w-px bg-border/50" />
+
+                                                            <AccordionTrigger className="py-1.5 px-2 hover:bg-muted/30 rounded-md text-sm font-medium text-foreground hover:no-underline justify-start gap-2 [&[data-state=open]>svg]:rotate-90">
+                                                                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0 transition-transform duration-200" />
                                                                 <span className="truncate">{child.label}</span>
                                                             </AccordionTrigger>
-                                                            <AccordionContent>
+                                                            <AccordionContent className="pl-2 pb-1">
                                                                 {child.children.map(subChild => renderLeafNode(subChild))}
                                                             </AccordionContent>
                                                         </AccordionItem>
