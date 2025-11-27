@@ -26,6 +26,14 @@ const statusColors: Record<Status, string> = {
     failed: "bg-red-100 hover:bg-red-200 border-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:border-red-900",
 }
 
+// 悬停时的光晕效果映射
+const hoverGlows: Record<Status, string> = {
+    unanswered: "hover:shadow-[0_8px_20px_-4px_rgba(var(--foreground),0.1)] hover:border-primary/30",
+    mastered: "hover:shadow-[0_8px_20px_-4px_rgba(34,197,94,0.25)] hover:border-green-500/50 dark:hover:shadow-[0_8px_20px_-4px_rgba(34,197,94,0.15)]",
+    confused: "hover:shadow-[0_8px_20px_-4px_rgba(234,179,8,0.25)] hover:border-yellow-500/50 dark:hover:shadow-[0_8px_20px_-4px_rgba(234,179,8,0.15)]",
+    failed: "hover:shadow-[0_8px_20px_-4px_rgba(239,68,68,0.25)] hover:border-red-500/50 dark:hover:shadow-[0_8px_20px_-4px_rgba(239,68,68,0.15)]",
+}
+
 export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
     const status = question.status || 'unanswered';
 
@@ -52,9 +60,12 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
             className={cn(
                 "group cursor-pointer transition-all duration-300 border overflow-hidden p-0 gap-0",
                 statusColors[status],
+                // 引入新的光晕效果
+                !isDimmed && hoverGlows[status],
+
                 isDimmed
                     ? "opacity-20 grayscale scale-90 hover:opacity-100 hover:grayscale-0 hover:scale-100"
-                    : "opacity-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/20"
+                    : "opacity-100 shadow-sm hover:-translate-y-1" // 加大一点上浮距离 (-0.5 -> -1)
             )}
             onClick={onClick}
         >
@@ -67,7 +78,15 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
             >
                 {/* 题号 - Glassmorphism 胶囊样式 */}
                 <div
-                    className="absolute rounded-md bg-white/90 dark:bg-slate-900/80 backdrop-blur-[2px] px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm z-20 border border-white/20 select-none"
+                    className={cn(
+                        "absolute rounded-md bg-white/90 dark:bg-slate-900/80 backdrop-blur-[2px] px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm z-20 border border-white/20 select-none",
+                        // 新增动画类：
+                        // 1. transition-all duration-300
+                        // 2. group-hover:scale-110: 整体微微变大
+                        // 3. group-hover:bg-white: 变亮 (去掉透明度)
+                        // 4. group-hover:shadow-md: 增加投影，产生悬浮感
+                        "transition-all duration-300 group-hover:scale-110 group-hover:bg-white dark:group-hover:bg-slate-900 group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    )}
                     style={{
                         top: '4%',
                         left: '4%',
@@ -114,7 +133,10 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
                             src={thumbUrl}
                             alt={`Q${question.number}`}
                             className={cn(
-                                "w-full opacity-90 hover:opacity-100 transition-opacity dark:invert",
+                                // 1. 修改 transition 属性：从 transition-opacity 改为 transition-all
+                                // 2. 增加 duration-500 ease-in-out：让动画更缓慢、平滑
+                                // 3. 增加 group-hover:scale-110：悬停时放大 10%
+                                "w-full opacity-90 transition-all duration-500 ease-in-out dark:invert group-hover:scale-110 group-hover:opacity-100",
                                 heightMode === 'fixed' ? "h-full object-cover" : "h-auto object-cover"
                             )}
                             loading="lazy"
