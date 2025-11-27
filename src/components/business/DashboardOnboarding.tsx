@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Target, BarChart2, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Target, BarChart2, Sparkles, Cloud, Database, Settings } from "lucide-react";
 import { SubjectStat } from "@/hooks/useDashboardStats";
 
 interface Props {
@@ -66,6 +66,43 @@ export function DashboardOnboarding({ subjects }: Props) {
                         <CardTitle>沉浸体验</CardTitle>
                         <CardDescription>
                             支持 Markdown 笔记、一键跳转 B 站视频讲解。打造最舒适的刷题环境。
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+
+            {/* 2.1 Advanced Features (Settings Highlights) */}
+            <div className="grid md:grid-cols-3 gap-6">
+                <Card className="bg-card/50 border-primary/10 hover:border-primary/30 transition-colors">
+                    <CardHeader>
+                        <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-2 text-purple-600 dark:text-purple-400">
+                            <Cloud className="w-6 h-6" />
+                        </div>
+                        <CardTitle>数据安全</CardTitle>
+                        <CardDescription>
+                            支持 GitHub Gist 云同步，多设备无缝切换。数据永不丢失，刷题更安心。
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+                <Card className="bg-card/50 border-primary/10 hover:border-primary/30 transition-colors">
+                    <CardHeader>
+                        <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-2 text-pink-600 dark:text-pink-400">
+                            <Database className="w-6 h-6" />
+                        </div>
+                        <CardTitle>无限扩展</CardTitle>
+                        <CardDescription>
+                            开放题库生态。通过设置添加自定义题库源，英语、政治、专业课一网打尽。
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+                <Card className="bg-card/50 border-primary/10 hover:border-primary/30 transition-colors">
+                    <CardHeader>
+                        <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-2 text-indigo-600 dark:text-indigo-400">
+                            <Settings className="w-6 h-6" />
+                        </div>
+                        <CardTitle>为你而设</CardTitle>
+                        <CardDescription>
+                            无论是大屏复习还是碎片时间刷题，完全可自定义的卡片布局与省流模式助你专注。
                         </CardDescription>
                     </CardHeader>
                 </Card>
