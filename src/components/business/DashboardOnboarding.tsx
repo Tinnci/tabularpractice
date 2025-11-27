@@ -21,7 +21,7 @@ export function DashboardOnboarding({ subjects }: Props) {
                     欢迎来到 TabularPractice
                 </h1>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                    您的智能化考研真题刷题助手。
+                    您的智能化真题刷题助手。
                     <br />
                     告别盲目题海战术，用数据驱动高效复习。
                 </p>

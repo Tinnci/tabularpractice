@@ -10,8 +10,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TabularPractice | 考研真题墙",
-  description: "基于大数据的考研数学真题刷题系统",
+  title: "TabularPractice | 真题墙",
+  description: "一个真题刷题系统",
   icons: {
     icon: "/favicon.ico",
   },
