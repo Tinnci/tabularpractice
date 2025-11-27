@@ -13,13 +13,13 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Question, Status } from "@/lib/types";
-import { getBilibiliEmbed } from "@/lib/utils";
+import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
-    Loader2, ImageOff, ExternalLink
+    Loader2, ImageOff, ExternalLink, Clock
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -343,6 +343,20 @@ export function QuestionModal({
                                                 // @ts-expect-error - playsInline is not in iframe type definition but is needed for iOS
                                                 playsInline
                                             />
+
+                                            {/* 时间戳提示 - 仅在有时间戳时显示 */}
+                                            {(() => {
+                                                const timestamp = question?.videoUrl ? getBilibiliTimestamp(question.videoUrl) : null;
+                                                if (timestamp !== null) {
+                                                    return (
+                                                        <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-medium shadow-lg">
+                                                            <Clock className="w-4 h-4" />
+                                                            <span>视频将从 {formatTimestamp(timestamp)} 开始</span>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
                                         </div>
 
                                         {/* 新增：iOS/移动端友好跳转按钮 */}

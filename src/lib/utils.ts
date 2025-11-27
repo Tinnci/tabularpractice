@@ -58,6 +58,46 @@ export function getBilibiliEmbed(url: string): string | null {
   }
 }
 
+/**
+ * 从B站视频链接中提取时间戳（秒）
+ * @param url B站视频链接
+ * @returns 时间戳（秒），如果没有则返回 null
+ */
+export function getBilibiliTimestamp(url: string): number | null {
+  try {
+    const urlObj = new URL(url);
+    const params = urlObj.searchParams;
+    const t = params.get('t') || params.get('time');
+
+    if (t) {
+      const seconds = parseInt(t, 10);
+      return isNaN(seconds) ? null : seconds;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 将秒数格式化为 MM:SS 或 HH:MM:SS 格式
+ * @param seconds 秒数
+ * @returns 格式化的时间字符串
+ */
+export function formatTimestamp(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+}
+
+
 import { Question, Paper, PaperGroup } from "@/lib/types";
 import { type RepoSource } from "@/lib/store";
 
