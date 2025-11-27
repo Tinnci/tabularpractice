@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Question, Paper } from "@/lib/types";
 import { QuestionCard } from "./QuestionCard";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -11,17 +12,30 @@ interface Props {
 }
 
 export function VerticalExamWall({ papers, questions, onQuestionClick, highlightTagId }: Props) {
-    const { appearance } = useProgressStore();
+    // 性能优化：使用 Selector 避免不必要的重渲染
+    const appearance = useProgressStore(state => state.appearance);
 
-    // 1. 将题目绑定到对应的试卷(年份)上
-    const questionsByPaperId = questions.reduce((acc, q) => {
-        if (!acc[q.paperId]) acc[q.paperId] = [];
-        acc[q.paperId].push(q);
-        return acc;
-    }, {} as Record<string, Question[]>);
+    // 1. 将题目绑定到对应的试卷(年份)上，并进行排序
+    // 性能优化：使用 useMemo 缓存计算结果，避免每次渲染都重新计算
+    const questionsByPaperId = useMemo(() => {
+        const map = questions.reduce((acc, q) => {
+            if (!acc[q.paperId]) acc[q.paperId] = [];
+            acc[q.paperId].push(q);
+            return acc;
+        }, {} as Record<string, Question[]>);
+
+        // 在这里一次性完成排序，避免在渲染循环中重复排序
+        Object.values(map).forEach(list => {
+            list.sort((a, b) => a.number - b.number);
+        });
+
+        return map;
+    }, [questions]);
 
     // 2. 对试卷按年份降序排序
-    const sortedPapers = [...papers].sort((a, b) => b.year - a.year);
+    const sortedPapers = useMemo(() => {
+        return [...papers].sort((a, b) => b.year - a.year);
+    }, [papers]);
 
     return (
         <div className="w-full h-full border rounded-xl bg-muted/30">
@@ -33,8 +47,7 @@ export function VerticalExamWall({ papers, questions, onQuestionClick, highlight
 
                     {sortedPapers.map((paper) => {
                         const paperQuestions = questionsByPaperId[paper.id] || [];
-                        // 确保题目按题号排序
-                        paperQuestions.sort((a, b) => a.number - b.number);
+                        // 题目排序已在 useMemo 中完成
 
                         return (
                             <div

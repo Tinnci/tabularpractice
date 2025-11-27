@@ -23,9 +23,13 @@ const statusColors: Record<Status, string> = {
 
 export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
     const status = question.status || 'unanswered';
-    const { notes, stars, toggleStar, repoBaseUrl, repoSources } = useProgressStore();
-    const hasNote = !!notes[question.id];
-    const isStarred = !!stars[question.id];
+
+    // 性能优化：使用细粒度的 Selector 避免全量订阅导致的渲染风暴
+    const hasNote = useProgressStore(state => !!state.notes[question.id]);
+    const isStarred = useProgressStore(state => !!state.stars[question.id]);
+    const toggleStar = useProgressStore(state => state.toggleStar);
+    const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
+    const repoSources = useProgressStore(state => state.repoSources);
 
     const handleStarClick = (e: React.MouseEvent) => {
         e.stopPropagation();
