@@ -20,7 +20,7 @@ export function MobileSidebar() {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="md:hidden -ml-2 mr-2">
+                        <Button variant="ghost" size="icon" className="md:hidden -ml-2 mr-2 transition-transform duration-300 hover:scale-110 active:scale-95">
                             <Menu className="h-5 w-5" />
                             <span className="sr-only">打开目录</span>
                         </Button>

@@ -187,7 +187,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                 {/* 2. 桌面端/宽屏：环形图 (hidden md:flex) */}
                 <div className="hidden md:flex items-center gap-4">
                     {/* 环形图 */}
-                    <div className="h-24 w-24 relative flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity" title="点击筛选">
+                    <div className="h-24 w-24 relative flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105" title="点击筛选">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
@@ -241,7 +241,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                     <div className="grid grid-cols-1 gap-y-1.5 text-xs flex-1 min-w-0">
                         <div
                             className={cn(
-                                "flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                                "flex items-center justify-between cursor-pointer rounded px-1 -mx-1 transition-all duration-200 hover:translate-x-1 hover:bg-muted/80 group",
                                 filterStatus === 'mastered' && "bg-muted font-medium"
                             )}
                             onClick={() => handleFilterClick('mastered')}
@@ -254,7 +254,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         </div>
                         <div
                             className={cn(
-                                "flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                                "flex items-center justify-between cursor-pointer rounded px-1 -mx-1 transition-all duration-200 hover:translate-x-1 hover:bg-muted/80 group",
                                 filterStatus === 'confused' && "bg-muted font-medium"
                             )}
                             onClick={() => handleFilterClick('confused')}
@@ -267,7 +267,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         </div>
                         <div
                             className={cn(
-                                "flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                                "flex items-center justify-between cursor-pointer rounded px-1 -mx-1 transition-all duration-200 hover:translate-x-1 hover:bg-muted/80 group",
                                 filterStatus === 'failed' && "bg-muted font-medium"
                             )}
                             onClick={() => handleFilterClick('failed')}
@@ -280,7 +280,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         </div>
                         <div
                             className={cn(
-                                "flex items-center justify-between pt-1 border-t border-border cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors group",
+                                "flex items-center justify-between pt-1 border-t border-border cursor-pointer rounded px-1 -mx-1 transition-all duration-200 hover:translate-x-1 hover:bg-muted/80 group",
                                 filterStatus === 'unanswered' && "bg-muted font-medium"
                             )}
                             onClick={() => handleFilterClick('unanswered')}
