@@ -13,46 +13,47 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function getBilibiliEmbed(url: string): string | null {
   try {
-    // 如果 URL 不包含协议头，添加一个默认协议以便 URL 构造器能够解析
-    const urlToParse = url.startsWith('http://') || url.startsWith('https://')
-      ? url
-      : `https://${url}`;
+    const urlObj = new URL(url);
 
-    // 1. 使用标准 URL API 解析，自动处理各种参数拼接和编码问题
-    const urlObj = new URL(urlToParse);
-
-    // 2. 智能提取视频 ID (支持 BV 号)
-    // 优先从 pathname 提取，避免查询参数干扰
-    const bvMatch = urlObj.pathname.match(/(BV\w+)/i);
-
-    if (!bvMatch) return null;
-
-    const bvid = bvMatch[1];
-
-    // 3. 使用 URLSearchParams 提取并处理查询参数
-    const params = urlObj.searchParams;
-    const page = params.get('p') || '1';
-    const t = params.get('t'); // 获取时间戳
-
-    // 4. 构建标准的 URLSearchParams
-    const embedParams = new URLSearchParams();
-    embedParams.set('bvid', bvid);
-    embedParams.set('page', page);
-    embedParams.set('high_quality', '1');
-    embedParams.set('danmaku', '0');
-
-    // 处理时间跳转
-    if (t) {
-      embedParams.set('t', t);
-      // 注意：某些情况下，为了确保时间跳转生效，可能需要开启自动播放
-      // 但出于用户体验考虑（避免突然发出声音），通常不强制 autoplay=1
-      // 如果发现跳转失效，可以尝试添加 embedParams.set('autoplay', '1');
+    // 1. 提取 BVID
+    let bvid = null;
+    const pathMatch = urlObj.pathname.match(/(BV\w+)/);
+    if (pathMatch) {
+      bvid = pathMatch[1];
+    } else {
+      bvid = urlObj.searchParams.get('bvid');
     }
 
-    return `//player.bilibili.com/player.html?${embedParams.toString()}`;
+    if (!bvid) return null;
 
-  } catch (error) {
-    console.warn("Invalid Bilibili URL:", url, error);
+    // 2. 提取参数
+    const params = urlObj.searchParams;
+    const page = params.get('p') || params.get('page') || '1';
+    const t = params.get('t') || params.get('time');
+
+    // 3. 构建 Embed URL
+    const embedUrl = new URL("https://player.bilibili.com/player.html");
+    embedUrl.searchParams.set("bvid", bvid);
+    embedUrl.searchParams.set("page", page);
+
+    // 注意：iOS 上 high_quality=1 可能会导致加载卡顿，可以尝试去掉或保留
+    embedUrl.searchParams.set("high_quality", "1");
+    embedUrl.searchParams.set("danmaku", "0");
+
+    // 尝试添加 autoplay=0，有时能避免 iOS 播放器初始化时的竞争状态错误
+    // 虽然不能自动播放，但有助于让播放器正确读取 t 参数等待用户点击
+    embedUrl.searchParams.set("autoplay", "0");
+
+    // 增加移动端/iOS 友好参数
+    embedUrl.searchParams.set("playsinline", "1");
+    embedUrl.searchParams.set("html5", "1");
+
+    if (t) embedUrl.searchParams.set("t", t);
+
+    return embedUrl.toString(); // 直接返回完整 https 链接
+
+  } catch {
+    console.warn("Bilibili URL 解析失败:", url);
     return null;
   }
 }
@@ -143,4 +144,3 @@ export function getImageUrl(
 
   return url;
 }
-

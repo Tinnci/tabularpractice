@@ -19,7 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
-    Loader2, ImageOff
+    Loader2, ImageOff, ExternalLink
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -330,16 +330,37 @@ export function QuestionModal({
 
                                 {/* 视频区域 */}
                                 {visibleViews.has('video') && videoEmbedUrl && (
-                                    <div className="bg-black rounded-xl border shadow-sm overflow-hidden aspect-video ring-2 ring-blue-100">
-                                        <iframe
-                                            src={videoEmbedUrl}
-                                            className="w-full h-full"
-                                            scrolling="no"
-                                            frameBorder="0"
-                                            allowFullScreen
-                                            allow="autoplay; encrypted-media"
-                                            title="视频讲解"
-                                        />
+                                    <div className="flex flex-col gap-2">
+                                        <div className="bg-black rounded-xl border shadow-sm overflow-hidden aspect-video ring-2 ring-blue-100 relative group">
+                                            <iframe
+                                                src={videoEmbedUrl}
+                                                className="w-full h-full"
+                                                scrolling="no"
+                                                frameBorder="0"
+                                                allowFullScreen
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                title="视频讲解"
+                                                // @ts-expect-error - playsInline is not in iframe type definition but is needed for iOS
+                                                playsInline
+                                            />
+                                        </div>
+
+                                        {/* 新增：iOS/移动端友好跳转按钮 */}
+                                        {question?.videoUrl && (
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2 text-xs h-8 bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100 hover:text-pink-700 dark:bg-pink-900/20 dark:border-pink-900 dark:text-pink-300"
+                                                    onClick={() => window.open(question.videoUrl, '_blank')}
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                    {/* 提示用户去 App 看，体验更好 */}
+                                                    <span className="sm:hidden">去 B 站观看 (空降)</span>
+                                                    <span className="hidden sm:inline">在 Bilibili 打开 (支持自动空降)</span>
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
