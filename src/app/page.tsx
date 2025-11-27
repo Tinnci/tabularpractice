@@ -8,6 +8,7 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useTheme } from "next-themes";
 
+import { DashboardOnboarding } from "@/components/business/DashboardOnboarding";
 import { ActivityHeatmap } from "@/components/business/ActivityHeatmap";
 
 export default function DashboardPage() {
@@ -21,6 +22,12 @@ export default function DashboardPage() {
   const totalMastered = total.mastered;
   const totalFailed = total.failed;
   const totalConfused = total.confused;
+  const totalAnswered = totalMastered + totalFailed + totalConfused;
+
+  // 如果是新用户（还未开始刷题），显示引导页
+  if (totalAnswered === 0 && activeSubjects.length > 0) {
+    return <DashboardOnboarding subjects={activeSubjects} />;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-8 max-w-7xl">
