@@ -156,19 +156,42 @@ export function QuestionModal({
     };
 
     // 保存草稿
-    const saveDraft = async () => {
+    // 保存草稿
+    const saveDraft = useCallback(async () => {
         if (question && canvasRef.current) {
             try {
                 const paths = await canvasRef.current.exportPaths();
+                // 获取最新 drafts 状态，避免将其加入依赖项导致函数频繁重建
+                const currentDrafts = useProgressStore.getState().drafts;
                 // 只有当有笔画时才保存，或者如果之前有保存过（清空也算保存）
-                if (paths.length > 0 || drafts[question.id]) {
+                if (paths.length > 0 || currentDrafts[question.id]) {
                     updateDraft(question.id, JSON.stringify(paths));
                 }
             } catch (e) {
                 console.error("Failed to save draft", e);
             }
         }
-    };
+    }, [question, updateDraft]);
+
+    // 防抖保存草稿，避免每笔画都触发昂贵的 exportPaths 和 store 更新
+    const saveDraftTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const debouncedSaveDraft = useCallback(() => {
+        if (saveDraftTimeoutRef.current) {
+            clearTimeout(saveDraftTimeoutRef.current);
+        }
+        saveDraftTimeoutRef.current = setTimeout(() => {
+            saveDraft();
+        }, 500); // 500ms 防抖
+    }, [saveDraft]);
+
+    // 组件卸载时清理定时器
+    useEffect(() => {
+        return () => {
+            if (saveDraftTimeoutRef.current) {
+                clearTimeout(saveDraftTimeoutRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (isOpen && question) {
@@ -619,7 +642,7 @@ export function QuestionModal({
                                                 strokeColor={strokeColor}
                                                 canvasColor="transparent"
                                                 className="w-full h-full"
-                                                onStroke={saveDraft}
+                                                onStroke={debouncedSaveDraft}
                                                 allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
                                             />
                                         </div>
