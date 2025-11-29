@@ -47,14 +47,14 @@ export function SettingsModal() {
     const {
         progress, notes, importData,
         repoSources, addRepoSource, removeRepoSource, toggleRepoSource,
-        githubToken, gistId, lastSyncedTime,
-        setGithubToken, setGistId, setLastSyncedTime
+        githubToken, gistId, lastSyncedTime, syncStatus,
+        setGithubToken, setGistId, setLastSyncedTime,
+        syncData
     } = useProgressStore()
 
     const [newRepoName, setNewRepoName] = useState("")
     const [newRepoUrl, setNewRepoUrl] = useState("")
     const [isCheckingRepo, setIsCheckingRepo] = useState(false)
-    const [isSyncing, setIsSyncing] = useState(false)
 
     // GitHub Sync Logic
     const handleSync = async () => {
@@ -63,115 +63,22 @@ export function SettingsModal() {
             return;
         }
 
-        setIsSyncing(true);
         const toastId = toast.loading("正在同步数据...");
 
         try {
-            const currentData = {
-                version: 2,
-                timestamp: new Date().toISOString(),
-                progress,
-                notes,
-                stars: useProgressStore.getState().stars,
-                repoSources: useProgressStore.getState().repoSources
-            };
+            await syncData();
+            const currentStatus = useProgressStore.getState().syncStatus;
 
-            const headers = {
-                "Authorization": `token ${githubToken}`,
-                "Accept": "application/vnd.github.v3+json",
-                "Content-Type": "application/json",
-            };
-
-            let targetGistId = gistId;
-            let mergedData = currentData;
-
-            // 1. 如果有 Gist ID，尝试获取远程数据并合并
-            if (targetGistId) {
-                try {
-                    const res = await fetch(`https://api.github.com/gists/${targetGistId}`, { headers });
-                    if (res.ok) {
-                        const gist = await res.json();
-                        const file = gist.files["tabular-practice-data.json"];
-                        if (file) {
-                            const remoteData = JSON.parse(file.content);
-
-                            // 合并逻辑：本地覆盖远程 (或者更复杂的合并策略)
-                            // 这里采用简单的浅层合并，本地优先
-                            // 对于 repoSources，采用去重合并
-
-                            let newRepoSources = currentData.repoSources;
-                            if (remoteData.repoSources && Array.isArray(remoteData.repoSources)) {
-                                const existingUrls = new Set(currentData.repoSources.map(s => s.url));
-                                const uniqueNewSources = remoteData.repoSources.filter((s: RepoSource) => !existingUrls.has(s.url));
-                                newRepoSources = [...currentData.repoSources, ...uniqueNewSources];
-                            }
-
-                            mergedData = {
-                                ...remoteData,
-                                ...currentData,
-                                progress: { ...remoteData.progress, ...currentData.progress },
-                                notes: { ...remoteData.notes, ...currentData.notes },
-                                stars: { ...remoteData.stars, ...currentData.stars },
-                                repoSources: newRepoSources,
-                                timestamp: new Date().toISOString()
-                            };
-                        }
-                    } else if (res.status === 404) {
-                        // Gist 不存在，重置 ID 并将创建新的
-                        targetGistId = null;
-                    }
-                } catch (e) {
-                    console.error("Fetch gist failed", e);
-                    // 网络错误等，继续尝试上传本地数据？或者中断？
-                    // 暂时中断以保护数据
-                    throw new Error("无法连接到 GitHub Gist");
-                }
+            if (currentStatus === 'error') {
+                toast.error("同步失败", {
+                    id: toastId,
+                    description: "请检查 Token 是否正确或网络连接"
+                });
+            } else {
+                toast.success("同步成功", { id: toastId });
             }
-
-            // 2. 上传数据 (创建或更新)
-            const body = JSON.stringify({
-                description: "TabularPractice Data Backup",
-                public: false,
-                files: {
-                    "tabular-practice-data.json": {
-                        content: JSON.stringify(mergedData, null, 2)
-                    }
-                }
-            });
-
-            const url = targetGistId
-                ? `https://api.github.com/gists/${targetGistId}`
-                : "https://api.github.com/gists";
-
-            const method = targetGistId ? "PATCH" : "POST";
-
-            const saveRes = await fetch(url, { method, headers, body });
-
-            if (!saveRes.ok) {
-                throw new Error(`同步失败: ${saveRes.statusText}`);
-            }
-
-            const savedGist = await saveRes.json();
-
-            // 3. 更新本地状态
-            if (!targetGistId) {
-                setGistId(savedGist.id);
-            }
-            setLastSyncedTime(new Date().toISOString());
-
-            // 更新本地数据为合并后的数据
-            importData(mergedData);
-
-            toast.success("同步成功", { id: toastId });
-
         } catch (error) {
-            console.error(error);
-            toast.error("同步失败", {
-                id: toastId,
-                description: error instanceof Error ? error.message : "未知错误"
-            });
-        } finally {
-            setIsSyncing(false);
+            toast.error("同步发生未知错误", { id: toastId });
         }
     };
 
@@ -437,11 +344,11 @@ export function SettingsModal() {
                                         <Button
                                             size="sm"
                                             onClick={handleSync}
-                                            disabled={isSyncing || !githubToken}
+                                            disabled={syncStatus === 'syncing' || !githubToken}
                                             className="gap-2"
                                         >
-                                            <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-                                            {isSyncing ? "同步中..." : "立即同步"}
+                                            <RefreshCw className={`h-3.5 w-3.5 ${syncStatus === 'syncing' ? "animate-spin" : ""}`} />
+                                            {syncStatus === 'syncing' ? "同步中..." : "立即同步"}
                                         </Button>
                                     </div>
                                 </div>

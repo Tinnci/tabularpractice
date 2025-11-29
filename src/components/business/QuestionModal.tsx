@@ -102,7 +102,7 @@ export function QuestionModal({
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
 
     // 笔记系统状态
-    const { notes, updateNote, stars, toggleStar, drafts, updateDraft, syncStatus } = useProgressStore();
+    const { notes, updateNote, stars, toggleStar, drafts, updateDraft, syncStatus, syncData } = useProgressStore();
     const [noteContent, setNoteContent] = useState("");
     const [isEditingNote, setIsEditingNote] = useState(false);
 
@@ -275,7 +275,11 @@ export function QuestionModal({
                                     </span>
                                 )}
                                 {syncStatus === 'error' && (
-                                    <div className="w-2 h-2 rounded-full bg-red-500" title="同步失败" />
+                                    <div
+                                        className="w-2 h-2 rounded-full bg-red-500 cursor-pointer hover:bg-red-600 transition-colors"
+                                        title="同步失败，点击重试"
+                                        onClick={() => syncData()}
+                                    />
                                 )}
                             </span>
                             <span className="hidden sm:inline text-[10px] sm:text-xs text-muted-foreground">{currentQuestion.type}</span>

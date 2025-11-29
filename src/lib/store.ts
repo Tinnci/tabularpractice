@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { Status, NotesMap } from './types'
+import { toast } from "sonner"
 
 export interface RepoSource {
     id: string;
@@ -90,7 +91,12 @@ interface ProgressState {
     setGistId: (id: string | null) => void;
     setLastSyncedTime: (time: string | null) => void;
     setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
+
+    syncData: () => Promise<void>;
+    triggerAutoSync: () => void;
 }
+
+let syncTimer: NodeJS.Timeout | null = null;
 
 export const useProgressStore = create<ProgressState>()(
     persist(
@@ -166,7 +172,7 @@ export const useProgressStore = create<ProgressState>()(
             mobileSidebarOpen: false,
             setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
-            updateStatus: (id, status) =>
+            updateStatus: (id, status) => {
                 set((state) => {
                     const today = new Date().toISOString().split('T')[0];
                     const currentCount = state.history[today] || 0;
@@ -180,19 +186,25 @@ export const useProgressStore = create<ProgressState>()(
                         progress: { ...state.progress, [id]: status },
                         history: newHistory
                     };
-                }),
+                });
+                get().triggerAutoSync();
+            },
 
-            updateNote: (id, content) =>
+            updateNote: (id, content) => {
                 set((state) => ({
                     notes: { ...state.notes, [id]: content }
-                })),
+                }));
+                get().triggerAutoSync();
+            },
 
-            updateDraft: (id, content) =>
+            updateDraft: (id, content) => {
                 set((state) => ({
                     drafts: { ...state.drafts, [id]: content }
-                })),
+                }));
+                get().triggerAutoSync();
+            },
 
-            toggleStar: (id) =>
+            toggleStar: (id) => {
                 set((state) => {
                     const newStars = { ...state.stars };
                     if (newStars[id]) {
@@ -201,7 +213,9 @@ export const useProgressStore = create<ProgressState>()(
                         newStars[id] = true;
                     }
                     return { stars: newStars };
-                }),
+                });
+                get().triggerAutoSync();
+            },
 
             setSelectedTagId: (id) => set({ selectedTagId: id }),
 
@@ -266,6 +280,133 @@ export const useProgressStore = create<ProgressState>()(
             },
 
             importProgress: (newProgress) => set({ progress: newProgress }),
+
+            // GitHub Sync Implementation
+            syncData: async () => {
+                const { githubToken, gistId, progress, notes, stars, drafts, repoSources, importData } = get();
+
+                if (!githubToken) return;
+
+                set({ syncStatus: 'syncing' });
+
+                try {
+                    const currentData = {
+                        version: 2,
+                        timestamp: new Date().toISOString(),
+                        progress,
+                        notes,
+                        stars,
+                        drafts,
+                        repoSources
+                    };
+
+                    const headers = {
+                        "Authorization": `token ${githubToken}`,
+                        "Accept": "application/vnd.github.v3+json",
+                        "Content-Type": "application/json",
+                    };
+
+                    let targetGistId = gistId;
+                    let mergedData = currentData;
+
+                    // 1. 如果有 Gist ID，尝试获取远程数据并合并
+                    if (targetGistId) {
+                        try {
+                            const res = await fetch(`https://api.github.com/gists/${targetGistId}`, { headers });
+                            if (res.ok) {
+                                const gist = await res.json();
+                                const file = gist.files["tabular-practice-data.json"];
+                                if (file) {
+                                    const remoteData = JSON.parse(file.content);
+
+                                    // 合并逻辑：本地优先
+                                    let newRepoSources = currentData.repoSources;
+                                    if (remoteData.repoSources && Array.isArray(remoteData.repoSources)) {
+                                        const existingUrls = new Set(currentData.repoSources.map(s => s.url));
+                                        const uniqueNewSources = remoteData.repoSources.filter((s: RepoSource) => !existingUrls.has(s.url));
+                                        newRepoSources = [...currentData.repoSources, ...uniqueNewSources];
+                                    }
+
+                                    mergedData = {
+                                        ...remoteData,
+                                        ...currentData,
+                                        progress: { ...remoteData.progress, ...currentData.progress },
+                                        notes: { ...remoteData.notes, ...currentData.notes },
+                                        stars: { ...remoteData.stars, ...currentData.stars },
+                                        drafts: { ...remoteData.drafts, ...currentData.drafts },
+                                        repoSources: newRepoSources,
+                                        timestamp: new Date().toISOString()
+                                    };
+                                }
+                            } else if (res.status === 404) {
+                                targetGistId = null; // Gist 不存在，重置 ID
+                            }
+                        } catch (e) {
+                            console.error("Fetch gist failed", e);
+                            // 如果获取失败（如网络问题），我们仍然尝试上传本地数据吗？
+                            // 为了安全起见，如果是网络错误，最好不要覆盖远程，除非我们确定
+                            // 这里简单处理：如果获取失败，抛出错误，中断同步
+                            throw new Error("无法连接到 GitHub Gist");
+                        }
+                    }
+
+                    // 2. 上传数据
+                    const body = JSON.stringify({
+                        description: "TabularPractice Data Backup",
+                        public: false,
+                        files: {
+                            "tabular-practice-data.json": {
+                                content: JSON.stringify(mergedData, null, 2)
+                            }
+                        }
+                    });
+
+                    const url = targetGistId
+                        ? `https://api.github.com/gists/${targetGistId}`
+                        : "https://api.github.com/gists";
+
+                    const method = targetGistId ? "PATCH" : "POST";
+
+                    const saveRes = await fetch(url, { method, headers, body });
+
+                    if (!saveRes.ok) {
+                        throw new Error(`同步失败: ${saveRes.statusText}`);
+                    }
+
+                    const savedGist = await saveRes.json();
+
+                    // 3. 更新本地状态
+                    if (!targetGistId) {
+                        set({ gistId: savedGist.id });
+                    }
+                    set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success' });
+
+                    // 更新本地数据为合并后的数据
+                    importData(mergedData);
+
+                    // 成功后 2秒重置状态为 idle，避免一直显示成功图标（如果需要的话）
+                    // 或者一直保持 success 直到下一次操作
+                    setTimeout(() => set({ syncStatus: 'idle' }), 3000);
+
+                } catch (error) {
+                    console.error(error);
+                    set({ syncStatus: 'error' });
+                    // 自动同步失败通常不弹 Toast，以免打扰，除非是手动触发
+                    // 但这里我们统一逻辑，可以只在 QuestionModal 显示红点
+                }
+            },
+
+            triggerAutoSync: () => {
+                const { githubToken } = get();
+                if (!githubToken) return;
+
+                if (syncTimer) clearTimeout(syncTimer);
+                set({ syncStatus: 'syncing' }); // 立即显示 syncing 状态让用户知道有变动待同步
+
+                syncTimer = setTimeout(() => {
+                    get().syncData();
+                }, 5000); // 5秒防抖
+            },
         }),
         {
             name: 'tabular-progress-storage',
