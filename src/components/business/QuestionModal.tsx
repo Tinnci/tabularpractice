@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useMemo } from "react";
+import { useEffect, useCallback, useState, useMemo, useRef } from "react";
 import {
     Dialog,
     DialogContent,
@@ -16,10 +16,11 @@ import { Question, Status } from "@/lib/types";
 import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
-    Loader2, ImageOff, ExternalLink, Clock
+    Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -41,7 +42,7 @@ interface Props {
     isLoading?: boolean;
 }
 
-type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note';
+type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft';
 
 // 通用 Markdown 渲染组件
 const MarkdownContent = ({ content }: { content: string }) => (
@@ -101,9 +102,15 @@ export function QuestionModal({
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
 
     // 笔记系统状态
-    const { notes, updateNote, stars, toggleStar } = useProgressStore();
+    const { notes, updateNote, stars, toggleStar, drafts, updateDraft, syncStatus } = useProgressStore();
     const [noteContent, setNoteContent] = useState("");
     const [isEditingNote, setIsEditingNote] = useState(false);
+
+    // 草稿系统状态
+    const canvasRef = useRef<ReactSketchCanvasRef>(null);
+    const [strokeColor, setStrokeColor] = useState("#000000");
+    const [strokeWidth, setStrokeWidth] = useState(4);
+    const [eraserMode, setEraserMode] = useState(false);
 
     const isStarred = question ? !!stars[question.id] : false;
 
@@ -115,10 +122,43 @@ export function QuestionModal({
         }
     }, [question, notes]);
 
+    // 加载草稿内容
+    useEffect(() => {
+        if (question && canvasRef.current) {
+            // 重置画布
+            canvasRef.current.clearCanvas();
+            // 如果有保存的草稿，加载它
+            const savedDraft = drafts[question.id];
+            if (savedDraft) {
+                try {
+                    const paths = JSON.parse(savedDraft);
+                    canvasRef.current.loadPaths(paths);
+                } catch (e) {
+                    console.error("Failed to load draft", e);
+                }
+            }
+        }
+    }, [question, drafts, visibleViews]);
+
     // 自动保存笔记
     const handleNoteBlur = () => {
         if (question && noteContent !== notes[question.id]) {
             updateNote(question.id, noteContent);
+        }
+    };
+
+    // 保存草稿
+    const saveDraft = async () => {
+        if (question && canvasRef.current) {
+            try {
+                const paths = await canvasRef.current.exportPaths();
+                // 只有当有笔画时才保存，或者如果之前有保存过（清空也算保存）
+                if (paths.length > 0 || drafts[question.id]) {
+                    updateDraft(question.id, JSON.stringify(paths));
+                }
+            } catch (e) {
+                console.error("Failed to save draft", e);
+            }
         }
     };
 
@@ -229,6 +269,14 @@ export function QuestionModal({
                                 >
                                     <Star className={cn("w-4 h-4", isStarred && "fill-yellow-500 text-yellow-500")} />
                                 </Button>
+                                {syncStatus === 'syncing' && (
+                                    <span title="同步中...">
+                                        <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
+                                    </span>
+                                )}
+                                {syncStatus === 'error' && (
+                                    <div className="w-2 h-2 rounded-full bg-red-500" title="同步失败" />
+                                )}
                             </span>
                             <span className="hidden sm:inline text-[10px] sm:text-xs text-muted-foreground">{currentQuestion.type}</span>
                         </div>
@@ -275,6 +323,16 @@ export function QuestionModal({
                             >
                                 <PenLine className="h-4 w-4 sm:mr-1" />
                                 <span className="hidden sm:inline text-xs">笔记</span>
+                            </Toggle>
+                            <Toggle
+                                size="sm"
+                                pressed={visibleViews.has('draft')}
+                                onPressedChange={() => toggleView('draft')}
+                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
+                                aria-label="Toggle draft"
+                            >
+                                <Pencil className="h-4 w-4 sm:mr-1" />
+                                <span className="hidden sm:inline text-xs">草稿</span>
                             </Toggle>
                         </div>
                     </div>
@@ -437,6 +495,92 @@ export function QuestionModal({
                                             ) : (
                                                 <span className="text-muted-foreground text-sm">暂无解析内容</span>
                                             )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 草稿区域 */}
+                                {visibleViews.has('draft') && (
+                                    <div className="bg-card rounded-xl border border-purple-200 dark:border-purple-900 shadow-sm overflow-hidden flex flex-col h-[500px]">
+                                        <div className="bg-purple-50/50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+                                            <div className="flex items-center gap-2">
+                                                <Pencil className="w-4 h-4" /> 手写草稿
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant={!eraserMode ? "secondary" : "ghost"}
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => {
+                                                        setEraserMode(false);
+                                                        canvasRef.current?.eraseMode(false);
+                                                    }}
+                                                    title="画笔"
+                                                >
+                                                    <Pencil className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    variant={eraserMode ? "secondary" : "ghost"}
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => {
+                                                        setEraserMode(true);
+                                                        canvasRef.current?.eraseMode(true);
+                                                    }}
+                                                    title="橡皮擦"
+                                                >
+                                                    <Eraser className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <div className="w-px h-4 bg-border mx-1" />
+                                                <input
+                                                    type="color"
+                                                    value={strokeColor}
+                                                    onChange={(e) => {
+                                                        setStrokeColor(e.target.value);
+                                                        setEraserMode(false);
+                                                        canvasRef.current?.eraseMode(false);
+                                                    }}
+                                                    className="w-6 h-6 rounded cursor-pointer border-0 p-0"
+                                                    title="颜色"
+                                                />
+                                                <div className="w-px h-4 bg-border mx-1" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => {
+                                                        canvasRef.current?.undo();
+                                                        saveDraft();
+                                                    }}
+                                                    title="撤销"
+                                                >
+                                                    <Undo className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                    onClick={() => {
+                                                        if (confirm('确定要清空草稿吗？')) {
+                                                            canvasRef.current?.clearCanvas();
+                                                            saveDraft();
+                                                        }
+                                                    }}
+                                                    title="清空"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 relative bg-white dark:bg-zinc-900 cursor-crosshair touch-none">
+                                            <ReactSketchCanvas
+                                                ref={canvasRef}
+                                                strokeWidth={strokeWidth}
+                                                strokeColor={strokeColor}
+                                                canvasColor="transparent"
+                                                className="w-full h-full"
+                                                onStroke={saveDraft}
+                                            />
                                         </div>
                                     </div>
                                 )}

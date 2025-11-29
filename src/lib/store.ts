@@ -20,6 +20,10 @@ interface ProgressState {
     // 核心数据：记录每日刷题活动
     history: Record<string, number>;
 
+    // 核心数据：记录题目ID对应的手写草稿 (Base64 JSON string)
+    drafts: Record<string, string>;
+    updateDraft: (id: string, content: string) => void;
+
     // 知识点筛选
     selectedTagId: string | null;
     // 当前选中的试卷组ID
@@ -41,7 +45,7 @@ interface ProgressState {
     setFilterYear: (year: 'all' | string) => void;
     setFilterStarred: (starred: boolean) => void;
     getStats: () => { mastered: number; confused: number; failed: number; total: number };
-    importData: (data: { progress: Record<string, Status>; notes?: NotesMap; stars?: Record<string, boolean> } | Record<string, Status>) => void;
+    importData: (data: { progress: Record<string, Status>; notes?: NotesMap; stars?: Record<string, boolean>; drafts?: Record<string, string> } | Record<string, Status>) => void;
     importProgress: (newProgress: Record<string, Status>) => void;
 
     // 废弃：repoBaseUrl 不再作为单一数据源依据，保留仅为兼容
@@ -81,9 +85,11 @@ interface ProgressState {
     githubToken: string | null;
     gistId: string | null;
     lastSyncedTime: string | null;
+    syncStatus: 'idle' | 'syncing' | 'success' | 'error';
     setGithubToken: (token: string | null) => void;
     setGistId: (id: string | null) => void;
     setLastSyncedTime: (time: string | null) => void;
+    setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -93,6 +99,7 @@ export const useProgressStore = create<ProgressState>()(
             history: {},
             notes: {},
             stars: {},
+            drafts: {},
             selectedTagId: null,
             currentGroupId: 'math1',
             filterSubject: 'math',
@@ -106,9 +113,11 @@ export const useProgressStore = create<ProgressState>()(
             githubToken: null,
             gistId: null,
             lastSyncedTime: null,
+            syncStatus: 'idle',
             setGithubToken: (token) => set({ githubToken: token }),
             setGistId: (id) => set({ gistId: id }),
             setLastSyncedTime: (time) => set({ lastSyncedTime: time }),
+            setSyncStatus: (status) => set({ syncStatus: status }),
 
             // 初始化时确保包含内置源和默认远程源
             repoSources: [
@@ -178,6 +187,11 @@ export const useProgressStore = create<ProgressState>()(
                     notes: { ...state.notes, [id]: content }
                 })),
 
+            updateDraft: (id, content) =>
+                set((state) => ({
+                    drafts: { ...state.drafts, [id]: content }
+                })),
+
             toggleStar: (id) =>
                 set((state) => {
                     const newStars = { ...state.stars };
@@ -222,6 +236,7 @@ export const useProgressStore = create<ProgressState>()(
                     progress: Record<string, Status>;
                     notes?: NotesMap;
                     stars?: Record<string, boolean>;
+                    drafts?: Record<string, string>;
                     repoSources?: RepoSource[];
                 } => {
                     return typeof d === 'object' && d !== null && 'progress' in d;
@@ -240,6 +255,7 @@ export const useProgressStore = create<ProgressState>()(
                             progress: data.progress,
                             notes: data.notes || {},
                             stars: data.stars || {},
+                            drafts: data.drafts || {},
                             repoSources: newRepoSources
                         };
                     });
