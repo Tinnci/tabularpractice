@@ -583,7 +583,8 @@ export function QuestionModal({
                                                     className="h-7 w-7"
                                                     onClick={() => {
                                                         canvasRef.current?.undo();
-                                                        saveDraft();
+                                                        // 延迟保存，确保 undo 操作已完成，解决 iPad/Safari 上可能的状态不同步问题
+                                                        setTimeout(saveDraft, 100);
                                                     }}
                                                     title="撤销"
                                                 >
@@ -596,7 +597,8 @@ export function QuestionModal({
                                                     onClick={() => {
                                                         if (confirm('确定要清空草稿吗？')) {
                                                             canvasRef.current?.clearCanvas();
-                                                            saveDraft();
+                                                            // 延迟保存
+                                                            setTimeout(saveDraft, 100);
                                                         }
                                                     }}
                                                     title="清空"
