@@ -20,7 +20,8 @@ import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canva
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
-    Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2
+    Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2,
+    Maximize2, Minimize2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -112,6 +113,7 @@ export function QuestionModal({
     const [strokeWidth, setStrokeWidth] = useState(4);
     const [eraserMode, setEraserMode] = useState(false);
     const [onlyPenMode, setOnlyPenMode] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const isStarred = question ? !!stars[question.id] : false;
 
@@ -248,7 +250,12 @@ export function QuestionModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="w-screen max-w-[100vw] h-[100dvh] sm:max-w-5xl sm:h-[95vh] flex flex-col p-0 gap-0 outline-none rounded-none sm:rounded-xl overflow-hidden">
+            <DialogContent className={cn(
+                "w-screen max-w-[100vw] h-[100dvh] flex flex-col p-0 gap-0 outline-none overflow-hidden transition-all duration-300",
+                isFullscreen
+                    ? "sm:max-w-[100vw] sm:h-[100vh] rounded-none"
+                    : "sm:max-w-5xl sm:h-[95vh] sm:rounded-xl"
+            )}>
                 <DialogTitle className="sr-only">{`第 ${currentQuestion.number} 题`}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
@@ -340,6 +347,17 @@ export function QuestionModal({
                                 <span className="hidden sm:inline text-xs">草稿</span>
                             </Toggle>
                         </div>
+
+                        {/* 全屏切换按钮 */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hidden sm:flex h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+                            onClick={() => setIsFullscreen(!isFullscreen)}
+                            title={isFullscreen ? "退出全屏" : "全屏显示"}
+                        >
+                            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                        </Button>
                     </div>
                     {/* 标签 (桌面端显示) */}
                     <div className="hidden sm:flex items-center gap-2 flex-wrap">
