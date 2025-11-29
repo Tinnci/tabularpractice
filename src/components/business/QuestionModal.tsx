@@ -127,7 +127,11 @@ export function QuestionModal({
 
     // 加载草稿内容
     useEffect(() => {
-        if (question && canvasRef.current) {
+        if (question && canvasRef.current && visibleViews.has('draft')) {
+            // 仅在切换题目或切换到草稿视图时加载
+            // 注意：不要将 drafts 加入依赖项，否则会导致每次保存（更新 store）时触发重绘，
+            // 从而打断用户的书写过程（因为 clearCanvas 会被调用）
+
             // 重置画布
             canvasRef.current.clearCanvas();
             // 如果有保存的草稿，加载它
@@ -141,7 +145,8 @@ export function QuestionModal({
                 }
             }
         }
-    }, [question, drafts, visibleViews]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [question, visibleViews]);
 
     // 自动保存笔记
     const handleNoteBlur = () => {
