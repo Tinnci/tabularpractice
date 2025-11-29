@@ -30,6 +30,7 @@ import 'katex/dist/katex.min.css';
 import { useProgressStore } from "@/lib/store";
 import { Switch } from "@/components/ui/switch";
 import { cn, getImageUrl } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 interface Props {
     isOpen: boolean;
@@ -108,8 +109,18 @@ export function QuestionModal({
     const [isEditingNote, setIsEditingNote] = useState(false);
 
     // 草稿系统状态
+    const { theme } = useTheme();
     const canvasRef = useRef<ReactSketchCanvasRef>(null);
     const [strokeColor, setStrokeColor] = useState("#000000");
+
+    // 监听主题变化，自动调整笔刷颜色
+    useEffect(() => {
+        if (theme === 'dark') {
+            setStrokeColor("#FFFFFF");
+        } else {
+            setStrokeColor("#000000");
+        }
+    }, [theme]);
     const [strokeWidth, setStrokeWidth] = useState(4);
     const [eraserMode, setEraserMode] = useState(false);
     const [onlyPenMode, setOnlyPenMode] = useState(false);
@@ -139,14 +150,29 @@ export function QuestionModal({
             if (savedDraft) {
                 try {
                     const paths = JSON.parse(savedDraft);
-                    canvasRef.current.loadPaths(paths);
+
+                    // 颜色自适应转换逻辑
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const transformedPaths = paths.map((path: any) => {
+                        // 如果是黑色且当前是深色模式 -> 转为白色
+                        if (path.strokeColor === "#000000" && theme === 'dark') {
+                            return { ...path, strokeColor: "#FFFFFF" };
+                        }
+                        // 如果是白色且当前是浅色模式 -> 转为黑色
+                        if (path.strokeColor === "#FFFFFF" && theme !== 'dark') {
+                            return { ...path, strokeColor: "#000000" };
+                        }
+                        return path;
+                    });
+
+                    canvasRef.current.loadPaths(transformedPaths);
                 } catch (e) {
                     console.error("Failed to load draft", e);
                 }
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [question, visibleViews]);
+    }, [question, visibleViews, theme]);
 
     // 自动保存笔记
     const handleNoteBlur = () => {
