@@ -16,7 +16,7 @@ import { Question, Status } from "@/lib/types";
 import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
+import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sketch-canvas";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
