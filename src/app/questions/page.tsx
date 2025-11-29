@@ -157,11 +157,16 @@ function QuestionsContent() {
 
   const handleStatusUpdate = (id: string, status: Status) => {
     updateStatus(id, status);
-    const hasNext = currentIndex < filteredQuestions.length - 1 && currentIndex !== -1;
-    if (hasNext) {
-      handleNavigate('next');
-    } else {
-      setSelectedQuestionId(null);
+
+    // 仅在"斩"（mastered）时自动跳转下一题
+    // "懵"和"崩"通常需要查看解析或做笔记，所以停留在当前题
+    if (status === 'mastered') {
+      const hasNext = currentIndex < filteredQuestions.length - 1 && currentIndex !== -1;
+      if (hasNext) {
+        handleNavigate('next');
+      } else {
+        setSelectedQuestionId(null);
+      }
     }
   };
 
