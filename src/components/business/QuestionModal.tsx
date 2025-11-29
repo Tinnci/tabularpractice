@@ -111,6 +111,7 @@ export function QuestionModal({
     const [strokeColor, setStrokeColor] = useState("#000000");
     const [strokeWidth, setStrokeWidth] = useState(4);
     const [eraserMode, setEraserMode] = useState(false);
+    const [onlyPenMode, setOnlyPenMode] = useState(false);
 
     const isStarred = question ? !!stars[question.id] : false;
 
@@ -549,6 +550,16 @@ export function QuestionModal({
                                                 />
                                                 <div className="w-px h-4 bg-border mx-1" />
                                                 <Button
+                                                    variant={onlyPenMode ? "secondary" : "ghost"}
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => setOnlyPenMode(!onlyPenMode)}
+                                                    title={onlyPenMode ? "已开启防误触 (仅限手写笔)" : "开启防误触 (仅限手写笔)"}
+                                                >
+                                                    <PenLine className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <div className="w-px h-4 bg-border mx-1" />
+                                                <Button
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-7 w-7"
@@ -584,6 +595,7 @@ export function QuestionModal({
                                                 canvasColor="transparent"
                                                 className="w-full h-full"
                                                 onStroke={saveDraft}
+                                                allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
                                             />
                                         </div>
                                     </div>
