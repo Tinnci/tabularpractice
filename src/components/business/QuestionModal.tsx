@@ -17,6 +17,7 @@ import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/u
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sketch-canvas";
+import { GpuSketchCanvas } from "@/components/ui/sketch-canvas/gpu";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
@@ -131,6 +132,7 @@ export function QuestionModal({
     const [strokeWidth, setStrokeWidth] = useState(4);
     const [eraserMode, setEraserMode] = useState(false);
     const [onlyPenMode, setOnlyPenMode] = useState(false);
+    const [useGpu, setUseGpu] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const isStarred = question ? !!stars[question.id] : false;
@@ -727,19 +729,49 @@ export function QuestionModal({
                                                             <p>清空草稿</p>
                                                         </TooltipContent>
                                                     </Tooltip>
+
+                                                    <div className="w-px h-5 bg-border mx-1" />
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant={useGpu ? "secondary" : "ghost"}
+                                                                size="sm"
+                                                                className="h-9 px-2 text-xs font-bold transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                onClick={() => setUseGpu(!useGpu)}
+                                                            >
+                                                                GPU
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="bottom">
+                                                            <p>{useGpu ? "已开启 GPU 加速 (Beta)" : "开启 GPU 加速 (Beta)"}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
                                                 </TooltipProvider>
                                             </div>
                                         </div>
                                         <div className="flex-1 relative bg-white dark:bg-zinc-900 cursor-crosshair touch-none">
-                                            <ReactSketchCanvas
-                                                ref={canvasRef}
-                                                strokeWidth={strokeWidth}
-                                                strokeColor={strokeColor}
-                                                canvasColor="transparent"
-                                                className="w-full h-full"
-                                                onStroke={debouncedSaveDraft}
-                                                allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
-                                            />
+                                            {useGpu ? (
+                                                <GpuSketchCanvas
+                                                    ref={canvasRef}
+                                                    strokeWidth={strokeWidth}
+                                                    strokeColor={strokeColor}
+                                                    canvasColor="transparent"
+                                                    className="w-full h-full"
+                                                    onStroke={debouncedSaveDraft}
+                                                    allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
+                                                />
+                                            ) : (
+                                                <ReactSketchCanvas
+                                                    ref={canvasRef}
+                                                    strokeWidth={strokeWidth}
+                                                    strokeColor={strokeColor}
+                                                    canvasColor="transparent"
+                                                    className="w-full h-full"
+                                                    onStroke={debouncedSaveDraft}
+                                                    allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 )}
