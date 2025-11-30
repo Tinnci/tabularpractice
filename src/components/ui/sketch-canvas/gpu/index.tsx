@@ -505,10 +505,16 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             isDrawingRef.current = false;
             (e.target as Element).releasePointerCapture(e.pointerId);
 
+            // Ensure the last points are written to the buffer
+            updateBuffer(false);
+
             const stroke = currentStrokeRef.current;
             strokesRef.current.push(stroke);
             totalPointsRef.current += stroke.points.length;
             currentStrokeRef.current = null;
+
+            // Final draw to ensure everything is up to date
+            draw();
 
             if (onStroke) {
                 const exportedPath: ExportedPath = {
