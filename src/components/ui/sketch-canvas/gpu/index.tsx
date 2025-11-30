@@ -446,7 +446,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             rawPointsRef.current = [{ x, y, p }];
 
             currentStrokeRef.current = {
-                points: [{ x, y, p }], // Start with the initial point
+                points: [{ x, y, p }],
                 color: hexToRgba(strokeColor),
                 hexColor: strokeColor,
                 width: strokeWidth * dpr,
@@ -473,13 +473,16 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const y = (ev.clientY - rect.top) * dpr;
                 const p = ev.pressure || 0.5;
 
+                // Filter out points that are too close to the last one to prevent stacking artifacts
+                if (rawPoints.length > 0) {
+                    const last = rawPoints[rawPoints.length - 1];
+                    const dist = Math.hypot(x - last.x, y - last.y);
+                    if (dist < 1) continue; // Ignore points closer than 1px
+                }
+
                 rawPoints.push({ x, y, p });
 
                 // We need at least 3 points to form a quadratic bezier segment
-                // P0 (start), P1 (control), P2 (end)
-                // We use the "midpoint" technique for smooth continuous curves:
-                // Curve goes from Mid(P_i-1, P_i) to Mid(P_i, P_i+1) with Control P_i.
-
                 if (rawPoints.length > 2) {
                     const i = rawPoints.length - 2;
                     const p0 = rawPoints[i - 1];
@@ -500,20 +503,12 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
                     // Interpolate Quadratic Bezier from mid1 to mid2 with control p1
                     const dist = Math.hypot(mid2.x - mid1.x, mid2.y - mid1.y);
-
-                    // Dynamic step size: smaller step for smoother lines
-                    // Ensure step is at most 1/4 of brush width to prevent gaps (dots)
-                    // But also clamp it to avoid excessive points on very thin lines
                     const brushSize = stroke.width;
                     const step = Math.max(1, brushSize / 4);
-
                     const numSteps = Math.ceil(dist / step);
 
                     for (let tStep = 1; tStep <= numSteps; tStep++) {
                         const t = tStep / numSteps;
-
-                        // Quadratic Bezier Formula:
-                        // B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
                         const a = Math.pow(1 - t, 2);
                         const b = 2 * (1 - t) * t;
                         const c = Math.pow(t, 2);
@@ -524,26 +519,20 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
                         stroke.points.push({ x: bx, y: by, p: bp });
                     }
-                } else {
-                    // Just add the point if we don't have enough for a curve yet (start of stroke)
-                    // This will be smoothed out as soon as we get the 3rd point
-                    // stroke.points.push({ x, y, p }); 
-                    // Actually, better to wait for the 3rd point to start rendering curves to avoid "tails"
-                    // But to reduce latency, we can just linear interpolate the very beginning
-                    if (rawPoints.length === 2) {
-                        const p0 = rawPoints[0];
-                        const p1 = rawPoints[1];
-                        const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
-                        const step = Math.max(1, stroke.width / 4);
-                        const numSteps = Math.ceil(dist / step);
-                        for (let i = 1; i <= numSteps; i++) {
-                            const t = i / numSteps;
-                            stroke.points.push({
-                                x: p0.x + (p1.x - p0.x) * t,
-                                y: p0.y + (p1.y - p0.y) * t,
-                                p: p0.p + (p1.p - p0.p) * t
-                            });
-                        }
+                } else if (rawPoints.length === 2) {
+                    // Linear interpolate the very beginning to reduce latency
+                    const p0 = rawPoints[0];
+                    const p1 = rawPoints[1];
+                    const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+                    const step = Math.max(1, stroke.width / 4);
+                    const numSteps = Math.ceil(dist / step);
+                    for (let i = 1; i <= numSteps; i++) {
+                        const t = i / numSteps;
+                        stroke.points.push({
+                            x: p0.x + (p1.x - p0.x) * t,
+                            y: p0.y + (p1.y - p0.y) * t,
+                            p: p0.p + (p1.p - p0.p) * t
+                        });
                     }
                 }
             }
@@ -557,16 +546,45 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             }
         };
 
-
         const handlePointerUp = (e: React.PointerEvent) => {
             if (!isDrawingRef.current || !currentStrokeRef.current) return;
             isDrawingRef.current = false;
             (e.target as Element).releasePointerCapture(e.pointerId);
 
+            const stroke = currentStrokeRef.current;
+            const rawPoints = rawPointsRef.current;
+
+            // Finalize the stroke: draw the tail from the last midpoint to the actual end
+            if (rawPoints.length > 2) {
+                const last = rawPoints[rawPoints.length - 1];
+                const secondLast = rawPoints[rawPoints.length - 2];
+
+                // The main loop stops at mid(secondLast, last). We need to finish the line to 'last'.
+                const startX = (secondLast.x + last.x) / 2;
+                const startY = (secondLast.y + last.y) / 2;
+                const startP = (secondLast.p + last.p) / 2;
+
+                const endX = last.x;
+                const endY = last.y;
+                const endP = last.p;
+
+                const dist = Math.hypot(endX - startX, endY - startY);
+                const step = Math.max(1, stroke.width / 4);
+                const numSteps = Math.ceil(dist / step);
+
+                for (let i = 1; i <= numSteps; i++) {
+                    const t = i / numSteps;
+                    stroke.points.push({
+                        x: startX + (endX - startX) * t,
+                        y: startY + (endY - startY) * t,
+                        p: startP + (endP - startP) * t
+                    });
+                }
+            }
+
             // Ensure the last points are written to the buffer
             updateBuffer(false);
 
-            const stroke = currentStrokeRef.current;
             strokesRef.current.push(stroke);
             totalPointsRef.current += stroke.points.length;
             currentStrokeRef.current = null;
