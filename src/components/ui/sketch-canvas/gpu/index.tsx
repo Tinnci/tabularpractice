@@ -76,8 +76,13 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             // 1. Update Uniform (Resolution)
             const width = canvasRef.current.width;
             const height = canvasRef.current.height;
-            // TypeGPU buffer write
-            uniformBufferRef.current.write({ resolution: [width, height] });
+
+            // Use raw WebGPU write to ensure buffer is updated
+            device.queue.writeBuffer(
+                root.unwrap(uniformBufferRef.current),
+                0,
+                new Float32Array([width, height])
+            );
 
             // 2. Prepare Draw
             const textureView = context.getCurrentTexture().createView();
