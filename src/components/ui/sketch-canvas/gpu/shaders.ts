@@ -2,8 +2,6 @@ import tgpu from 'typegpu';
 import * as d from 'typegpu/data';
 import * as std from 'typegpu/std';
 
-// --- Data Structures ---
-
 export const CanvasUniforms = d.struct({
     resolution: d.vec2f,
 });
@@ -15,8 +13,6 @@ export const StrokePoint = d.struct({
     color: d.vec4f,
 });
 
-// --- Shaders ---
-
 const unstable = tgpu['~unstable'] as any;
 
 /**
@@ -25,12 +21,11 @@ const unstable = tgpu['~unstable'] as any;
 export const vertexShader = unstable.vertexFn({
     in: {
         vertexIndex: d.builtin.vertexIndex,
-        instanceIndex: d.builtin.instanceIndex, // 获取当前实例ID
+        instanceIndex: d.builtin.instanceIndex,
     },
     uniforms: {
         canvas: CanvasUniforms,
-        // 关键修改：将点数据作为 Storage Buffer 传入，而不是 Attribute
-        // Storage Buffer 允许我们在 Shader 中像数组一样随机访问
+        // 使用不定长数组，TypeGPU 会将其映射为 Storage Buffer (read-only)
         points: d.arrayOf(StrokePoint),
     },
     out: {
@@ -39,11 +34,12 @@ export const vertexShader = unstable.vertexFn({
         color: d.vec4f,
     },
 }, (input: any, resources: any) => {
-    // 手动读取数据：根据 draw 调用中的 instanceIndex 获取对应的点数据
-    // 注意：TypeGPU/WGSL 会自动处理 buffer offset
-    // 这里的 instanceIndex 是全局的，对应于 draw 调用中的 firstInstance + index
+    // 通过 instanceIndex 索引 Storage Buffer
     const point = resources.points[input.instanceIndex];
 
+    // 生成 Quad 坐标
+    // 修正顶点顺序以避免背面剔除问题 (Triangle Strip: 0,1,2,3 -> Z-shape)
+    // 0:(-1,-1), 1:(1,-1), 2:(-1,1), 3:(1,1)
     let x = -1.0;
     let y = -1.0;
     if (input.vertexIndex === 1) { x = 1.0; }
@@ -52,7 +48,6 @@ export const vertexShader = unstable.vertexFn({
 
     const quadPos = d.vec2f(x, y);
 
-    // 使用读取到的 point 数据
     const size = std.mul(point.size, std.max(point.pressure, 0.1));
     const offset = std.mul(quadPos, size);
     const pixelPos = std.add(point.position, offset);

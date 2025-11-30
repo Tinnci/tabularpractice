@@ -47,7 +47,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
         const drawPipelineRef = useRef<any>(null);
         const erasePipelineRef = useRef<any>(null);
 
-        // Storage Buffer
         const pointBufferRef = useRef<any>(null);
         const uniformBufferRef = useRef<any>(null);
 
@@ -65,35 +64,38 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             return [r, g, b, 1.0];
         };
 
+        // --- 核心修改：Draw 函数 ---
         const draw = () => {
             if (!rootRef.current || !drawPipelineRef.current || !erasePipelineRef.current || !canvasRef.current) return;
 
-            const device = rootRef.current.device as GPUDevice;
             const context = canvasRef.current.getContext('webgpu') as GPUCanvasContext;
             if (!context) return;
 
+            // 1. 更新 Uniform (分辨率)
             const width = canvasRef.current.width;
             const height = canvasRef.current.height;
+            uniformBufferRef.current.write({ resolution: [width, height] });
 
-            uniformBufferRef.current.write({
-                resolution: [width, height],
-            });
-
-            const commandEncoder = device.createCommandEncoder();
+            // 2. 准备绘制
             const textureView = context.getCurrentTexture().createView();
 
-            const renderPass = commandEncoder.beginRenderPass({
-                colorAttachments: [{
-                    view: textureView,
-                    clearValue: { r: 0, g: 0, b: 0, a: 0 },
-                    loadOp: 'clear',
-                    storeOp: 'store',
-                }],
-            });
-
+            // 收集所有需要绘制的笔画
             const allStrokes = [...strokesRef.current];
             if (currentStrokeRef.current) {
                 allStrokes.push(currentStrokeRef.current);
+            }
+
+            // 3. 循环绘制
+            // 注意：因为我们要多次通过 pipeline.draw 绘制到同一个 texture，
+            // 第一笔需要 clear，后面的需要 load (保留上一笔)
+            let isFirstDraw = true;
+
+            // 如果没有笔画，我们需要清空屏幕
+            if (allStrokes.length === 0) {
+                // 这里可以使用一个空的 Pass 或者简单的 clear，
+                // 但为了简单起见，利用 TypeGPU 的机制，我们可以不做操作，或者强制 draw 一个空的
+                // 实际上，WebGPU Canvas 默认每帧会 clear。如果什么都不做，就是透明/黑色。
+                return;
             }
 
             for (const stroke of allStrokes) {
@@ -101,19 +103,29 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
                 const pipeline = stroke.isEraser ? erasePipelineRef.current : drawPipelineRef.current;
 
-                // Draw 逻辑不变：instanceIndex 会自动传递给 shader
-                // shader 中的 input.instanceIndex 将会是 (0 + startIndex) 到 (length + startIndex)
-                pipeline.draw(4, stroke.points.length, 0, stroke.startIndex, renderPass);
-            }
+                // 使用 TypeGPU 的 Fluent API
+                pipeline
+                    .withColorAttachment({
+                        view: textureView,
+                        // 第一笔清除，后续保留
+                        loadOp: isFirstDraw ? 'clear' : 'load',
+                        storeOp: 'store',
+                        clearValue: { r: 0, g: 0, b: 0, a: 0 } // 透明背景
+                    })
+                    // 绑定资源
+                    .with(vertexShader.uniforms.canvas, uniformBufferRef.current)
+                    .with(vertexShader.uniforms.points, pointBufferRef.current)
+                    // 执行绘制
+                    // draw(vertexCount, instanceCount, firstVertex, firstInstance)
+                    .draw(4, stroke.points.length, 0, stroke.startIndex);
 
-            renderPass.end();
-            device.queue.submit([commandEncoder.finish()]);
+                isFirstDraw = false;
+            }
         };
 
         const updateBuffer = (fullRebuild = false) => {
             if (!pointBufferRef.current || !rootRef.current) return;
             const device = rootRef.current.device as GPUDevice;
-            // 获取原始 buffer
             const rawBuffer = rootRef.current.unwrap(pointBufferRef.current) as GPUBuffer;
 
             const writeStrokeToData = (stroke: GpuStroke, targetData: Float32Array, startOffset: number) => {
@@ -173,8 +185,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const root = await tgpu.init();
                 rootRef.current = root;
 
-                // 修改 1: 创建 Buffer 时标记为 'storage'
-                // 注意：WebGPU 中 Storage Buffer 通常需要 4字节对齐，Stride 为 32 符合要求
+                // 创建 Buffer，标记为 Storage
                 const PointsArray = d.arrayOf(StrokePoint, MAX_POINTS);
                 const pointBuffer = root.createBuffer(PointsArray).$usage('storage');
                 pointBufferRef.current = pointBuffer;
@@ -194,13 +205,15 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const pipelineConfig = {
                     vertex: vertexShader,
                     fragment: fragmentShader,
-                    primitive: { topology: 'triangle-strip', stripIndexFormat: undefined },
+                    // 关键：关闭剔除，或者确保顶点顺序正确。这里关闭剔除最安全。
+                    primitive: {
+                        topology: 'triangle-strip',
+                        stripIndexFormat: undefined,
+                        cullMode: 'none'
+                    },
                 };
 
-                // 修改 2: 绑定方式改变
-                // 之前是 .with(vertexShader.in.instance, vertexBuffer)
-                // 现在是 .with(vertexShader.uniforms.points, pointBuffer)
-
+                // 创建 Pipeline，不在这里绑定 .with()，而在 draw 时动态绑定
                 const drawPipeline = unstable.createRenderPipeline({
                     ...pipelineConfig,
                     targets: [{
@@ -210,9 +223,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                             alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add' },
                         },
                     }],
-                })
-                    .with(vertexShader.uniforms.canvas, uniformBuffer)
-                    .with(vertexShader.uniforms.points, pointBuffer); // 绑定 Storage Buffer
+                });
 
                 const erasePipeline = unstable.createRenderPipeline({
                     ...pipelineConfig,
@@ -223,9 +234,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                             alpha: { srcFactor: 'zero', dstFactor: 'one-minus-src-alpha', operation: 'add' },
                         },
                     }],
-                })
-                    .with(vertexShader.uniforms.canvas, uniformBuffer)
-                    .with(vertexShader.uniforms.points, pointBuffer); // 绑定 Storage Buffer
+                });
 
                 drawPipelineRef.current = drawPipeline;
                 erasePipelineRef.current = erasePipeline;
@@ -323,7 +332,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     const removed = strokesRef.current.pop();
                     if (removed) {
                         totalPointsRef.current -= removed.points.length;
-                        updateBuffer(true); // Rebuild buffer without the last stroke
+                        updateBuffer(true);
                         draw();
                     }
                 }
@@ -332,7 +341,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 isEraserRef.current = erase;
             },
             exportPaths: async () => {
-                // Convert internal strokes to ExportedPath[]
                 return strokesRef.current.map(s => ({
                     paths: s.points.map(p => ({ x: p.x, y: p.y })),
                     strokeWidth: s.width,
@@ -343,7 +351,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 }));
             },
             loadPaths: (paths: ExportedPath[]) => {
-                // Convert ExportedPath[] to internal strokes
                 let currentTotal = 0;
                 const newStrokes: GpuStroke[] = paths.map(p => {
                     const stroke: GpuStroke = {
