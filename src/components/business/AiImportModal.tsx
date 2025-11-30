@@ -110,7 +110,6 @@ export function AiImportModal({ isOpen, onClose }: Props) {
 
             const prompt = `
             你是一个专业的试卷解析助手。请分析上传的 PDF 文件，提取其中的试题信息。
-            请严格按照以下 JSON 格式返回数据，不要包含 Markdown 代码块标记（如 \`\`\`json），直接返回纯 JSON 字符串。
             
             目标 JSON 结构:
             {
@@ -159,13 +158,16 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                             { inlineData: { mimeType: file.type, data: base64Data } }
                         ]
                     }
-                ]
+                ],
+                config: {
+                    responseMimeType: 'application/json'
+                }
             });
 
             const text = response.text;
             if (!text) throw new Error("No content generated");
 
-            // 清理可能存在的 Markdown 代码块标记
+            // 虽然 JSON 模式通常不包含 markdown 标记，但为了兼容性保留简单的清理
             const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
             setRawResponse(cleanJson);
 
