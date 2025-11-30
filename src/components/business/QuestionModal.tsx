@@ -584,87 +584,134 @@ export function QuestionModal({
                                                 <Pencil className="w-4 h-4" /> 手写草稿
                                             </div>
                                             <div className="flex items-center gap-1 sm:gap-2">
-                                                <Button
-                                                    variant={!eraserMode ? "secondary" : "ghost"}
-                                                    size="icon"
-                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
-                                                    onClick={() => {
-                                                        setEraserMode(false);
-                                                        canvasRef.current?.eraseMode(false);
-                                                    }}
-                                                    title="画笔"
-                                                >
-                                                    <Pencil className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant={eraserMode ? "secondary" : "ghost"}
-                                                    size="icon"
-                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
-                                                    onClick={() => {
-                                                        setEraserMode(true);
-                                                        canvasRef.current?.eraseMode(true);
-                                                    }}
-                                                    title="橡皮擦"
-                                                >
-                                                    <Eraser className="w-4 h-4" />
-                                                </Button>
-                                                <div className="w-px h-5 bg-border mx-1" />
-                                                <div className="relative w-9 h-9 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors cursor-pointer active:scale-90">
-                                                    <div 
-                                                        className="w-5 h-5 rounded-full border shadow-sm" 
-                                                        style={{ backgroundColor: strokeColor }}
-                                                    />
-                                                    <input
-                                                        type="color"
-                                                        value={strokeColor}
-                                                        onChange={(e) => {
-                                                            setStrokeColor(e.target.value);
-                                                            setEraserMode(false);
-                                                            canvasRef.current?.eraseMode(false);
-                                                        }}
-                                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                                        title="颜色"
-                                                    />
-                                                </div>
-                                                <div className="w-px h-5 bg-border mx-1" />
-                                                <Button
-                                                    variant={onlyPenMode ? "secondary" : "ghost"}
-                                                    size="icon"
-                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
-                                                    onClick={() => setOnlyPenMode(!onlyPenMode)}
-                                                    title={onlyPenMode ? "已开启防误触 (仅限手写笔)" : "开启防误触 (仅限手写笔)"}
-                                                >
-                                                    <PenLine className="w-4 h-4" />
-                                                </Button>
-                                                <div className="w-px h-5 bg-border mx-1" />
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
-                                                    onClick={() => {
-                                                        canvasRef.current?.undo();
-                                                        // 延迟保存，确保 undo 操作已完成
-                                                        setTimeout(saveDraft, 100);
-                                                    }}
-                                                    title="撤销"
-                                                >
-                                                    <Undo className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90"
-                                                    onClick={() => {
-                                                        if (confirm('确定要清空草稿吗？')) {
-                                                            canvasRef.current?.clearCanvas();
-                                                            // 延迟保存
-                                                            setTimeout(saveDraft, 100);
-                                                        }
-                                                    }}
-                                                    title="清空"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
+                                                <TooltipProvider delayDuration={300}>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant={!eraserMode ? "secondary" : "ghost"}
+                                                                size="icon"
+                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                onClick={() => {
+                                                                    setEraserMode(false);
+                                                                    canvasRef.current?.eraseMode(false);
+                                                                }}
+                                                            >
+                                                                <Pencil className="w-4 h-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="bottom">
+                                                            <p>画笔</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant={eraserMode ? "secondary" : "ghost"}
+                                                                size="icon"
+                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                onClick={() => {
+                                                                    setEraserMode(true);
+                                                                    canvasRef.current?.eraseMode(true);
+                                                                }}
+                                                            >
+                                                                <Eraser className="w-4 h-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="bottom">
+                                                            <p>橡皮擦</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+
+                                                    <div className="w-px h-5 bg-border mx-1" />
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div className="relative w-9 h-9 flex items-center justify-center rounded-md hover:bg-muted/50 hover:scale-105 transition-all cursor-pointer active:scale-90 group">
+                                                                <div
+                                                                    className="w-5 h-5 rounded-full border shadow-sm group-hover:ring-2 group-hover:ring-offset-1 group-hover:ring-muted-foreground/20 transition-all"
+                                                                    style={{ backgroundColor: strokeColor }}
+                                                                />
+                                                                <input
+                                                                    type="color"
+                                                                    value={strokeColor}
+                                                                    onChange={(e) => {
+                                                                        setStrokeColor(e.target.value);
+                                                                        setEraserMode(false);
+                                                                        canvasRef.current?.eraseMode(false);
+                                                                    }}
+                                                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                                                />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="bottom">
+                                                            <p>颜色选择</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+
+                                                    <div className="w-px h-5 bg-border mx-1" />
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant={onlyPenMode ? "secondary" : "ghost"}
+                                                                size="icon"
+                                                                className={cn(
+                                                                    "h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground",
+                                                                    onlyPenMode ? "text-foreground" : "text-muted-foreground"
+                                                                )}
+                                                                onClick={() => setOnlyPenMode(!onlyPenMode)}
+                                                            >
+                                                                <PenLine className="w-4 h-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="bottom">
+                                                            <p>{onlyPenMode ? "已开启防误触 (仅限手写笔)" : "开启防误触 (仅限手写笔)"}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+
+                                                    <div className="w-px h-5 bg-border mx-1" />
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                onClick={() => {
+                                                                    canvasRef.current?.undo();
+                                                                    setTimeout(saveDraft, 100);
+                                                                }}
+                                                            >
+                                                                <Undo className="w-4 h-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="bottom">
+                                                            <p>撤销</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-9 w-9 text-red-500/70 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90 hover:scale-105"
+                                                                onClick={() => {
+                                                                    if (confirm('确定要清空草稿吗？')) {
+                                                                        canvasRef.current?.clearCanvas();
+                                                                        setTimeout(saveDraft, 100);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="bottom">
+                                                            <p>清空草稿</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
                                         </div>
                                         <div className="flex-1 relative bg-white dark:bg-zinc-900 cursor-crosshair touch-none">
