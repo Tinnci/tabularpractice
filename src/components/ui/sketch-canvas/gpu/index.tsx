@@ -28,25 +28,27 @@ interface GpuStroke {
 }
 
 const MAX_POINTS = 500000;
-// StrokePoint 结构变更后，每个点由 8 个 float 组成 (32 bytes)
-// pos(2) + pressure(1) + size(1) + color(4)
 const FLOATS_PER_POINT = 8;
 
 const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
-    ({
-        width = "100%",
-        height = "100%",
-        className = "",
-        strokeColor = "#000000",
-        strokeWidth = 4,
-        allowOnlyPointerType = "all",
-        onStroke
-    }, ref) => {
+    (props, ref) => {
+        const {
+            width = "100%",
+            height = "100%",
+            className = "",
+            strokeColor = "#000000",
+            strokeWidth = 4,
+            allowOnlyPointerType = "all",
+            onStroke
+        } = props;
+
         const canvasRef = useRef<HTMLCanvasElement>(null);
         const rootRef = useRef<any>(null);
         const drawPipelineRef = useRef<any>(null);
         const erasePipelineRef = useRef<any>(null);
-        const vertexBufferRef = useRef<any>(null);
+
+        // Storage Buffer
+        const pointBufferRef = useRef<any>(null);
         const uniformBufferRef = useRef<any>(null);
 
         const strokesRef = useRef<GpuStroke[]>([]);
@@ -73,7 +75,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             const width = canvasRef.current.width;
             const height = canvasRef.current.height;
 
-            // 更新一次全局 Uniform (Resolution)
             uniformBufferRef.current.write({
                 resolution: [width, height],
             });
@@ -98,8 +99,10 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             for (const stroke of allStrokes) {
                 if (stroke.points.length === 0) continue;
 
-                // 不再在这里写 Uniforms，颜色和大小已经在 Buffer 里了
                 const pipeline = stroke.isEraser ? erasePipelineRef.current : drawPipelineRef.current;
+
+                // Draw 逻辑不变：instanceIndex 会自动传递给 shader
+                // shader 中的 input.instanceIndex 将会是 (0 + startIndex) 到 (length + startIndex)
                 pipeline.draw(4, stroke.points.length, 0, stroke.startIndex, renderPass);
             }
 
@@ -108,24 +111,23 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
         };
 
         const updateBuffer = (fullRebuild = false) => {
-            if (!vertexBufferRef.current || !rootRef.current) return;
+            if (!pointBufferRef.current || !rootRef.current) return;
             const device = rootRef.current.device as GPUDevice;
-            const rawBuffer = rootRef.current.unwrap(vertexBufferRef.current) as GPUBuffer;
+            // 获取原始 buffer
+            const rawBuffer = rootRef.current.unwrap(pointBufferRef.current) as GPUBuffer;
 
-            // 辅助函数：将一个 stroke 的数据写入 Float32Array
             const writeStrokeToData = (stroke: GpuStroke, targetData: Float32Array, startOffset: number) => {
                 let offset = startOffset;
                 for (let i = 0; i < stroke.points.length; i++) {
                     const p = stroke.points[i];
-                    // StrokePoint struct layout
                     targetData[offset++] = p.x;
                     targetData[offset++] = p.y;
                     targetData[offset++] = p.p;
-                    targetData[offset++] = stroke.width; // size
-                    targetData[offset++] = stroke.color[0]; // r
-                    targetData[offset++] = stroke.color[1]; // g
-                    targetData[offset++] = stroke.color[2]; // b
-                    targetData[offset++] = stroke.color[3]; // a
+                    targetData[offset++] = stroke.width;
+                    targetData[offset++] = stroke.color[0];
+                    targetData[offset++] = stroke.color[1];
+                    targetData[offset++] = stroke.color[2];
+                    targetData[offset++] = stroke.color[3];
                 }
                 return offset;
             };
@@ -134,45 +136,34 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const data = new Float32Array(MAX_POINTS * FLOATS_PER_POINT);
                 let currentTotal = 0;
                 let offset = 0;
-
                 const processStroke = (stroke: GpuStroke) => {
                     stroke.startIndex = currentTotal;
                     offset = writeStrokeToData(stroke, data, offset);
                     currentTotal += stroke.points.length;
                 };
-
                 strokesRef.current.forEach(processStroke);
                 if (currentStrokeRef.current) processStroke(currentStrokeRef.current);
-
                 totalPointsRef.current = currentTotal;
 
                 if (currentTotal > 0) {
-                    // 只写入有效部分
                     device.queue.writeBuffer(rawBuffer, 0, data, 0, currentTotal * FLOATS_PER_POINT * 4);
                 }
             } else {
-                // Append mode
                 const stroke = currentStrokeRef.current;
                 if (!stroke) return;
-
-                if (stroke.startIndex === -1) {
-                    stroke.startIndex = totalPointsRef.current;
-                }
+                if (stroke.startIndex === -1) stroke.startIndex = totalPointsRef.current;
 
                 const startIdx = stroke.startIndex;
                 const count = stroke.points.length;
-
                 if (startIdx + count > MAX_POINTS) return;
 
                 const data = new Float32Array(count * FLOATS_PER_POINT);
                 writeStrokeToData(stroke, data, 0);
 
-                // 写入位置：startIndex * (Bytes per Point) = startIndex * 32
                 device.queue.writeBuffer(rawBuffer, startIdx * 32, data);
             }
         };
 
-        // Init WebGPU
         useEffect(() => {
             const initGpu = async () => {
                 if (!canvasRef.current || !navigator.gpu) return;
@@ -182,9 +173,11 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const root = await tgpu.init();
                 rootRef.current = root;
 
+                // 修改 1: 创建 Buffer 时标记为 'storage'
+                // 注意：WebGPU 中 Storage Buffer 通常需要 4字节对齐，Stride 为 32 符合要求
                 const PointsArray = d.arrayOf(StrokePoint, MAX_POINTS);
-                const vertexBuffer = root.createBuffer(PointsArray).$usage('vertex');
-                vertexBufferRef.current = vertexBuffer;
+                const pointBuffer = root.createBuffer(PointsArray).$usage('storage');
+                pointBufferRef.current = pointBuffer;
 
                 const uniformBuffer = root.createBuffer(CanvasUniforms).$usage('uniform');
                 uniformBufferRef.current = uniformBuffer;
@@ -204,6 +197,10 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     primitive: { topology: 'triangle-strip', stripIndexFormat: undefined },
                 };
 
+                // 修改 2: 绑定方式改变
+                // 之前是 .with(vertexShader.in.instance, vertexBuffer)
+                // 现在是 .with(vertexShader.uniforms.points, pointBuffer)
+
                 const drawPipeline = unstable.createRenderPipeline({
                     ...pipelineConfig,
                     targets: [{
@@ -215,7 +212,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     }],
                 })
                     .with(vertexShader.uniforms.canvas, uniformBuffer)
-                    .with(vertexShader.in.instance, vertexBuffer);
+                    .with(vertexShader.uniforms.points, pointBuffer); // 绑定 Storage Buffer
 
                 const erasePipeline = unstable.createRenderPipeline({
                     ...pipelineConfig,
@@ -228,7 +225,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     }],
                 })
                     .with(vertexShader.uniforms.canvas, uniformBuffer)
-                    .with(vertexShader.in.instance, vertexBuffer);
+                    .with(vertexShader.uniforms.points, pointBuffer); // 绑定 Storage Buffer
 
                 drawPipelineRef.current = drawPipeline;
                 erasePipelineRef.current = erasePipeline;
@@ -254,17 +251,16 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             const y = e.clientY - rect.top;
             const p = e.pressure || 0.5;
 
-            // Start new stroke
             currentStrokeRef.current = {
                 points: [{ x, y, p }],
                 color: hexToRgba(strokeColor),
                 hexColor: strokeColor,
                 width: strokeWidth,
                 isEraser: isEraserRef.current,
-                startIndex: totalPointsRef.current // Start at the end of existing points
+                startIndex: totalPointsRef.current
             };
 
-            updateBuffer(false); // Append
+            updateBuffer(false);
             draw();
         };
 
@@ -283,7 +279,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
             if (!rafRef.current) {
                 rafRef.current = requestAnimationFrame(() => {
-                    updateBuffer(false); // Append
+                    updateBuffer(false);
                     draw();
                     rafRef.current = null;
                 });
@@ -295,7 +291,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             isDrawingRef.current = false;
             (e.target as Element).releasePointerCapture(e.pointerId);
 
-            // Finalize stroke
             const stroke = currentStrokeRef.current;
             strokesRef.current.push(stroke);
             totalPointsRef.current += stroke.points.length;
