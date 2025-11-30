@@ -24,8 +24,17 @@ const multiSourceFetcher = async (urls: string[]) => {
     });
 
     const results = await Promise.all(promises);
-    // 合并所有结果
-    return results.flat();
+    const allQuestions = results.flat();
+
+    // 去重：基于 ID
+    const uniqueQuestions = new Map<string, Question>();
+    allQuestions.forEach(q => {
+        if (!uniqueQuestions.has(q.id)) {
+            uniqueQuestions.set(q.id, q);
+        }
+    });
+
+    return Array.from(uniqueQuestions.values());
 };
 
 // 多源 PaperGroups fetcher
