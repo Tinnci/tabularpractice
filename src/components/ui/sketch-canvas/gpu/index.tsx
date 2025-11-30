@@ -592,18 +592,33 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
         // Resize
         useEffect(() => {
-            const handleResize = () => {
-                if (canvasRef.current && canvasRef.current.parentElement) {
-                    const rect = canvasRef.current.parentElement.getBoundingClientRect();
-                    const dpr = window.devicePixelRatio || 1;
+            if (!canvasRef.current || !canvasRef.current.parentElement) return;
+
+            const updateSize = () => {
+                if (!canvasRef.current || !canvasRef.current.parentElement) return;
+                const rect = canvasRef.current.parentElement.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+
+                // Only update if size actually changed to avoid unnecessary clears/redraws
+                if (canvasRef.current.width !== rect.width * dpr || canvasRef.current.height !== rect.height * dpr) {
                     canvasRef.current.width = rect.width * dpr;
                     canvasRef.current.height = rect.height * dpr;
                     draw();
                 }
             };
-            window.addEventListener('resize', handleResize);
-            handleResize();
-            return () => window.removeEventListener('resize', handleResize);
+
+            const resizeObserver = new ResizeObserver(() => {
+                updateSize();
+            });
+
+            resizeObserver.observe(canvasRef.current.parentElement);
+
+            // Initial size update
+            updateSize();
+
+            return () => {
+                resizeObserver.disconnect();
+            };
         }, []);
 
         return (
