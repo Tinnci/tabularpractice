@@ -77,12 +77,13 @@ export function AiImportModal({ isOpen, onClose }: Props) {
 
             // Filter for Gemini models that support generateContent
             const geminiModels = allModels
-                .filter((m: any) => {
-                    if (!m.name) return false;
-                    const methods = m.supportedGenerationMethods || [];
-                    return m.name.includes('gemini') && methods.includes('generateContent');
+                .filter((m: unknown) => {
+                    if (typeof m !== 'object' || m === null || !('name' in m)) return false;
+                    const model = m as { name: string; supportedGenerationMethods?: string[] };
+                    const methods = model.supportedGenerationMethods || [];
+                    return model.name.includes('gemini') && methods.includes('generateContent');
                 })
-                .map((m: any) => m.name.replace('models/', ''));
+                .map((m: unknown) => (m as { name: string }).name.replace('models/', ''));
 
             setAvailableModels(geminiModels);
 
@@ -272,7 +273,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                                 </Button>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                点击"获取模型"查看您的 API Key 可用的所有模型
+                                点击&quot;获取模型&quot;查看您的 API Key 可用的所有模型
                             </p>
                         </div>
 

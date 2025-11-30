@@ -7,7 +7,7 @@ import { GlobalSearch } from "@/components/business/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { usePaperDetail } from "@/hooks/useQuestions";
 import { Question, Status, PaperGroup } from "@/lib/types";
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useProgressStore } from "@/lib/store";
 import {
   Select,
@@ -29,7 +29,7 @@ import {
 
 import { ShortcutsHelpModal } from "@/components/business/ShortcutsHelpModal";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useContextQuestions } from "@/hooks/useContextQuestions";
 
 function QuestionsContent() {
@@ -52,15 +52,31 @@ function QuestionsContent() {
 
   const { contextQuestions, currentPapers, mergedQuestions, paperGroupsData } = useContextQuestions();
 
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
-  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
-
   // URL 参数同步逻辑
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Derive state directly from URL
+  const selectedQuestionId = searchParams.get('questionId');
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+
+  // Helper to update URL params
+  const updateUrl = useCallback((newParams: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === null) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchParams, router, pathname]);
+
   useEffect(() => {
     const status = searchParams.get('status');
     const subject = searchParams.get('subject');
-    const questionId = searchParams.get('questionId');
 
     if (status) {
       setFilterStatus(status as Status);
@@ -73,10 +89,6 @@ function QuestionsContent() {
           setCurrentGroupId(targetGroup.id);
         }
       }
-    }
-
-    if (questionId) {
-      setSelectedQuestionId(questionId);
     }
   }, [searchParams, setFilterStatus, setCurrentGroupId, paperGroupsData]);
 
@@ -134,7 +146,7 @@ function QuestionsContent() {
   }, [contextQuestions, filterStatus, filterStarred, stars]);
 
   const handleQuestionClick = (id: string) => {
-    setSelectedQuestionId(id);
+    updateUrl({ questionId: id });
   };
 
   const currentIndex = useMemo(() => {
@@ -156,7 +168,7 @@ function QuestionsContent() {
     if (currentIndex === -1) return;
     const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
     if (newIndex >= 0 && newIndex < filteredQuestions.length) {
-      setSelectedQuestionId(filteredQuestions[newIndex].id);
+      updateUrl({ questionId: filteredQuestions[newIndex].id });
     }
   };
 
@@ -170,7 +182,7 @@ function QuestionsContent() {
       if (hasNext) {
         handleNavigate('next');
       } else {
-        setSelectedQuestionId(null);
+        updateUrl({ questionId: null });
       }
     }
   };
@@ -304,7 +316,7 @@ function QuestionsContent() {
               </Tooltip>
             </TooltipProvider>
 
-            <GlobalSearch questions={mergedQuestions} onQuestionSelect={(id) => setSelectedQuestionId(id)} />
+            <GlobalSearch questions={mergedQuestions} onQuestionSelect={(id) => updateUrl({ questionId: id })} />
 
             <div className="hidden lg:flex flex-col items-end text-[10px] text-muted-foreground border-l pl-3 leading-tight">
               <span>{filteredQuestions.length} 题</span>
@@ -320,7 +332,7 @@ function QuestionsContent() {
 
       <QuestionModal
         isOpen={!!selectedQuestionId}
-        onClose={() => setSelectedQuestionId(null)}
+        onClose={() => updateUrl({ questionId: null })}
         question={currentQuestion}
         onUpdateStatus={handleStatusUpdate}
         onPrev={() => handleNavigate('prev')}

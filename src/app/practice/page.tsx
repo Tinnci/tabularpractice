@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useContextQuestions } from "@/hooks/useContextQuestions";
 import { QuestionModal } from "@/components/business/QuestionModal";
 import { Button } from "@/components/ui/button";
@@ -71,7 +71,7 @@ export default function PracticePage() {
     };
 
     const handleStart = () => {
-        let filtered = mergedQuestions.filter(q => {
+        const filtered = mergedQuestions.filter(q => {
             if (!selectedTypes.has(q.type)) return false;
             if (selectedTags.size > 0) {
                 const hasTag = q.tags?.some(t => selectedTags.has(t));
