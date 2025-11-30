@@ -196,7 +196,7 @@ export function QuestionModal({
             setVisibleViews(new Set(['question']));
             setLastQuestionId(question.id);
         }
-    }, [question, isOpen, setLastQuestionId]);
+    }, [question?.id, isOpen, setLastQuestionId]);
 
     // 保存草稿
     const saveDraft = useCallback(async () => {
