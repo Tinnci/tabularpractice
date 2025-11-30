@@ -114,12 +114,20 @@ export function QuestionModal({
     const [strokeColor, setStrokeColor] = useState("#000000");
 
     // 监听主题变化，自动调整笔刷颜色
+    // 监听主题变化，自动调整笔刷颜色 (仅当当前颜色为黑/白时)
     useEffect(() => {
         if (theme === 'dark') {
-            setStrokeColor("#FFFFFF");
+            // 只有当前是黑色时，才自动转为白色
+            if (strokeColor === "#000000") {
+                setStrokeColor("#FFFFFF");
+            }
         } else {
-            setStrokeColor("#000000");
+            // 只有当前是白色时，才自动转为黑色
+            if (strokeColor === "#FFFFFF") {
+                setStrokeColor("#000000");
+            }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [theme]);
     const [strokeWidth, setStrokeWidth] = useState(4);
     const [eraserMode, setEraserMode] = useState(false);
