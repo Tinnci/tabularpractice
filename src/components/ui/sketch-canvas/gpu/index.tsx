@@ -230,8 +230,9 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
                 // Ensure canvas size is correct before init
                 const rect = canvasRef.current.getBoundingClientRect();
-                canvasRef.current.width = rect.width;
-                canvasRef.current.height = rect.height;
+                const dpr = window.devicePixelRatio || 1;
+                canvasRef.current.width = rect.width * dpr;
+                canvasRef.current.height = rect.height * dpr;
 
                 const root = await tgpu.init();
                 rootRef.current = root;
@@ -427,21 +428,23 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
         }, []);
 
         // Interaction Handlers
+        // Interaction Handlers
         const handlePointerDown = (e: React.PointerEvent) => {
             if (allowOnlyPointerType !== 'all' && e.pointerType !== allowOnlyPointerType) return;
             (e.target as Element).setPointerCapture(e.pointerId);
             isDrawingRef.current = true;
 
             const rect = canvasRef.current!.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const dpr = window.devicePixelRatio || 1;
+            const x = (e.clientX - rect.left) * dpr;
+            const y = (e.clientY - rect.top) * dpr;
             const p = e.pressure || 0.5;
 
             currentStrokeRef.current = {
                 points: [{ x, y, p }],
                 color: hexToRgba(strokeColor),
                 hexColor: strokeColor,
-                width: strokeWidth,
+                width: strokeWidth * dpr,
                 isEraser: isEraserRef.current,
                 startIndex: totalPointsRef.current
             };
@@ -455,10 +458,11 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
             const events = (e as any).getCoalescedEvents ? (e as any).getCoalescedEvents() : [e];
             const rect = canvasRef.current!.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
 
             for (const ev of events) {
-                const x = ev.clientX - rect.left;
-                const y = ev.clientY - rect.top;
+                const x = (ev.clientX - rect.left) * dpr;
+                const y = (ev.clientY - rect.top) * dpr;
                 const p = ev.pressure || 0.5;
 
                 // Interpolation Logic
@@ -466,7 +470,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 if (points.length > 0) {
                     const lastPoint = points[points.length - 1];
                     const dist = Math.hypot(x - lastPoint.x, y - lastPoint.y);
-                    const step = 2; // Pixel distance between interpolated points (lower = smoother but more data)
+                    const step = 2 * dpr; // Scale step size
 
                     if (dist > step) {
                         const numSteps = Math.floor(dist / step);
@@ -494,6 +498,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 });
             }
         };
+
 
         const handlePointerUp = (e: React.PointerEvent) => {
             if (!isDrawingRef.current || !currentStrokeRef.current) return;
@@ -583,8 +588,10 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
         useEffect(() => {
             const handleResize = () => {
                 if (canvasRef.current && canvasRef.current.parentElement) {
-                    canvasRef.current.width = canvasRef.current.parentElement.clientWidth;
-                    canvasRef.current.height = canvasRef.current.parentElement.clientHeight;
+                    const rect = canvasRef.current.parentElement.getBoundingClientRect();
+                    const dpr = window.devicePixelRatio || 1;
+                    canvasRef.current.width = rect.width * dpr;
+                    canvasRef.current.height = rect.height * dpr;
                     draw();
                 }
             };
