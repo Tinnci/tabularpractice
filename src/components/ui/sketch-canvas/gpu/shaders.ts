@@ -4,17 +4,17 @@ import * as std from 'typegpu/std';
 
 // --- Data Structures ---
 
-// Uniforms: 全局变量，每帧更新一次
+// Uniforms: 仅保留全局通用的 Resolution
 export const CanvasUniforms = d.struct({
     resolution: d.vec2f, // 画布宽高 [width, height]
-    brushColor: d.vec4f, // 笔刷颜色 [r, g, b, a]
-    brushSize: d.f32,    // 基础笔刷半径
 });
 
-// Instance Data: 每个笔触点的数据
+// Instance Data: 每个点携带完整的渲染信息
 export const StrokePoint = d.struct({
     position: d.vec2f, // 屏幕像素坐标 [x, y]
     pressure: d.f32,   // 压力值 (0.0 - 1.0)
+    size: d.f32,       // 笔刷基础大小 (Added)
+    color: d.vec4f,    // 笔刷颜色 (Added)
 });
 
 // --- Shaders ---
@@ -41,24 +41,20 @@ export const vertexShader = unstable.vertexFn({
     },
 }, (input: any, uniforms: any) => {
     // 生成 Quad 的局部坐标 (-1 到 1)
-
-    // 使用 float 运算模拟位运算生成坐标
     // 0: (-1, -1), 1: (1, -1), 2: (-1, 1), 3: (1, 1)
 
     let x = -1.0;
     let y = -1.0;
 
-    // 注意：TypeGPU 的控制流可能需要特殊处理，这里尝试直接使用 JS 逻辑
-    // 如果 TypeGPU 编译器不支持 if，可能需要用 step/mix 等数学函数
     if (input.vertexIndex === 1) { x = 1.0; }
     if (input.vertexIndex === 2) { y = 1.0; }
     if (input.vertexIndex === 3) { x = 1.0; y = 1.0; }
 
     const quadPos = d.vec2f(x, y);
 
-    // 计算实际半径: 基础大小 * 压力
-    // max 在 std 中
-    const size = std.mul(uniforms.canvas.brushSize, std.max(input.instance.pressure, 0.1));
+    // 使用 Instance 中的 size 和 color
+    // 计算实际半径: size * pressure
+    const size = std.mul(input.instance.size, std.max(input.instance.pressure, 0.1));
 
     // 计算屏幕像素坐标
     // pixelPos = position + quadPos * size
@@ -75,7 +71,7 @@ export const vertexShader = unstable.vertexFn({
     return {
         pos: d.vec4f(ndcX, ndcY, 0.0, 1.0),
         uv: quadPos,
-        color: uniforms.canvas.brushColor,
+        color: input.instance.color, // 直接传递 Instance 颜色
     };
 });
 

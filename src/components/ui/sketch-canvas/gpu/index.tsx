@@ -21,14 +21,16 @@ interface GpuSketchCanvasProps {
 interface GpuStroke {
     points: { x: number, y: number, p: number }[];
     color: [number, number, number, number];
-    hexColor: string; // Store original hex for export
+    hexColor: string;
     width: number;
     isEraser: boolean;
-    startIndex: number; // In the global vertex buffer
+    startIndex: number;
 }
 
-// 最大点数限制 (用于预分配 Buffer)
 const MAX_POINTS = 500000;
+// StrokePoint 结构变更后，每个点由 8 个 float 组成 (32 bytes)
+// pos(2) + pressure(1) + size(1) + color(4)
+const FLOATS_PER_POINT = 8;
 
 const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
     ({
@@ -47,7 +49,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
         const vertexBufferRef = useRef<any>(null);
         const uniformBufferRef = useRef<any>(null);
 
-        // State
         const strokesRef = useRef<GpuStroke[]>([]);
         const currentStrokeRef = useRef<GpuStroke | null>(null);
         const isDrawingRef = useRef(false);
@@ -55,7 +56,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
         const totalPointsRef = useRef(0);
         const isEraserRef = useRef(false);
 
-        // Helper: Hex to RGBA
         const hexToRgba = (hex: string): [number, number, number, number] => {
             const r = parseInt(hex.slice(1, 3), 16) / 255;
             const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -63,13 +63,20 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             return [r, g, b, 1.0];
         };
 
-        // Draw Function
         const draw = () => {
             if (!rootRef.current || !drawPipelineRef.current || !erasePipelineRef.current || !canvasRef.current) return;
 
             const device = rootRef.current.device as GPUDevice;
             const context = canvasRef.current.getContext('webgpu') as GPUCanvasContext;
             if (!context) return;
+
+            const width = canvasRef.current.width;
+            const height = canvasRef.current.height;
+
+            // 更新一次全局 Uniform (Resolution)
+            uniformBufferRef.current.write({
+                resolution: [width, height],
+            });
 
             const commandEncoder = device.createCommandEncoder();
             const textureView = context.getCurrentTexture().createView();
@@ -83,10 +90,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 }],
             });
 
-            const width = canvasRef.current.width;
-            const height = canvasRef.current.height;
-
-            // Render all historical strokes + current stroke
             const allStrokes = [...strokesRef.current];
             if (currentStrokeRef.current) {
                 allStrokes.push(currentStrokeRef.current);
@@ -95,21 +98,8 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             for (const stroke of allStrokes) {
                 if (stroke.points.length === 0) continue;
 
-                // Update Uniforms for this stroke
-                // Note: In a highly optimized app, we might use a dynamic uniform buffer or instance data for colors.
-                // For now, writing to the uniform buffer per stroke is acceptable for < 1000 strokes.
-                uniformBufferRef.current.write({
-                    resolution: [width, height],
-                    brushColor: stroke.color,
-                    brushSize: stroke.width,
-                });
-
-                // Select Pipeline
+                // 不再在这里写 Uniforms，颜色和大小已经在 Buffer 里了
                 const pipeline = stroke.isEraser ? erasePipelineRef.current : drawPipelineRef.current;
-
-                // Draw
-                // We assume the vertex buffer is already populated with all points in order.
-                // stroke.startIndex tells us where this stroke's points begin.
                 pipeline.draw(4, stroke.points.length, 0, stroke.startIndex, renderPass);
             }
 
@@ -117,31 +107,37 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             device.queue.submit([commandEncoder.finish()]);
         };
 
-        // Update Vertex Buffer
-        // This function rebuilds the ENTIRE vertex buffer or appends to it.
-        // For simplicity in this iteration, we'll append the current stroke's new points
-        // or rebuild if necessary (e.g. undo/clear).
         const updateBuffer = (fullRebuild = false) => {
             if (!vertexBufferRef.current || !rootRef.current) return;
             const device = rootRef.current.device as GPUDevice;
             const rawBuffer = rootRef.current.unwrap(vertexBufferRef.current) as GPUBuffer;
 
-            if (fullRebuild) {
-                // Rebuild everything from strokesRef
-                let offset = 0;
-                const data = new Float32Array(MAX_POINTS * 4); // Pre-allocate max
+            // 辅助函数：将一个 stroke 的数据写入 Float32Array
+            const writeStrokeToData = (stroke: GpuStroke, targetData: Float32Array, startOffset: number) => {
+                let offset = startOffset;
+                for (let i = 0; i < stroke.points.length; i++) {
+                    const p = stroke.points[i];
+                    // StrokePoint struct layout
+                    targetData[offset++] = p.x;
+                    targetData[offset++] = p.y;
+                    targetData[offset++] = p.p;
+                    targetData[offset++] = stroke.width; // size
+                    targetData[offset++] = stroke.color[0]; // r
+                    targetData[offset++] = stroke.color[1]; // g
+                    targetData[offset++] = stroke.color[2]; // b
+                    targetData[offset++] = stroke.color[3]; // a
+                }
+                return offset;
+            };
 
+            if (fullRebuild) {
+                const data = new Float32Array(MAX_POINTS * FLOATS_PER_POINT);
                 let currentTotal = 0;
+                let offset = 0;
 
                 const processStroke = (stroke: GpuStroke) => {
                     stroke.startIndex = currentTotal;
-                    for (let i = 0; i < stroke.points.length; i++) {
-                        const p = stroke.points[i];
-                        data[offset++] = p.x;
-                        data[offset++] = p.y;
-                        data[offset++] = p.p;
-                        data[offset++] = 0; // padding
-                    }
+                    offset = writeStrokeToData(stroke, data, offset);
                     currentTotal += stroke.points.length;
                 };
 
@@ -150,45 +146,29 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
                 totalPointsRef.current = currentTotal;
 
-                // Write only the used portion
                 if (currentTotal > 0) {
-                    device.queue.writeBuffer(rawBuffer, 0, data, 0, currentTotal * 4);
+                    // 只写入有效部分
+                    device.queue.writeBuffer(rawBuffer, 0, data, 0, currentTotal * FLOATS_PER_POINT * 4);
                 }
             } else {
-                // Append mode (for drawing)
-                // We assume strokesRef is already in buffer, we just need to add currentStrokeRef's NEW points.
-                // Actually, for simplicity and robustness against race conditions, 
-                // let's just write the CURRENT stroke's data to its specific slot.
-
+                // Append mode
                 const stroke = currentStrokeRef.current;
                 if (!stroke) return;
 
-                // If it's a new stroke, startIndex might need setting
                 if (stroke.startIndex === -1) {
                     stroke.startIndex = totalPointsRef.current;
                 }
 
-                // Calculate where to write
-                // We write the WHOLE current stroke every frame (or optimized: just the new points).
-                // Let's write the whole current stroke for safety.
                 const startIdx = stroke.startIndex;
                 const count = stroke.points.length;
 
-                if (startIdx + count > MAX_POINTS) {
-                    // Buffer overflow protection
-                    return;
-                }
+                if (startIdx + count > MAX_POINTS) return;
 
-                const data = new Float32Array(count * 4);
-                for (let i = 0; i < count; i++) {
-                    const p = stroke.points[i];
-                    data[i * 4 + 0] = p.x;
-                    data[i * 4 + 1] = p.y;
-                    data[i * 4 + 2] = p.p;
-                    data[i * 4 + 3] = 0;
-                }
+                const data = new Float32Array(count * FLOATS_PER_POINT);
+                writeStrokeToData(stroke, data, 0);
 
-                device.queue.writeBuffer(rawBuffer, startIdx * 16, data); // 16 bytes per point
+                // 写入位置：startIndex * (Bytes per Point) = startIndex * 32
+                device.queue.writeBuffer(rawBuffer, startIdx * 32, data);
             }
         };
 
@@ -202,7 +182,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const root = await tgpu.init();
                 rootRef.current = root;
 
-                // Buffers
                 const PointsArray = d.arrayOf(StrokePoint, MAX_POINTS);
                 const vertexBuffer = root.createBuffer(PointsArray).$usage('vertex');
                 vertexBufferRef.current = vertexBuffer;
@@ -210,7 +189,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const uniformBuffer = root.createBuffer(CanvasUniforms).$usage('uniform');
                 uniformBufferRef.current = uniformBuffer;
 
-                // Pipelines
                 const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
                 context.configure({
                     device: root.device as GPUDevice,
@@ -220,14 +198,12 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
                 const unstable = root['~unstable'] as any;
 
-                // Common pipeline config
                 const pipelineConfig = {
                     vertex: vertexShader,
                     fragment: fragmentShader,
                     primitive: { topology: 'triangle-strip', stripIndexFormat: undefined },
                 };
 
-                // Draw Pipeline (Alpha Blending)
                 const drawPipeline = unstable.createRenderPipeline({
                     ...pipelineConfig,
                     targets: [{
@@ -241,10 +217,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     .with(vertexShader.uniforms.canvas, uniformBuffer)
                     .with(vertexShader.in.instance, vertexBuffer);
 
-                // Erase Pipeline (Dst Out / Clear)
-                // We use 'dst-out' to subtract alpha. 
-                // srcFactor: 'zero', dstFactor: 'one-minus-src-alpha' -> Result = Dst * (1 - SrcAlpha)
-                // If SrcAlpha is 1 (brush), Dst becomes 0 (transparent).
                 const erasePipeline = unstable.createRenderPipeline({
                     ...pipelineConfig,
                     targets: [{
