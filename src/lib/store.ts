@@ -92,7 +92,7 @@ interface ProgressState {
     setLastSyncedTime: (time: string | null) => void;
     setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
 
-    syncData: () => Promise<void>;
+    syncData: (isAutoSync?: boolean) => Promise<void>;
     triggerAutoSync: () => void;
 }
 
@@ -282,7 +282,7 @@ export const useProgressStore = create<ProgressState>()(
             importProgress: (newProgress) => set({ progress: newProgress }),
 
             // GitHub Sync Implementation
-            syncData: async () => {
+            syncData: async (isAutoSync = false) => {
                 const { githubToken, gistId, progress, notes, stars, drafts, repoSources, importData } = get();
 
                 if (!githubToken) return;
@@ -310,6 +310,9 @@ export const useProgressStore = create<ProgressState>()(
                     let mergedData = currentData;
 
                     // 1. 如果有 Gist ID，尝试获取远程数据并合并
+                    // 注意：如果是自动同步，我们假设本地是最新的（因为是用户操作触发的），
+                    // 但为了防止冲突，我们还是应该获取远程数据来合并，
+                    // 只是最后不把合并结果写回本地 Store（避免重绘）。
                     if (targetGistId) {
                         try {
                             const res = await fetch(`https://api.github.com/gists/${targetGistId}`, { headers });
@@ -343,9 +346,6 @@ export const useProgressStore = create<ProgressState>()(
                             }
                         } catch (e) {
                             console.error("Fetch gist failed", e);
-                            // 如果获取失败（如网络问题），我们仍然尝试上传本地数据吗？
-                            // 为了安全起见，如果是网络错误，最好不要覆盖远程，除非我们确定
-                            // 这里简单处理：如果获取失败，抛出错误，中断同步
                             throw new Error("无法连接到 GitHub Gist");
                         }
                     }
@@ -381,18 +381,17 @@ export const useProgressStore = create<ProgressState>()(
                     }
                     set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success' });
 
-                    // 更新本地数据为合并后的数据
-                    importData(mergedData);
+                    // 关键修改：如果是自动同步，不要覆盖本地数据
+                    // 只有手动同步（isAutoSync = false）时才更新本地
+                    if (!isAutoSync) {
+                        importData(mergedData);
+                    }
 
-                    // 成功后 2秒重置状态为 idle，避免一直显示成功图标（如果需要的话）
-                    // 或者一直保持 success 直到下一次操作
                     setTimeout(() => set({ syncStatus: 'idle' }), 3000);
 
                 } catch (error) {
                     console.error(error);
                     set({ syncStatus: 'error' });
-                    // 自动同步失败通常不弹 Toast，以免打扰，除非是手动触发
-                    // 但这里我们统一逻辑，可以只在 QuestionModal 显示红点
                 }
             },
 
@@ -401,10 +400,10 @@ export const useProgressStore = create<ProgressState>()(
                 if (!githubToken) return;
 
                 if (syncTimer) clearTimeout(syncTimer);
-                set({ syncStatus: 'syncing' }); // 立即显示 syncing 状态让用户知道有变动待同步
+                set({ syncStatus: 'syncing' });
 
                 syncTimer = setTimeout(() => {
-                    get().syncData();
+                    get().syncData(true); // 传入 true 标识为自动同步
                 }, 5000); // 5秒防抖
             },
         }),
