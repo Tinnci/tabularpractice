@@ -172,6 +172,14 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const data = new Float32Array(count * FLOATS_PER_POINT);
                 writeStrokeToData(stroke, data, 0);
 
+                // Debug logging
+                console.log('[GPU Debug] Writing buffer:', {
+                    startIndex: startIdx,
+                    pointsCount: count,
+                    firstPointData: Array.from(data.slice(0, 8)), // x, y, p, size, r, g, b, a
+                    bufferOffset: startIdx * 32
+                });
+
                 device.queue.writeBuffer(rawBuffer, startIdx * 32, data);
             }
         };
@@ -182,8 +190,21 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const context = canvasRef.current.getContext('webgpu') as unknown as GPUCanvasContext;
                 if (!context) return;
 
+                // Ensure canvas size is correct before init
+                const rect = canvasRef.current.getBoundingClientRect();
+                canvasRef.current.width = rect.width;
+                canvasRef.current.height = rect.height;
+
                 const root = await tgpu.init();
                 rootRef.current = root;
+                const device = root.device as GPUDevice;
+
+                // 1. Global Error Listener
+                device.addEventListener('uncapturederror', (event) => {
+                    const e = event as GPUUncapturedErrorEvent;
+                    console.error('[WebGPU Error]', e.error.message);
+                    console.error(e.error);
+                });
 
                 // 创建 Buffer，标记为 Storage
                 const PointsArray = d.arrayOf(StrokePoint, MAX_POINTS);

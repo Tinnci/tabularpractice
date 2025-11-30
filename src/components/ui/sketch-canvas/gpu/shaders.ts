@@ -48,6 +48,16 @@ export const vertexShader = unstable.vertexFn({
 
     const quadPos = d.vec2f(x, y);
 
+    // --- DEBUG: Force centered quad ---
+    // Ignore calculated position, use quadPos directly scaled to 0.5 screen size
+    return {
+        pos: d.vec4f(quadPos.x * 0.5, quadPos.y * 0.5, 0.0, 1.0),
+        uv: quadPos,
+        color: d.vec4f(1.0, 0.0, 0.0, 1.0), // Force Red
+    };
+
+    // Normal logic
+    /*
     const size = std.mul(point.size, std.max(point.pressure, 0.1));
     const offset = std.mul(quadPos, size);
     const pixelPos = std.add(point.position, offset);
@@ -60,6 +70,7 @@ export const vertexShader = unstable.vertexFn({
         uv: quadPos,
         color: point.color,
     };
+    */
 });
 
 /**
@@ -72,10 +83,15 @@ export const fragmentShader = unstable.fragmentFn({
     },
     out: d.vec4f,
 }, (input: any) => {
+    // --- DEBUG: Force Red Output ---
+    return d.vec4f(1.0, 0.0, 0.0, 1.0);
+
+    /*
     const dist = std.length(input.uv);
     if (dist > 1.0) {
         std.discard();
     }
     const alpha = std.sub(1.0, std.smoothstep(0.8, 1.0, dist));
     return d.vec4f(input.color.rgb, std.mul(input.color.a, alpha));
+    */
 });
