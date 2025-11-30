@@ -453,7 +453,10 @@ export function QuestionModal({
                         <ScrollArea className="h-full">
                             {/* key={currentQuestion.id} 强制 React 在题目切换时重新渲染整个内容区域，
                                 解决"切换下一题但内容未刷新"的问题，并重置图片加载状态 */}
-                            <div key={currentQuestion.id} className="p-3 sm:p-6 flex flex-col gap-3 sm:gap-6 max-w-4xl mx-auto pb-20 animate-in fade-in duration-300">
+                            <div key={currentQuestion.id} className={cn(
+                                "p-3 sm:p-6 flex flex-col gap-3 sm:gap-6 mx-auto pb-20 animate-in fade-in duration-300 transition-all ease-in-out",
+                                isFullscreen ? "max-w-[1600px]" : "max-w-4xl"
+                            )}>
 
 
                                 {/* 移动端标签显示 (桌面端在顶部) */}
