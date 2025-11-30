@@ -14,6 +14,7 @@ import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
 import tagsData from "@/data/tags.json";
+import { pinyin } from "pinyin-pro";
 
 export default function PracticePage() {
     const { mergedQuestions } = useContextQuestions();
@@ -30,7 +31,14 @@ export default function PracticePage() {
         const map = new Map<string, string>();
         const traverse = (nodes: TagNode[]) => {
             for (const node of nodes) {
+                // Map original ID (English)
                 map.set(node.id, node.label);
+
+                // Map Pinyin ID (for compatibility with pinyin-slugified data)
+                // Example: "伴随矩阵" -> "ban-sui-ju-zhen"
+                const slug = pinyin(node.label, { toneType: 'none', type: 'array' }).join('-');
+                map.set(slug, node.label);
+
                 if (node.children) {
                     traverse(node.children);
                 }
