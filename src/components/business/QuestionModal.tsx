@@ -104,7 +104,7 @@ export function QuestionModal({
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
 
     // 笔记系统状态
-    const { notes, updateNote, stars, toggleStar, drafts, updateDraft, syncStatus, syncData } = useProgressStore();
+    const { notes, updateNote, stars, toggleStar, updateDraft, syncStatus, syncData } = useProgressStore();
     const [noteContent, setNoteContent] = useState("");
     const [isEditingNote, setIsEditingNote] = useState(false);
 
@@ -113,7 +113,6 @@ export function QuestionModal({
     const canvasRef = useRef<ReactSketchCanvasRef>(null);
     const [strokeColor, setStrokeColor] = useState("#000000");
 
-    // 监听主题变化，自动调整笔刷颜色
     // 监听主题变化，自动调整笔刷颜色 (仅当当前颜色为黑/白时)
     useEffect(() => {
         if (theme === 'dark') {
@@ -148,13 +147,13 @@ export function QuestionModal({
     useEffect(() => {
         if (question && canvasRef.current && visibleViews.has('draft')) {
             // 仅在切换题目或切换到草稿视图时加载
-            // 注意：不要将 drafts 加入依赖项，否则会导致每次保存（更新 store）时触发重绘，
-            // 从而打断用户的书写过程（因为 clearCanvas 会被调用）
+            // 直接从 store 读取最新状态，避免订阅 drafts 导致重绘
+            const currentDrafts = useProgressStore.getState().drafts;
 
             // 重置画布
             canvasRef.current.clearCanvas();
             // 如果有保存的草稿，加载它
-            const savedDraft = drafts[question.id];
+            const savedDraft = currentDrafts[question.id];
             if (savedDraft) {
                 try {
                     const paths = JSON.parse(savedDraft);
@@ -180,7 +179,7 @@ export function QuestionModal({
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [question, visibleViews, theme]);
+    }, [question, visibleViews, theme]); // 移除 drafts 依赖
 
     // 自动保存笔记
     const handleNoteBlur = () => {
@@ -189,7 +188,6 @@ export function QuestionModal({
         }
     };
 
-    // 保存草稿
     // 保存草稿
     const saveDraft = useCallback(async () => {
         if (question && canvasRef.current) {
