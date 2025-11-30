@@ -10,10 +10,12 @@ import { useTheme } from "next-themes";
 
 import { DashboardOnboarding } from "@/components/business/DashboardOnboarding";
 import { ActivityHeatmap } from "@/components/business/ActivityHeatmap";
+import { useProgressStore } from "@/lib/store";
 
 export default function DashboardPage() {
   const { total, subjects } = useDashboardStats();
   const { theme } = useTheme();
+  const lastQuestionId = useProgressStore(state => state.lastQuestionId);
 
   // 1. 生成图表数据
   // 过滤掉题目数为 0 的科目
@@ -45,10 +47,10 @@ export default function DashboardPage() {
               保持节奏，每天进步一点点。你已经斩获了 <span className="font-bold text-foreground">{totalMastered}</span> 道真题。
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Link href="/questions">
+              <Link href={lastQuestionId ? `/questions?questionId=${lastQuestionId}` : "/questions"}>
                 <Button size="lg" className="w-full sm:w-auto gap-2 shadow-lg hover:shadow-xl transition-all">
                   <PlayCircle className="w-5 h-5" />
-                  继续刷题
+                  {lastQuestionId ? "继续上次刷题" : "开始刷题"}
                 </Button>
               </Link>
               <Link href="/questions?status=unanswered">

@@ -8,7 +8,11 @@ interface Props {
     subjects: SubjectStat[];
 }
 
+import { useProgressStore } from "@/lib/store";
+
 export function DashboardOnboarding({ subjects }: Props) {
+    const lastQuestionId = useProgressStore(state => state.lastQuestionId);
+
     return (
         <div className="container mx-auto p-6 space-y-12 max-w-5xl animate-in fade-in slide-in-from-bottom-4 duration-700">
 
@@ -33,9 +37,9 @@ export function DashboardOnboarding({ subjects }: Props) {
                     告别盲目题海战术，用数据驱动高效复习。
                 </p>
                 <div className="flex justify-center gap-4 pt-4">
-                    <Link href="/questions">
+                    <Link href={lastQuestionId ? `/questions?questionId=${lastQuestionId}` : "/questions"}>
                         <Button size="lg" className="h-12 px-8 text-lg gap-2 shadow-lg hover:shadow-xl transition-all">
-                            开始刷题 <ArrowRight className="w-5 h-5" />
+                            {lastQuestionId ? "继续刷题" : "开始刷题"} <ArrowRight className="w-5 h-5" />
                         </Button>
                     </Link>
                 </div>

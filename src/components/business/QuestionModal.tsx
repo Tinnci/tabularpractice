@@ -188,6 +188,16 @@ export function QuestionModal({
         }
     };
 
+    // 记录最后打开的题目 ID
+    const { setLastQuestionId } = useProgressStore();
+
+    useEffect(() => {
+        if (isOpen && question) {
+            setVisibleViews(new Set(['question']));
+            setLastQuestionId(question.id);
+        }
+    }, [question, isOpen, setLastQuestionId]);
+
     // 保存草稿
     const saveDraft = useCallback(async () => {
         if (question && canvasRef.current) {

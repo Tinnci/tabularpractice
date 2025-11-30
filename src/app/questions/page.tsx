@@ -60,6 +60,7 @@ function QuestionsContent() {
   useEffect(() => {
     const status = searchParams.get('status');
     const subject = searchParams.get('subject');
+    const questionId = searchParams.get('questionId');
 
     if (status) {
       setFilterStatus(status as Status);
@@ -72,6 +73,10 @@ function QuestionsContent() {
           setCurrentGroupId(targetGroup.id);
         }
       }
+    }
+
+    if (questionId) {
+      setSelectedQuestionId(questionId);
     }
   }, [searchParams, setFilterStatus, setCurrentGroupId, paperGroupsData]);
 

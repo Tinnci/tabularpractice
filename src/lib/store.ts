@@ -28,6 +28,8 @@ interface ProgressState {
     selectedTagId: string | null;
     // 当前选中的试卷组ID
     currentGroupId: string;
+    // 上次打开的题目ID (用于继续刷题)
+    lastQuestionId: string | null;
     // 派生属性：当前科目类型 (math/english/politics)
     filterSubject: 'math' | 'english' | 'politics';
     filterStatus: Status | 'all';
@@ -40,6 +42,7 @@ interface ProgressState {
     toggleStar: (id: string) => void;
     setSelectedTagId: (id: string | null) => void;
     setCurrentGroupId: (id: string) => void;
+    setLastQuestionId: (id: string | null) => void;
     setFilterStatus: (status: Status | 'all') => void;
     setFilterType: (type: 'all' | 'choice' | 'fill' | 'answer') => void;
     setFilterYear: (year: 'all' | string) => void;
@@ -117,6 +120,7 @@ export const useProgressStore = create<ProgressState>()(
             drafts: {},
             selectedTagId: null,
             currentGroupId: 'math1',
+            lastQuestionId: null,
             filterSubject: 'math',
             filterStatus: 'all',
             filterType: 'all',
@@ -264,6 +268,8 @@ export const useProgressStore = create<ProgressState>()(
                     filterSubject: subject
                 });
             },
+
+            setLastQuestionId: (id) => set({ lastQuestionId: id }),
 
             setFilterStatus: (status) => set({ filterStatus: status }),
 
