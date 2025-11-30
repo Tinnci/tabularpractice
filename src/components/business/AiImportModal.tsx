@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "../ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProgressStore } from "@/lib/store";
 import { Loader2, Upload, FileText, CheckCircle } from "lucide-react";
 import { Question, Paper, PaperGroup } from "@/lib/types";
@@ -23,6 +24,9 @@ export function AiImportModal({ isOpen, onClose }: Props) {
     const [parsedData, setParsedData] = useState<{ questions: Question[], paper: Paper, group: PaperGroup } | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [rawResponse, setRawResponse] = useState("");
+    const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
+    const [isFetchingModels, setIsFetchingModels] = useState(false);
 
     // 如果已有 API Key，直接跳到上传步骤
     if (step === 'api-key' && geminiApiKey) {
@@ -55,6 +59,44 @@ export function AiImportModal({ isOpen, onClose }: Props) {
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
+    };
+
+    const fetchAvailableModels = async () => {
+        if (!geminiApiKey || isFetchingModels) return;
+
+        setIsFetchingModels(true);
+        try {
+            const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+            const models = await ai.models.list();
+
+            // Collect all models from the async iterable
+            const allModels = [];
+            for await (const model of models) {
+                allModels.push(model);
+            }
+
+            // Filter for Gemini models that support generateContent
+            const geminiModels = allModels
+                .filter((m: any) => {
+                    if (!m.name) return false;
+                    const methods = m.supportedGenerationMethods || [];
+                    return m.name.includes('gemini') && methods.includes('generateContent');
+                })
+                .map((m: any) => m.name.replace('models/', ''));
+
+            setAvailableModels(geminiModels);
+
+            // Set default model if not in list
+            if (geminiModels.length > 0 && !geminiModels.includes(selectedModel)) {
+                setSelectedModel(geminiModels[0]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch models:', error);
+            toast.error('获取模型列表失败，使用默认模型');
+            setAvailableModels(['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']);
+        } finally {
+            setIsFetchingModels(false);
+        }
     };
 
     const processFile = async () => {
@@ -109,7 +151,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
             `;
 
             const response = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: selectedModel,
                 contents: [
                     {
                         parts: [
@@ -188,6 +230,51 @@ export function AiImportModal({ isOpen, onClose }: Props) {
 
                 {step === 'upload' && (
                     <div className="space-y-6 py-4">
+                        {/* Model Selection */}
+                        <div className="space-y-2">
+                            <Label>选择模型</Label>
+                            <div className="flex gap-2">
+                                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="选择 Gemini 模型" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableModels.length > 0 ? (
+                                            availableModels.map(model => (
+                                                <SelectItem key={model} value={model}>
+                                                    {model}
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <SelectItem value="gemini-1.5-flash">gemini-1.5-flash</SelectItem>
+                                                <SelectItem value="gemini-1.5-pro">gemini-1.5-pro</SelectItem>
+                                                <SelectItem value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</SelectItem>
+                                            </>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    variant="outline"
+                                    onClick={fetchAvailableModels}
+                                    disabled={isFetchingModels}
+                                >
+                                    {isFetchingModels ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            获取中...
+                                        </>
+                                    ) : (
+                                        "获取模型"
+                                    )}
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                点击"获取模型"查看您的 API Key 可用的所有模型
+                            </p>
+                        </div>
+
+                        {/* File Upload */}
                         <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center gap-4 hover:bg-muted/50 transition-colors cursor-pointer relative">
                             <input
                                 type="file"
