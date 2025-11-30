@@ -190,13 +190,14 @@ export function QuestionModal({
 
     // 记录最后打开的题目 ID
     const { setLastQuestionId } = useProgressStore();
+    const questionId = question?.id;
 
     useEffect(() => {
-        if (isOpen && question) {
+        if (isOpen && questionId) {
             setVisibleViews(new Set(['question']));
-            setLastQuestionId(question.id);
+            setLastQuestionId(questionId);
         }
-    }, [question?.id, isOpen, setLastQuestionId]);
+    }, [questionId, isOpen, setLastQuestionId]);
 
     // 保存草稿
     const saveDraft = useCallback(async () => {

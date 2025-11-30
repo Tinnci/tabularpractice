@@ -13,10 +13,33 @@ import { Play, Shuffle, Tag, Filter, RotateCcw, Dumbbell } from "lucide-react";
 import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
+import tagsData from "@/data/tags.json";
 
 export default function PracticePage() {
     const { mergedQuestions } = useContextQuestions();
     const { updateStatus } = useProgressStore();
+
+    // Create a map of tag ID to label
+    const tagMap = useMemo(() => {
+        interface TagNode {
+            id: string;
+            label: string;
+            children?: TagNode[];
+        }
+
+        const map = new Map<string, string>();
+        const traverse = (nodes: TagNode[]) => {
+            for (const node of nodes) {
+                map.set(node.id, node.label);
+                if (node.children) {
+                    traverse(node.children);
+                }
+            }
+        };
+        // Cast imported JSON to TagNode[] as it's structurally compatible
+        traverse(tagsData as unknown as TagNode[]);
+        return map;
+    }, []);
 
     // Configuration State
     const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['choice', 'fill', 'answer']));
@@ -224,17 +247,17 @@ export default function PracticePage() {
                                 {allTags.length === 0 && (
                                     <p className="text-sm text-muted-foreground p-2">No tags available.</p>
                                 )}
-                                {allTags.map(tag => (
+                                {allTags.map(tagId => (
                                     <Badge
-                                        key={tag}
-                                        variant={selectedTags.has(tag) ? "default" : "outline"}
+                                        key={tagId}
+                                        variant={selectedTags.has(tagId) ? "default" : "outline"}
                                         className={cn(
                                             "cursor-pointer transition-all hover:scale-105 active:scale-95 select-none px-3 py-1",
-                                            selectedTags.has(tag) ? "shadow-md shadow-primary/20" : "hover:bg-muted"
+                                            selectedTags.has(tagId) ? "shadow-md shadow-primary/20" : "hover:bg-muted"
                                         )}
-                                        onClick={() => toggleTag(tag)}
+                                        onClick={() => toggleTag(tagId)}
                                     >
-                                        {tag}
+                                        {tagMap.get(tagId) || tagId}
                                     </Badge>
                                 ))}
                             </div>
