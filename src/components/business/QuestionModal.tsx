@@ -583,71 +583,77 @@ export function QuestionModal({
                                             <div className="flex items-center gap-2">
                                                 <Pencil className="w-4 h-4" /> 手写草稿
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1 sm:gap-2">
                                                 <Button
                                                     variant={!eraserMode ? "secondary" : "ghost"}
                                                     size="icon"
-                                                    className="h-7 w-7"
+                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
                                                     onClick={() => {
                                                         setEraserMode(false);
                                                         canvasRef.current?.eraseMode(false);
                                                     }}
                                                     title="画笔"
                                                 >
-                                                    <Pencil className="w-3.5 h-3.5" />
+                                                    <Pencil className="w-4 h-4" />
                                                 </Button>
                                                 <Button
                                                     variant={eraserMode ? "secondary" : "ghost"}
                                                     size="icon"
-                                                    className="h-7 w-7"
+                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
                                                     onClick={() => {
                                                         setEraserMode(true);
                                                         canvasRef.current?.eraseMode(true);
                                                     }}
                                                     title="橡皮擦"
                                                 >
-                                                    <Eraser className="w-3.5 h-3.5" />
+                                                    <Eraser className="w-4 h-4" />
                                                 </Button>
-                                                <div className="w-px h-4 bg-border mx-1" />
-                                                <input
-                                                    type="color"
-                                                    value={strokeColor}
-                                                    onChange={(e) => {
-                                                        setStrokeColor(e.target.value);
-                                                        setEraserMode(false);
-                                                        canvasRef.current?.eraseMode(false);
-                                                    }}
-                                                    className="w-6 h-6 rounded cursor-pointer border-0 p-0"
-                                                    title="颜色"
-                                                />
-                                                <div className="w-px h-4 bg-border mx-1" />
+                                                <div className="w-px h-5 bg-border mx-1" />
+                                                <div className="relative w-9 h-9 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors cursor-pointer active:scale-90">
+                                                    <div 
+                                                        className="w-5 h-5 rounded-full border shadow-sm" 
+                                                        style={{ backgroundColor: strokeColor }}
+                                                    />
+                                                    <input
+                                                        type="color"
+                                                        value={strokeColor}
+                                                        onChange={(e) => {
+                                                            setStrokeColor(e.target.value);
+                                                            setEraserMode(false);
+                                                            canvasRef.current?.eraseMode(false);
+                                                        }}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                                        title="颜色"
+                                                    />
+                                                </div>
+                                                <div className="w-px h-5 bg-border mx-1" />
                                                 <Button
                                                     variant={onlyPenMode ? "secondary" : "ghost"}
                                                     size="icon"
-                                                    className="h-7 w-7"
+                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
                                                     onClick={() => setOnlyPenMode(!onlyPenMode)}
                                                     title={onlyPenMode ? "已开启防误触 (仅限手写笔)" : "开启防误触 (仅限手写笔)"}
                                                 >
-                                                    <PenLine className="w-3.5 h-3.5" />
+                                                    <PenLine className="w-4 h-4" />
                                                 </Button>
-                                                <div className="w-px h-4 bg-border mx-1" />
+                                                <div className="w-px h-5 bg-border mx-1" />
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7"
+                                                    className="h-9 w-9 transition-all active:scale-90 hover:bg-muted/80"
                                                     onClick={() => {
                                                         canvasRef.current?.undo();
-                                                        // 延迟保存，确保 undo 操作已完成，解决 iPad/Safari 上可能的状态不同步问题
+                                                        // 延迟保存，确保 undo 操作已完成
                                                         setTimeout(saveDraft, 100);
                                                     }}
                                                     title="撤销"
                                                 >
-                                                    <Undo className="w-3.5 h-3.5" />
+                                                    <Undo className="w-4 h-4" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                    className="h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90"
                                                     onClick={() => {
                                                         if (confirm('确定要清空草稿吗？')) {
                                                             canvasRef.current?.clearCanvas();
@@ -657,7 +663,7 @@ export function QuestionModal({
                                                     }}
                                                     title="清空"
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </div>
                                         </div>
