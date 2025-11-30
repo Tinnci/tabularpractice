@@ -54,6 +54,9 @@ export function Navbar() {
                         <Link href="/questions" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname.startsWith("/questions") ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
                             Questions
                         </Link>
+                        <Link href="/practice" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname.startsWith("/practice") ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
+                            Practice
+                        </Link>
 
                         <Tooltip>
                             <TooltipTrigger asChild>

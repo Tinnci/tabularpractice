@@ -1,0 +1,261 @@
+"use client";
+
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useContextQuestions } from "@/hooks/useContextQuestions";
+import { QuestionModal } from "@/components/business/QuestionModal";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Play, Shuffle, Tag, Filter, RotateCcw, Dumbbell } from "lucide-react";
+import { Question } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { useProgressStore } from "@/lib/store";
+
+export default function PracticePage() {
+    const { mergedQuestions } = useContextQuestions();
+    const { updateStatus } = useProgressStore();
+
+    // Configuration State
+    const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['choice', 'fill', 'answer']));
+    const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+    const [isShuffle, setIsShuffle] = useState(false);
+
+    // Session State
+    const [isStarted, setIsStarted] = useState(false);
+    const [queue, setQueue] = useState<Question[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Derived Data
+    const allTags = useMemo(() => {
+        const tags = new Set<string>();
+        mergedQuestions.forEach(q => {
+            q.tags?.forEach(t => tags.add(t));
+        });
+        return Array.from(tags).sort();
+    }, [mergedQuestions]);
+
+    const filteredCount = useMemo(() => {
+        return mergedQuestions.filter(q => {
+            if (!selectedTypes.has(q.type)) return false;
+            if (selectedTags.size > 0) {
+                const hasTag = q.tags?.some(t => selectedTags.has(t));
+                if (!hasTag) return false;
+            }
+            return true;
+        }).length;
+    }, [mergedQuestions, selectedTypes, selectedTags]);
+
+    // Handlers
+    const toggleType = (type: string) => {
+        const newTypes = new Set(selectedTypes);
+        if (newTypes.has(type)) {
+            newTypes.delete(type);
+        } else {
+            newTypes.add(type);
+        }
+        setSelectedTypes(newTypes);
+    };
+
+    const toggleTag = (tag: string) => {
+        const newTags = new Set(selectedTags);
+        if (newTags.has(tag)) {
+            newTags.delete(tag);
+        } else {
+            newTags.add(tag);
+        }
+        setSelectedTags(newTags);
+    };
+
+    const handleStart = () => {
+        let filtered = mergedQuestions.filter(q => {
+            if (!selectedTypes.has(q.type)) return false;
+            if (selectedTags.size > 0) {
+                const hasTag = q.tags?.some(t => selectedTags.has(t));
+                if (!hasTag) return false;
+            }
+            return true;
+        });
+
+        if (isShuffle) {
+            // Fisher-Yates Shuffle
+            for (let i = filtered.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+            }
+        }
+
+        setQueue(filtered);
+        setCurrentIndex(0);
+        setIsStarted(true);
+        setIsModalOpen(true);
+    };
+
+    const handleEndSession = () => {
+        setIsStarted(false);
+        setQueue([]);
+        setCurrentIndex(0);
+        setIsModalOpen(false);
+    };
+
+    const handleNext = useCallback(() => {
+        if (currentIndex < queue.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+        }
+    }, [currentIndex, queue.length]);
+
+    const handlePrev = useCallback(() => {
+        if (currentIndex > 0) {
+            setCurrentIndex(prev => prev - 1);
+        }
+    }, [currentIndex]);
+
+    // Current Question
+    const currentQuestion = queue[currentIndex];
+
+    if (isStarted) {
+        return (
+            <div className="container mx-auto p-6 max-w-4xl h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
+                <Card className="w-full max-w-md text-center p-8 shadow-xl border-primary/20">
+                    <div className="mb-6 flex justify-center">
+                        <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
+                            <Dumbbell className="h-10 w-10 text-primary" />
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">Practice Session Active</h2>
+                    <p className="text-muted-foreground mb-8">
+                        Question {currentIndex + 1} of {queue.length}
+                    </p>
+
+                    <div className="flex flex-col gap-4">
+                        <Button size="lg" onClick={() => setIsModalOpen(true)} className="w-full gap-2">
+                            <Play className="w-4 h-4" /> Continue Practice
+                        </Button>
+                        <Button variant="outline" onClick={handleEndSession} className="w-full gap-2">
+                            <RotateCcw className="w-4 h-4" /> End Session
+                        </Button>
+                    </div>
+                </Card>
+
+                <QuestionModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    question={currentQuestion}
+                    onNext={handleNext}
+                    onPrev={handlePrev}
+                    hasNext={currentIndex < queue.length - 1}
+                    hasPrev={currentIndex > 0}
+                    onUpdateStatus={updateStatus}
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="container mx-auto p-6 max-w-4xl space-y-8">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                    <Dumbbell className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Custom Practice</h1>
+                    <p className="text-muted-foreground">Configure your practice session to focus on specific areas.</p>
+                </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+                {/* Configuration Card */}
+                <Card className="md:col-span-2 border-primary/10 shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Filter className="w-5 h-5 text-primary" />
+                            Session Settings
+                        </CardTitle>
+                        <CardDescription>
+                            Filter questions by type and tags, or shuffle them for a random challenge.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-8">
+
+                        {/* 1. Question Types */}
+                        <div className="space-y-3">
+                            <Label className="text-base font-semibold">Question Types</Label>
+                            <div className="flex flex-wrap gap-4">
+                                {['choice', 'fill', 'answer'].map(type => (
+                                    <div key={type} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`type-${type}`}
+                                            checked={selectedTypes.has(type)}
+                                            onCheckedChange={() => toggleType(type)}
+                                        />
+                                        <Label htmlFor={`type-${type}`} className="capitalize cursor-pointer">
+                                            {type === 'choice' ? 'Multiple Choice' : type === 'fill' ? 'Fill in the Blank' : 'Short Answer'}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 2. Shuffle Option */}
+                        <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                            <div className="space-y-0.5">
+                                <Label className="text-base font-semibold flex items-center gap-2">
+                                    <Shuffle className="w-4 h-4" /> Random Shuffle
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Randomize the order of questions in this session.
+                                </p>
+                            </div>
+                            <Switch
+                                checked={isShuffle}
+                                onCheckedChange={setIsShuffle}
+                            />
+                        </div>
+
+                        {/* 3. Tags */}
+                        <div className="space-y-3">
+                            <Label className="text-base font-semibold flex items-center gap-2">
+                                <Tag className="w-4 h-4" /> Tags ({selectedTags.size} selected)
+                            </Label>
+                            <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-2 border rounded-md bg-background/50">
+                                {allTags.length === 0 && (
+                                    <p className="text-sm text-muted-foreground p-2">No tags available.</p>
+                                )}
+                                {allTags.map(tag => (
+                                    <Badge
+                                        key={tag}
+                                        variant={selectedTags.has(tag) ? "default" : "outline"}
+                                        className={cn(
+                                            "cursor-pointer transition-all hover:scale-105 active:scale-95 select-none px-3 py-1",
+                                            selectedTags.has(tag) ? "shadow-md shadow-primary/20" : "hover:bg-muted"
+                                        )}
+                                        onClick={() => toggleTag(tag)}
+                                    >
+                                        {tag}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-muted/10 p-6">
+                        <div className="text-sm text-muted-foreground">
+                            <span className="font-bold text-foreground">{filteredCount}</span> questions match your criteria.
+                        </div>
+                        <Button
+                            size="lg"
+                            onClick={handleStart}
+                            disabled={filteredCount === 0}
+                            className="w-full sm:w-auto gap-2 shadow-lg hover:shadow-xl transition-all"
+                        >
+                            <Play className="w-5 h-5" /> Start Practice
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        </div>
+    );
+}

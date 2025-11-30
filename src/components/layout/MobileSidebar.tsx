@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, ListTodo } from "lucide-react";
+import { Menu, LayoutDashboard, ListTodo, Dumbbell } from "lucide-react";
 import Link from "next/link";
 import {
     Tooltip,
@@ -50,6 +50,12 @@ export function MobileSidebar() {
                         <Button variant="ghost" className="w-full justify-start gap-2 h-10 font-normal">
                             <ListTodo className="w-4 h-4" />
                             Questions
+                        </Button>
+                    </Link>
+                    <Link href="/practice" onClick={() => setMobileSidebarOpen(false)}>
+                        <Button variant="ghost" className="w-full justify-start gap-2 h-10 font-normal">
+                            <Dumbbell className="w-4 h-4" />
+                            Practice
                         </Button>
                     </Link>
                 </div>
