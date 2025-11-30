@@ -429,6 +429,8 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
 
         // Interaction Handlers
         // Interaction Handlers
+        const rawPointsRef = useRef<{ x: number, y: number, p: number }[]>([]);
+
         const handlePointerDown = (e: React.PointerEvent) => {
             if (allowOnlyPointerType !== 'all' && e.pointerType !== allowOnlyPointerType) return;
             (e.target as Element).setPointerCapture(e.pointerId);
@@ -440,8 +442,11 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             const y = (e.clientY - rect.top) * dpr;
             const p = e.pressure || 0.5;
 
+            // Initialize raw points buffer
+            rawPointsRef.current = [{ x, y, p }];
+
             currentStrokeRef.current = {
-                points: [{ x, y, p }],
+                points: [{ x, y, p }], // Start with the initial point
                 color: hexToRgba(strokeColor),
                 hexColor: strokeColor,
                 width: strokeWidth * dpr,
@@ -460,33 +465,86 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             const rect = canvasRef.current!.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
 
+            const stroke = currentStrokeRef.current;
+            const rawPoints = rawPointsRef.current;
+
             for (const ev of events) {
                 const x = (ev.clientX - rect.left) * dpr;
                 const y = (ev.clientY - rect.top) * dpr;
                 const p = ev.pressure || 0.5;
 
-                // Interpolation Logic
-                const points = currentStrokeRef.current.points;
-                if (points.length > 0) {
-                    const lastPoint = points[points.length - 1];
-                    const dist = Math.hypot(x - lastPoint.x, y - lastPoint.y);
-                    const step = 2 * dpr; // Scale step size
+                rawPoints.push({ x, y, p });
 
-                    if (dist > step) {
-                        const numSteps = Math.floor(dist / step);
-                        for (let i = 1; i <= numSteps; i++) {
-                            const t = i / numSteps;
-                            points.push({
-                                x: lastPoint.x + (x - lastPoint.x) * t,
-                                y: lastPoint.y + (y - lastPoint.y) * t,
-                                p: lastPoint.p + (p - lastPoint.p) * t
-                            });
-                        }
-                    } else {
-                        points.push({ x, y, p });
+                // We need at least 3 points to form a quadratic bezier segment
+                // P0 (start), P1 (control), P2 (end)
+                // We use the "midpoint" technique for smooth continuous curves:
+                // Curve goes from Mid(P_i-1, P_i) to Mid(P_i, P_i+1) with Control P_i.
+
+                if (rawPoints.length > 2) {
+                    const i = rawPoints.length - 2;
+                    const p0 = rawPoints[i - 1];
+                    const p1 = rawPoints[i];
+                    const p2 = rawPoints[i + 1];
+
+                    // Calculate midpoints
+                    const mid1 = {
+                        x: (p0.x + p1.x) / 2,
+                        y: (p0.y + p1.y) / 2,
+                        p: (p0.p + p1.p) / 2
+                    };
+                    const mid2 = {
+                        x: (p1.x + p2.x) / 2,
+                        y: (p1.y + p2.y) / 2,
+                        p: (p1.p + p2.p) / 2
+                    };
+
+                    // Interpolate Quadratic Bezier from mid1 to mid2 with control p1
+                    const dist = Math.hypot(mid2.x - mid1.x, mid2.y - mid1.y);
+
+                    // Dynamic step size: smaller step for smoother lines
+                    // Ensure step is at most 1/4 of brush width to prevent gaps (dots)
+                    // But also clamp it to avoid excessive points on very thin lines
+                    const brushSize = stroke.width;
+                    const step = Math.max(1, brushSize / 4);
+
+                    const numSteps = Math.ceil(dist / step);
+
+                    for (let tStep = 1; tStep <= numSteps; tStep++) {
+                        const t = tStep / numSteps;
+
+                        // Quadratic Bezier Formula:
+                        // B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+                        const a = Math.pow(1 - t, 2);
+                        const b = 2 * (1 - t) * t;
+                        const c = Math.pow(t, 2);
+
+                        const bx = a * mid1.x + b * p1.x + c * mid2.x;
+                        const by = a * mid1.y + b * p1.y + c * mid2.y;
+                        const bp = a * mid1.p + b * p1.p + c * mid2.p;
+
+                        stroke.points.push({ x: bx, y: by, p: bp });
                     }
                 } else {
-                    points.push({ x, y, p });
+                    // Just add the point if we don't have enough for a curve yet (start of stroke)
+                    // This will be smoothed out as soon as we get the 3rd point
+                    // stroke.points.push({ x, y, p }); 
+                    // Actually, better to wait for the 3rd point to start rendering curves to avoid "tails"
+                    // But to reduce latency, we can just linear interpolate the very beginning
+                    if (rawPoints.length === 2) {
+                        const p0 = rawPoints[0];
+                        const p1 = rawPoints[1];
+                        const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+                        const step = Math.max(1, stroke.width / 4);
+                        const numSteps = Math.ceil(dist / step);
+                        for (let i = 1; i <= numSteps; i++) {
+                            const t = i / numSteps;
+                            stroke.points.push({
+                                x: p0.x + (p1.x - p0.x) * t,
+                                y: p0.y + (p1.y - p0.y) * t,
+                                p: p0.p + (p1.p - p0.p) * t
+                            });
+                        }
+                    }
                 }
             }
 
