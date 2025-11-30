@@ -65,62 +65,94 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             return [r, g, b, 1.0];
         };
 
-        // --- 核心修改：Draw 函数 ---
         const draw = () => {
             if (!rootRef.current || !drawPipelineRef.current || !erasePipelineRef.current || !canvasRef.current) return;
 
-            const context = canvasRef.current.getContext('webgpu') as GPUCanvasContext;
+            const root = rootRef.current;
+            const device = root.device as GPUDevice;
+            const context = canvasRef.current.getContext('webgpu') as unknown as GPUCanvasContext;
             if (!context) return;
 
-            // 1. 更新 Uniform (分辨率)
+            // 1. Update Uniform (Resolution)
             const width = canvasRef.current.width;
             const height = canvasRef.current.height;
+            // TypeGPU buffer write
             uniformBufferRef.current.write({ resolution: [width, height] });
 
-            // 2. 准备绘制
+            // 2. Prepare Draw
             const textureView = context.getCurrentTexture().createView();
 
-            // 收集所有需要绘制的笔画
             const allStrokes = [...strokesRef.current];
             if (currentStrokeRef.current) {
                 allStrokes.push(currentStrokeRef.current);
             }
 
-            // 3. 循环绘制
-            // 注意：因为我们要多次通过 pipeline.draw 绘制到同一个 texture，
-            // 第一笔需要 clear，后面的需要 load (保留上一笔)
-            let isFirstDraw = true;
+            if (allStrokes.length === 0) return;
 
-            // 如果没有笔画，我们需要清空屏幕
-            if (allStrokes.length === 0) {
-                // 这里可以使用一个空的 Pass 或者简单的 clear，
-                // 但为了简单起见，利用 TypeGPU 的机制，我们可以不做操作，或者强制 draw 一个空的
-                // 实际上，WebGPU Canvas 默认每帧会 clear。如果什么都不做，就是透明/黑色。
-                return;
-            }
+            // Check pipeline type
+            const isTypeGpuPipeline = 'with' in drawPipelineRef.current;
 
-            for (const stroke of allStrokes) {
-                if (stroke.points.length === 0) continue;
+            if (isTypeGpuPipeline) {
+                // --- TypeGPU Logic ---
+                let isFirstDraw = true;
+                for (const stroke of allStrokes) {
+                    if (stroke.points.length === 0) continue;
 
-                const pipeline = stroke.isEraser ? erasePipelineRef.current : drawPipelineRef.current;
+                    const pipeline = stroke.isEraser ? erasePipelineRef.current : drawPipelineRef.current;
 
-                // 使用 TypeGPU 的 Fluent API
-                pipeline
-                    .withColorAttachment({
+                    pipeline
+                        .withColorAttachment({
+                            view: textureView,
+                            loadOp: isFirstDraw ? 'clear' : 'load',
+                            storeOp: 'store',
+                            clearValue: { r: 0, g: 0, b: 0, a: 0 }
+                        })
+                        .with(vertexShader.uniforms.canvas, uniformBufferRef.current)
+                        .with(vertexShader.uniforms.points, pointBufferRef.current)
+                        .draw(4, stroke.points.length, 0, stroke.startIndex);
+
+                    isFirstDraw = false;
+                }
+            } else {
+                // --- Standard WebGPU Fallback Logic ---
+                const commandEncoder = device.createCommandEncoder();
+                const renderPassDescriptor: GPURenderPassDescriptor = {
+                    colorAttachments: [{
                         view: textureView,
-                        // 第一笔清除，后续保留
-                        loadOp: isFirstDraw ? 'clear' : 'load',
+                        clearValue: { r: 0, g: 0, b: 0, a: 0 },
+                        loadOp: 'clear',
                         storeOp: 'store',
-                        clearValue: { r: 0, g: 0, b: 0, a: 0 } // 透明背景
-                    })
-                    // 绑定资源
-                    .with(vertexShader.uniforms.canvas, uniformBufferRef.current)
-                    .with(vertexShader.uniforms.points, pointBufferRef.current)
-                    // 执行绘制
-                    // draw(vertexCount, instanceCount, firstVertex, firstInstance)
-                    .draw(4, stroke.points.length, 0, stroke.startIndex);
+                    }],
+                };
 
-                isFirstDraw = false;
+                const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+
+                // Create BindGroup (Assuming layout 0, bindings: 0=canvas, 1=points)
+                // We assume drawPipeline and erasePipeline share the same layout (same shaders)
+                const pipeline = drawPipelineRef.current as GPURenderPipeline;
+                const bindGroupLayout = pipeline.getBindGroupLayout(0);
+
+                const bindGroup = device.createBindGroup({
+                    layout: bindGroupLayout,
+                    entries: [
+                        { binding: 0, resource: { buffer: root.unwrap(uniformBufferRef.current) } },
+                        { binding: 1, resource: { buffer: root.unwrap(pointBufferRef.current) } }
+                    ]
+                });
+
+                for (const stroke of allStrokes) {
+                    if (stroke.points.length === 0) continue;
+
+                    const p = stroke.isEraser ? (erasePipelineRef.current as GPURenderPipeline) : (drawPipelineRef.current as GPURenderPipeline);
+
+                    passEncoder.setPipeline(p);
+                    passEncoder.setBindGroup(0, bindGroup);
+                    // draw(vertexCount, instanceCount, firstVertex, firstInstance)
+                    passEncoder.draw(4, stroke.points.length, 0, stroke.startIndex);
+                }
+
+                passEncoder.end();
+                device.queue.submit([commandEncoder.finish()]);
             }
         };
 
@@ -227,7 +259,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const pipelineConfig = {
                     vertex: vertexShader,
                     fragment: fragmentShader,
-                    // 关键：关闭剔除，或者确保顶点顺序正确。这里关闭剔除最安全。
                     primitive: {
                         topology: 'triangle-strip',
                         stripIndexFormat: undefined,
@@ -235,8 +266,68 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     },
                 };
 
-                // 创建 Pipeline，不在这里绑定 .with()，而在 draw 时动态绑定
-                const drawPipeline = unstable.createRenderPipeline({
+                // Fallback to standard WebGPU if createRenderPipeline is missing
+                const createRenderPipeline = unstable?.createRenderPipeline || (root as any).createRenderPipeline;
+
+                if (!createRenderPipeline) {
+                    console.warn('[GPU] createRenderPipeline not found, falling back to standard WebGPU');
+
+                    // 1. Resolve WGSL
+                    const vsCode = tgpu.resolve(vertexShader);
+                    const fsCode = tgpu.resolve(fragmentShader);
+
+                    const vsModule = device.createShaderModule({ code: vsCode });
+                    const fsModule = device.createShaderModule({ code: fsCode });
+
+                    // 2. Create Pipelines
+                    const pipelineDescriptor: GPURenderPipelineDescriptor = {
+                        layout: 'auto',
+                        vertex: {
+                            module: vsModule,
+                            entryPoint: 'main',
+                        },
+                        fragment: {
+                            module: fsModule,
+                            entryPoint: 'main',
+                            targets: [{
+                                format: presentationFormat,
+                                blend: {
+                                    color: { srcFactor: 'src-alpha', dstFactor: 'one-minus-src-alpha', operation: 'add' },
+                                    alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add' },
+                                },
+                            }],
+                        },
+                        primitive: {
+                            topology: 'triangle-strip',
+                            cullMode: 'none',
+                        },
+                    };
+
+                    const drawPipeline = device.createRenderPipeline(pipelineDescriptor);
+
+                    const erasePipelineDescriptor: GPURenderPipelineDescriptor = {
+                        ...pipelineDescriptor,
+                        fragment: {
+                            ...pipelineDescriptor.fragment!,
+                            targets: [{
+                                format: presentationFormat,
+                                blend: {
+                                    color: { srcFactor: 'zero', dstFactor: 'one-minus-src-alpha', operation: 'add' },
+                                    alpha: { srcFactor: 'zero', dstFactor: 'one-minus-src-alpha', operation: 'add' },
+                                },
+                            }],
+                        }
+                    };
+
+                    const erasePipeline = device.createRenderPipeline(erasePipelineDescriptor);
+
+                    drawPipelineRef.current = drawPipeline;
+                    erasePipelineRef.current = erasePipeline;
+                    draw();
+                    return;
+                }
+
+                const drawPipeline = createRenderPipeline({
                     ...pipelineConfig,
                     targets: [{
                         format: presentationFormat,
@@ -247,7 +338,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     }],
                 });
 
-                const erasePipeline = unstable.createRenderPipeline({
+                const erasePipeline = createRenderPipeline({
                     ...pipelineConfig,
                     targets: [{
                         format: presentationFormat,
