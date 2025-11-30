@@ -5,8 +5,7 @@ import React, {
     useRef,
     useImperativeHandle,
     forwardRef,
-    useCallback,
-    useEffect,
+    useId,
 } from "react";
 import { SvgPath } from "./SvgPath";
 import {
@@ -35,7 +34,7 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
     ) => {
         // --- State ---
         const [paths, setPaths] = useState<CanvasPath[]>([]);
-        const [isDrawing, setIsDrawing] = useState(false);
+        const [, setIsDrawing] = useState(false);
 
         // "Current Path" state - separated to avoid re-rendering all paths
         const [currentPath, setCurrentPath] = useState<CanvasPath | null>(null);
@@ -196,25 +195,6 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
 
         // --- Rendering ---
 
-        // Separate paths into "draw" and "erase" for masking
-        // Actually, to support "Eraser erases everything underneath", we need to be careful.
-        // Standard SVG approach: 
-        // 1. Render all "draw" paths.
-        // 2. Render all "eraser" paths into a mask (white background, black strokes).
-        // 3. Apply mask to the group of "draw" paths.
-        // BUT: This only works if erasers are meant to erase EVERYTHING. 
-        // If we want "Eraser 2 erases Stroke 1, but Stroke 3 is drawn OVER Eraser 2", 
-        // then simple masking doesn't work.
-        // `react-sketch-canvas` seems to just use a global mask for ALL eraser strokes. 
-        // This implies you cannot "draw over" an erased area without the new drawing ALSO being erased 
-        // if the eraser mask is applied globally.
-        // Let's check `react-sketch-canvas` behavior: "Erasers are always on top?"
-        // Actually, usually sketchpads implement "Eraser" as just "Destination-Out" compositing.
-        // In SVG, we can't easily mix order.
-        // COMPROMISE: For this implementation, we will use a MASK for all eraser strokes.
-        // This means "Eraser" strokes will erase ALL ink, regardless of layer order.
-        // This is usually acceptable for simple note taking.
-
         const drawPaths = paths.filter(p => p.drawMode);
         const eraserPaths = paths.filter(p => !p.drawMode);
 
@@ -222,7 +202,8 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
         const activeDrawPath = currentPath && currentPath.drawMode ? currentPath : null;
         const activeEraserPath = currentPath && !currentPath.drawMode ? currentPath : null;
 
-        const maskId = "react-sketch-canvas-mask-" + (React.useId ? React.useId() : Math.random().toString(36).substr(2, 9));
+        const id = useId();
+        const maskId = `react-sketch-canvas-mask-${id}`;
 
         return (
             <div

@@ -11,12 +11,17 @@ interface SvgPathProps {
  * Helper to convert array of points to SVG path data string (d attribute)
  * using quadratic bezier curves for smoothness
  */
-function getSvgPathFromStroke(points: Point[], closed: boolean = false): string {
+function getSvgPathFromStroke(points: Point[]): string {
     const len = points.length;
     if (len < 1) return "";
 
-    let a = points[0];
-    let b = points[1];
+    const a = points[0];
+    // b is not used in the original code except for assignment, but logic seems to rely on array indexing.
+    // Actually, looking at the code:
+    // let b = points[1];
+    // if (len < 2) ...
+    // The loop starts at i=1.
+    // 'b' is never used. So we can just remove it.
 
     if (len < 2) {
         // A single point is drawn as a dot (very short line)

@@ -48,7 +48,7 @@ export function SettingsModal() {
         progress, notes, importData,
         repoSources, addRepoSource, removeRepoSource, toggleRepoSource,
         githubToken, gistId, lastSyncedTime, syncStatus,
-        setGithubToken, setGistId, setLastSyncedTime,
+        setGithubToken, setGistId,
         syncData
     } = useProgressStore()
 
@@ -63,29 +63,20 @@ export function SettingsModal() {
             return;
         }
 
-        const toastId = toast.loading("正在同步数据...");
-
         try {
             await syncData();
-            const currentStatus = useProgressStore.getState().syncStatus;
-
-            if (currentStatus === 'error') {
-                toast.error("同步失败", {
-                    id: toastId,
-                    description: "请检查 Token 是否正确或网络连接"
-                });
-            } else {
-                toast.success("同步成功", { id: toastId });
-            }
+            toast.success("同步成功");
         } catch (error) {
-            toast.error("同步发生未知错误", { id: toastId });
+            console.error(error);
+            toast.error("同步失败", {
+                description: "请检查网络或 Token 权限"
+            });
         }
     };
 
-    // 验证并添加新题库源
-    const handleAddSource = async () => {
+    const handleCheckRepo = async () => {
+        const url = newRepoUrl.trim().replace(/\/$/, "");
         const name = newRepoName.trim();
-        const url = newRepoUrl.trim();
 
         if (!name || !url) {
             toast.error("请填写名称和 URL");
@@ -432,7 +423,7 @@ export function SettingsModal() {
                                                 className="flex-1 h-8 text-sm"
                                             />
                                             <Button
-                                                onClick={handleAddSource}
+                                                onClick={handleCheckRepo}
                                                 disabled={isCheckingRepo || !newRepoName || !newRepoUrl}
                                                 size="sm"
                                                 className="h-8"

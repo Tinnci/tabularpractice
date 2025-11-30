@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Target, BarChart2, Sparkles, Cloud, Database, Settings } from "lucide-react";
-import { SubjectStat } from "@/hooks/useDashboardStats";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, BarChart2, BookOpen, Cloud, Database, Settings, Target } from "lucide-react";
+import { type SubjectStat } from "@/hooks/useDashboardStats";
 
 interface Props {
     subjects: SubjectStat[];

@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { Status, NotesMap } from './types'
-import { toast } from "sonner"
 
 export interface RepoSource {
     id: string;

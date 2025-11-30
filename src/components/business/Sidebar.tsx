@@ -5,7 +5,7 @@ import { getTagsForSubject, type TagNode } from "@/data/subject-tags";
 import { useProgressStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Folder, Hash, Layers, ChevronRight, PieChart, Circle } from "lucide-react";
+import { Layers, ChevronRight, PieChart, Hash } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ProgressOverview } from "./ProgressOverview";
 import {

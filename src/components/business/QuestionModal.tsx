@@ -129,7 +129,7 @@ export function QuestionModal({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [theme]);
-    const [strokeWidth, setStrokeWidth] = useState(4);
+    const [strokeWidth] = useState(4);
     const [eraserMode, setEraserMode] = useState(false);
     const [onlyPenMode, setOnlyPenMode] = useState(false);
     const [useGpu, setUseGpu] = useState(false);
@@ -140,7 +140,6 @@ export function QuestionModal({
     // 初始化笔记内容
     useEffect(() => {
         if (question) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setNoteContent(notes[question.id] || "");
         }
     }, [question, notes]);
@@ -180,7 +179,6 @@ export function QuestionModal({
                 }
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [question, visibleViews, theme]); // 移除 drafts 依赖
 
     // 自动保存笔记
@@ -229,7 +227,6 @@ export function QuestionModal({
 
     useEffect(() => {
         if (isOpen && question) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setVisibleViews(new Set(['question']));
         }
     }, [question, isOpen]);
@@ -645,40 +642,11 @@ export function QuestionModal({
 
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <div className="relative w-9 h-9 flex items-center justify-center rounded-md hover:bg-muted/50 hover:scale-105 transition-all cursor-pointer active:scale-90 group">
-                                                                <div
-                                                                    className="w-5 h-5 rounded-full border shadow-sm group-hover:ring-2 group-hover:ring-offset-1 group-hover:ring-muted-foreground/20 transition-all"
-                                                                    style={{ backgroundColor: strokeColor }}
-                                                                />
-                                                                <input
-                                                                    type="color"
-                                                                    value={strokeColor}
-                                                                    onChange={(e) => {
-                                                                        setStrokeColor(e.target.value);
-                                                                        setEraserMode(false);
-                                                                        canvasRef.current?.eraseMode(false);
-                                                                    }}
-                                                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                                                />
-                                                            </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
-                                                            <p>颜色选择</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <div className="w-px h-5 bg-border mx-1" />
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
                                                             <Button
                                                                 variant={onlyPenMode ? "secondary" : "ghost"}
                                                                 size="icon"
-                                                                className={cn(
-                                                                    "h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground",
-                                                                    onlyPenMode ? "text-foreground" : "text-muted-foreground"
-                                                                )}
                                                                 onClick={() => setOnlyPenMode(!onlyPenMode)}
+                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
                                                             >
                                                                 <PenLine className="w-4 h-4" />
                                                             </Button>
@@ -864,7 +832,7 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'mastered')}
+                                        onClick={() => question?.id && onUpdateStatus(question.id, 'mastered')}
                                         disabled={isLoading}
                                         className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
@@ -880,7 +848,7 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'confused')}
+                                        onClick={() => question?.id && onUpdateStatus(question.id, 'confused')}
                                         disabled={isLoading}
                                         className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
@@ -896,7 +864,7 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => currentQuestion.id && onUpdateStatus(currentQuestion.id, 'failed')}
+                                        onClick={() => question?.id && onUpdateStatus(question.id, 'failed')}
                                         disabled={isLoading}
                                         className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >

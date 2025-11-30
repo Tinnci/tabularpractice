@@ -1,6 +1,7 @@
 /// <reference types="@webgpu/types" />
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import tgpu from 'typegpu';
 import * as d from 'typegpu/data';
