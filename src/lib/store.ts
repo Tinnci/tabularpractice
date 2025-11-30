@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { Status, NotesMap } from './types'
+import { Status, NotesMap, Question, Paper, PaperGroup } from './types'
 
 export interface RepoSource {
     id: string;
@@ -93,6 +93,16 @@ interface ProgressState {
 
     syncData: (isAutoSync?: boolean) => Promise<void>;
     triggerAutoSync: () => void;
+
+    // Custom Data (AI Imported)
+    customQuestions: Record<string, Question>;
+    customPapers: Record<string, Paper>;
+    customPaperGroups: Record<string, PaperGroup>;
+    addCustomData: (data: { questions?: Question[], papers?: Paper[], groups?: PaperGroup[] }) => void;
+
+    // AI Settings
+    geminiApiKey: string | null;
+    setGeminiApiKey: (key: string | null) => void;
 }
 
 let syncTimer: NodeJS.Timeout | null = null;
@@ -123,6 +133,31 @@ export const useProgressStore = create<ProgressState>()(
             setGistId: (id) => set({ gistId: id }),
             setLastSyncedTime: (time) => set({ lastSyncedTime: time }),
             setSyncStatus: (status) => set({ syncStatus: status }),
+
+            // Custom Data
+            customQuestions: {},
+            customPapers: {},
+            customPaperGroups: {},
+            geminiApiKey: null,
+
+            setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+
+            addCustomData: ({ questions = [], papers = [], groups = [] }) => set((state) => {
+                const newQuestions = { ...state.customQuestions };
+                questions.forEach(q => newQuestions[q.id] = q);
+
+                const newPapers = { ...state.customPapers };
+                papers.forEach(p => newPapers[p.id] = p);
+
+                const newGroups = { ...state.customPaperGroups };
+                groups.forEach(g => newGroups[g.id] = g);
+
+                return {
+                    customQuestions: newQuestions,
+                    customPapers: newPapers,
+                    customPaperGroups: newGroups
+                };
+            }),
 
             // 初始化时确保包含内置源和默认远程源
             repoSources: [

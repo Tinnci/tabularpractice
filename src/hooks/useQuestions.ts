@@ -77,6 +77,8 @@ export function useQuestions() {
     // 如果没有启用的源，默认启用本地源
     if (enabledUrls.length === 0) enabledUrls.push('');
 
+    const customQuestions = useProgressStore(state => state.customQuestions);
+
     const { data, error, isLoading } = useSWR<Question[]>(
         ['questions-index', ...enabledUrls], // Key 包含所有 URL，变化时自动重刷
         () => multiSourceFetcher(enabledUrls),
@@ -86,24 +88,27 @@ export function useQuestions() {
         }
     );
 
+    // Merge custom questions
+    const questionsIndex = data ? [...data, ...Object.values(customQuestions)] : Object.values(customQuestions);
+
     return {
-        questionsIndex: data || [],
+        questionsIndex,
         isLoading,
         isError: error
     };
 }
 
 export function usePaperDetail(paperId: string | null) {
-    // 试卷详情目前比较复杂，因为不知道这个 paperId 属于哪个源
-    // 简单的做法是：尝试从所有启用的源 fetch，直到成功
-    // 或者，我们在 questionsIndex 里应该包含 sourceUrl 信息？
-    // 暂时简化：遍历所有源尝试 fetch
-
     const repoSources = useProgressStore(state => state.repoSources);
+    const customPapers = useProgressStore(state => state.customPapers);
+    const customQuestions = useProgressStore(state => state.customQuestions);
+
     const enabledUrls = (repoSources && repoSources.length > 0)
         ? repoSources.filter(s => s.enabled).map(s => s.url)
         : [''];
     if (enabledUrls.length === 0) enabledUrls.push('');
+
+    const isCustom = paperId && customPapers[paperId];
 
     const fetchPaperDetail = async () => {
         if (!paperId) return null;
@@ -121,12 +126,29 @@ export function usePaperDetail(paperId: string | null) {
     };
 
     const { data, error, isLoading } = useSWR<PaperDetail>(
-        paperId ? ['paper-detail', paperId, ...enabledUrls] : null,
+        (paperId && !isCustom) ? ['paper-detail', paperId, ...enabledUrls] : null,
         fetchPaperDetail,
         {
             revalidateOnFocus: false
         }
     );
+
+    if (isCustom && paperId) {
+        const paper = customPapers[paperId];
+        const questions = Object.values(customQuestions).filter(q => q.paperId === paperId);
+        const questionsMap: Record<string, Question> = {};
+        questions.forEach(q => questionsMap[q.id] = q);
+
+        return {
+            paperDetail: {
+                paperId: paper.id,
+                year: paper.year,
+                questions: questionsMap
+            },
+            isLoading: false,
+            isError: null
+        };
+    }
 
     return {
         paperDetail: data,
@@ -181,6 +203,8 @@ export function useTags() {
 
 export function usePaperGroups() {
     const repoSources = useProgressStore(state => state.repoSources);
+    const customPaperGroups = useProgressStore(state => state.customPaperGroups);
+
     const enabledUrls = (repoSources && repoSources.length > 0)
         ? repoSources.filter(s => s.enabled).map(s => s.url)
         : [''];
@@ -195,8 +219,11 @@ export function usePaperGroups() {
         }
     );
 
+    // Merge custom groups
+    const paperGroups = data ? [...data, ...Object.values(customPaperGroups)] : Object.values(customPaperGroups);
+
     return {
-        paperGroups: data,
+        paperGroups,
         isLoading,
         isError: error
     };
