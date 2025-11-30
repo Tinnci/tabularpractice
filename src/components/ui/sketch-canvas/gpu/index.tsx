@@ -21,6 +21,7 @@ interface GpuSketchCanvasProps {
 interface GpuStroke {
     points: { x: number, y: number, p: number }[];
     color: [number, number, number, number];
+    hexColor: string; // Store original hex for export
     width: number;
     isEraser: boolean;
     startIndex: number; // In the global vertex buffer
@@ -285,6 +286,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
             currentStrokeRef.current = {
                 points: [{ x, y, p }],
                 color: hexToRgba(strokeColor),
+                hexColor: strokeColor,
                 width: strokeWidth,
                 isEraser: isEraserRef.current,
                 startIndex: totalPointsRef.current // Start at the end of existing points
@@ -331,7 +333,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const exportedPath: ExportedPath = {
                     paths: stroke.points.map(p => ({ x: p.x, y: p.y })),
                     strokeWidth: stroke.width,
-                    strokeColor: strokeColor, // Note: storing the original hex might be better if we want to restore it exactly
+                    strokeColor: stroke.hexColor,
                     drawMode: !stroke.isEraser,
                     startTimestamp: Date.now(),
                     endTimestamp: Date.now()
@@ -367,7 +369,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 return strokesRef.current.map(s => ({
                     paths: s.points.map(p => ({ x: p.x, y: p.y })),
                     strokeWidth: s.width,
-                    strokeColor: "#000000", // TODO: Reverse RGBA to Hex or store Hex in stroke
+                    strokeColor: s.hexColor,
                     drawMode: !s.isEraser,
                     startTimestamp: 0,
                     endTimestamp: 0
@@ -380,6 +382,7 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                     const stroke: GpuStroke = {
                         points: p.paths.map(pt => ({ x: pt.x, y: pt.y, p: 0.5 })),
                         color: hexToRgba(p.strokeColor),
+                        hexColor: p.strokeColor,
                         width: p.strokeWidth,
                         isEraser: !p.drawMode,
                         startIndex: currentTotal
