@@ -460,7 +460,30 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
                 const x = ev.clientX - rect.left;
                 const y = ev.clientY - rect.top;
                 const p = ev.pressure || 0.5;
-                currentStrokeRef.current.points.push({ x, y, p });
+
+                // Interpolation Logic
+                const points = currentStrokeRef.current.points;
+                if (points.length > 0) {
+                    const lastPoint = points[points.length - 1];
+                    const dist = Math.hypot(x - lastPoint.x, y - lastPoint.y);
+                    const step = 2; // Pixel distance between interpolated points (lower = smoother but more data)
+
+                    if (dist > step) {
+                        const numSteps = Math.floor(dist / step);
+                        for (let i = 1; i <= numSteps; i++) {
+                            const t = i / numSteps;
+                            points.push({
+                                x: lastPoint.x + (x - lastPoint.x) * t,
+                                y: lastPoint.y + (y - lastPoint.y) * t,
+                                p: lastPoint.p + (p - lastPoint.p) * t
+                            });
+                        }
+                    } else {
+                        points.push({ x, y, p });
+                    }
+                } else {
+                    points.push({ x, y, p });
+                }
             }
 
             if (!rafRef.current) {
