@@ -43,6 +43,7 @@
     "sonner": "^2.0.7",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.4.0",
+    "typegpu": "^0.8.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -51,6 +52,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@webgpu/types": "^0.1.66",
     "esbuild-wasm": "^0.25.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
