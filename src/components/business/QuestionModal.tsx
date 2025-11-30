@@ -359,52 +359,62 @@ export function QuestionModal({
                                     size="sm"
                                     pressed={visibleViews.has('video')}
                                     onPressedChange={() => toggleView('video')}
-                                    className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
+                                    className="group h-8 px-2.5 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0 transition-all duration-300 ease-in-out"
                                     aria-label="Toggle video"
                                 >
-                                    <MonitorPlay className="h-4 w-4 sm:mr-1" />
-                                    <span className="hidden sm:inline text-xs">视频</span>
+                                    <MonitorPlay className="h-4 w-4 shrink-0" />
+                                    <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
+                                        视频
+                                    </span>
                                 </Toggle>
                             )}
                             <Toggle
                                 size="sm"
                                 pressed={visibleViews.has('answer')}
                                 onPressedChange={() => toggleView('answer')}
-                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
+                                className="group h-8 px-2.5 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0 transition-all duration-300 ease-in-out"
                                 aria-label="Toggle answer"
                             >
-                                <Eye className="h-4 w-4 sm:mr-1" />
-                                <span className="hidden sm:inline text-xs">答案</span>
+                                <Eye className="h-4 w-4 shrink-0" />
+                                <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
+                                    答案
+                                </span>
                             </Toggle>
                             <Toggle
                                 size="sm"
                                 pressed={visibleViews.has('analysis')}
                                 onPressedChange={() => toggleView('analysis')}
-                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
+                                className="group h-8 px-2.5 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0 transition-all duration-300 ease-in-out"
                                 aria-label="Toggle analysis"
                             >
-                                <FileText className="h-4 w-4 sm:mr-1" />
-                                <span className="hidden sm:inline text-xs">解析</span>
+                                <FileText className="h-4 w-4 shrink-0" />
+                                <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
+                                    解析
+                                </span>
                             </Toggle>
                             <Toggle
                                 size="sm"
                                 pressed={visibleViews.has('note')}
                                 onPressedChange={() => toggleView('note')}
-                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
+                                className="group h-8 px-2.5 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0 transition-all duration-300 ease-in-out"
                                 aria-label="Toggle note"
                             >
-                                <PenLine className="h-4 w-4 sm:mr-1" />
-                                <span className="hidden sm:inline text-xs">笔记</span>
+                                <PenLine className="h-4 w-4 shrink-0" />
+                                <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
+                                    笔记
+                                </span>
                             </Toggle>
                             <Toggle
                                 size="sm"
                                 pressed={visibleViews.has('draft')}
                                 onPressedChange={() => toggleView('draft')}
-                                className="h-auto p-2 sm:h-7 sm:w-auto sm:px-2 sm:py-1 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0"
+                                className="group h-8 px-2.5 data-[state=on]:bg-background data-[state=on]:shadow-sm shrink-0 transition-all duration-300 ease-in-out"
                                 aria-label="Toggle draft"
                             >
-                                <Pencil className="h-4 w-4 sm:mr-1" />
-                                <span className="hidden sm:inline text-xs">草稿</span>
+                                <Pencil className="h-4 w-4 shrink-0" />
+                                <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
+                                    草稿
+                                </span>
                             </Toggle>
                         </div>
 
