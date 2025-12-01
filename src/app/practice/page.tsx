@@ -35,8 +35,11 @@ export default function PracticePage() {
                 map.set(node.id, node.label);
 
                 // Map Pinyin ID (for compatibility with pinyin-slugified data)
-                // Example: "伴随矩阵" -> "ban-sui-ju-zhen"
-                const slug = pinyin(node.label, { toneType: 'none', type: 'array' }).join('-');
+                // 1. Clean punctuation (remove non-alphanumeric/non-Chinese)
+                const cleanLabel = node.label.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+
+                // 2. Generate slug with 'v' for 'ü'
+                const slug = pinyin(cleanLabel, { toneType: 'none', type: 'array', v: true }).join('-');
                 map.set(slug, node.label);
 
                 if (node.children) {
@@ -46,6 +49,10 @@ export default function PracticePage() {
         };
         // Cast imported JSON to TagNode[] as it's structurally compatible
         traverse(tagsData as unknown as TagNode[]);
+
+        // Manual Overrides for Polyphones or incorrect data slugs
+        map.set('xing-lie-shi', '行列式'); // Standard is 'hang-lie-shi', but data uses 'xing'
+
         return map;
     }, []);
 
