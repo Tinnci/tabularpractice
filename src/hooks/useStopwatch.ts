@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 interface UseStopwatchOptions {
     autoStart?: boolean;
@@ -8,50 +8,101 @@ interface UseStopwatchOptions {
 export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwatchOptions = {}) {
     const [elapsed, setElapsed] = useState(0); // 毫秒
     const [isRunning, setIsRunning] = useState(autoStart);
-    const requestRef = useRef<number | null>(null);
+    const [isSmartPaused, setIsSmartPaused] = useState(false); // 标记是否是因为切屏导致的暂停
+
     const startTimeRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0); // 暂停时已过去的时间
+    const requestRef = useRef<number | null>(null);
+    const animateRef = useRef<(() => void) | null>(null);
 
-    const animateRef = useRef<((time: number) => void) | null>(null);
-
-    const animate = useCallback((time: number) => {
+    // 动画循环
+    const animate = useCallback(() => {
         if (startTimeRef.current > 0) {
-            setElapsed(savedElapsedRef.current + (time - startTimeRef.current));
+            const now = performance.now();
+            setElapsed(savedElapsedRef.current + (now - startTimeRef.current));
         }
         if (animateRef.current) {
             requestRef.current = requestAnimationFrame(animateRef.current);
         }
     }, []);
 
+    // 更新 animateRef
     useEffect(() => {
         animateRef.current = animate;
     }, [animate]);
 
+    // 开始/继续
     const start = useCallback(() => {
-        if (isRunning) return;
         setIsRunning(true);
         startTimeRef.current = performance.now();
-        requestRef.current = requestAnimationFrame(animate);
-    }, [isRunning, animate]);
-
-    const pause = useCallback(() => {
-        if (!isRunning) return;
-        setIsRunning(false);
-        if (requestRef.current) cancelAnimationFrame(requestRef.current);
-        // 保存当前流逝的时间
-        savedElapsedRef.current = elapsed;
-        startTimeRef.current = 0;
-    }, [isRunning, elapsed]);
-
-    const reset = useCallback(() => {
-        setIsRunning(false);
-        if (requestRef.current) cancelAnimationFrame(requestRef.current);
-        setElapsed(0);
-        savedElapsedRef.current = 0;
-        startTimeRef.current = 0;
-        // 如果需要重置后立即开始，可以在这里调用 start()
+        if (animateRef.current) {
+            requestRef.current = requestAnimationFrame(animateRef.current);
+        }
     }, []);
 
+    // 暂停
+    const pause = useCallback(() => {
+        setIsRunning(false);
+        if (requestRef.current) {
+            cancelAnimationFrame(requestRef.current);
+            requestRef.current = null;
+        }
+        // 保存当前流逝的时间，防止下次 start 时时间跳变
+        if (startTimeRef.current > 0) {
+            savedElapsedRef.current += performance.now() - startTimeRef.current;
+        }
+        startTimeRef.current = 0;
+    }, []);
+
+    // 重置
+    const reset = useCallback((newAutoStart = false) => {
+        setIsRunning(newAutoStart);
+        setElapsed(0);
+        savedElapsedRef.current = 0;
+        startTimeRef.current = newAutoStart ? performance.now() : 0;
+        if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        if (newAutoStart && animateRef.current) {
+            requestRef.current = requestAnimationFrame(animateRef.current);
+        }
+    }, []);
+
+    // 智能暂停逻辑 (Page Visibility API)
+    useEffect(() => {
+        if (!smartPause) return;
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                // 页面隐藏：如果是运行状态，则暂停，并标记为“智能暂停”
+                if (isRunning) {
+                    pause();
+                    setIsRunning(true); // 保持逻辑状态为运行，只是物理暂停
+                    setIsSmartPaused(true);
+                }
+            } else {
+                // 页面恢复：如果是“智能暂停”状态，则自动恢复
+                if (isSmartPaused) {
+                    start();
+                    setIsSmartPaused(false);
+                }
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [smartPause, isRunning, isSmartPaused, pause, start]);
+
+    // 启动/清理
+    useEffect(() => {
+        if (autoStart) {
+            startTimeRef.current = performance.now();
+            requestRef.current = requestAnimationFrame(animate);
+        }
+        return () => {
+            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        };
+    }, [autoStart, animate]);
+
+    // 切换
     const toggle = useCallback(() => {
         if (isRunning) {
             pause();
@@ -60,52 +111,13 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
         }
     }, [isRunning, pause, start]);
 
-    // 智能暂停逻辑：监听页面可见性
-    useEffect(() => {
-        if (!smartPause) return;
-
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                // 页面隐藏，如果正在运行则暂停，并标记是由系统暂停的（可选逻辑）
-                if (isRunning) {
-                    pause();
-                    // 这里可以加一个 toast 提示 "计时已自动暂停"
-                }
-            } else {
-                // 页面恢复，可选逻辑：自动恢复或保持暂停
-                // 考研刷题场景下，建议保持暂停，让用户手动点开始，或者自动恢复
-                // 这里演示自动恢复逻辑：(需要引入额外的ref来记录是否是被系统暂停的，略简化)
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        return () => {
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, [smartPause, isRunning, pause]);
-
-    // 清理
-    useEffect(() => {
-        return () => {
-            if (requestRef.current) cancelAnimationFrame(requestRef.current);
-        };
-    }, []);
-
-    // 格式化时间显示 (MM:SS)
-    const formatTime = (ms: number) => {
-        const totalSeconds = Math.floor(ms / 1000);
+    // 格式化时间
+    const formattedTime = useMemo(() => {
+        const totalSeconds = Math.floor(elapsed / 1000);
         const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
         const s = (totalSeconds % 60).toString().padStart(2, '0');
         return `${m}:${s}`;
-    };
+    }, [elapsed]);
 
-    return {
-        elapsed,
-        formattedTime: formatTime(elapsed),
-        isRunning,
-        start,
-        pause,
-        reset,
-        toggle
-    };
+    return { elapsed, isRunning, start, pause, reset, toggle, formattedTime };
 }

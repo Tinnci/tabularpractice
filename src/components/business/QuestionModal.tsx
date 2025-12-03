@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Question, Status } from "@/lib/types";
 import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
+import { useStopwatch } from "@/hooks/useStopwatch";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sketch-canvas";
@@ -24,7 +25,7 @@ import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
     Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2,
-    Maximize2, Minimize2
+    Maximize2, Minimize2, Play, Pause
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -105,6 +106,40 @@ export function QuestionModal({
 }: Props) {
 
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
+
+    // 计时器逻辑
+    const { addTime } = useProgressStore();
+    const { elapsed, isRunning, start, pause, reset } = useStopwatch({
+        autoStart: true,
+        smartPause: true
+    });
+    const activeQuestionIdRef = useRef<string | null>(question?.id || null);
+
+    // 当题目 ID 变化 或 Modal 关闭时，保存时间
+    useEffect(() => {
+        const handleSaveTime = () => {
+            const currentId = activeQuestionIdRef.current;
+            if (currentId && elapsed > 1000) {
+                addTime(currentId, elapsed);
+            }
+        };
+
+        if (question?.id !== activeQuestionIdRef.current) {
+            handleSaveTime();
+            reset(true);
+            activeQuestionIdRef.current = question?.id || null;
+        }
+    }, [question?.id, elapsed, addTime, reset]);
+
+    // 专门处理 Modal 关闭时的保存
+    useEffect(() => {
+        if (!isOpen && activeQuestionIdRef.current) {
+            if (elapsed > 1000) {
+                addTime(activeQuestionIdRef.current, elapsed);
+            }
+            reset(false);
+        }
+    }, [isOpen, elapsed, addTime, reset]);
 
     // 笔记系统状态
     const { notes, updateNote, stars, toggleStar, syncStatus, syncData } = useProgressStore();
@@ -324,6 +359,18 @@ export function QuestionModal({
         setVisibleViews(newSet);
     };
 
+    const TimerUI = (
+        <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-full text-xs font-mono ml-2 sm:ml-4 shrink-0">
+            <Clock className="w-3 h-3 text-muted-foreground" />
+            <span className={cn("min-w-[40px] text-center", isRunning ? "text-primary" : "text-muted-foreground")}>
+                {formatTimestamp(Math.floor(elapsed / 1000))}
+            </span>
+            <button onClick={() => isRunning ? pause() : start()} className="hover:bg-background rounded p-1 transition-colors">
+                {isRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+            </button>
+        </div>
+    );
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className={cn(
@@ -342,6 +389,7 @@ export function QuestionModal({
                                 <span className="sm:hidden text-muted-foreground">#</span>
                                 <span>{currentQuestion.number}</span>
                                 <span className="hidden sm:inline">第 {currentQuestion.number} 题</span>
+                                {question && TimerUI}
                                 {/* 收藏按钮 */}
                                 <Button
                                     variant="ghost"
