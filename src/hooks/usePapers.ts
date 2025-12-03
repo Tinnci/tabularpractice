@@ -8,7 +8,11 @@ const multiSourcePapersFetcher = async (urls: string[]) => {
         try {
             const res = await fetch(`${target}/papers.json`); // 拉取 papers.json
             if (!res.ok) return [];
-            return await res.json();
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                return data.map((item: Paper) => ({ ...item, sourceUrl: baseUrl }));
+            }
+            return [];
         } catch { return []; }
     });
 
@@ -27,11 +31,11 @@ export function usePapers() {
         : [''];
     if (enabledUrls.length === 0) enabledUrls.push('');
 
-    const { data, isLoading } = useSWR<Paper[]>(
+    const { data, isLoading, mutate } = useSWR<Paper[]>(
         ['papers-list', ...enabledUrls],
         () => multiSourcePapersFetcher(enabledUrls),
         { revalidateOnFocus: false }
     );
 
-    return { papers: data || [], isLoading };
+    return { papers: data || [], isLoading, mutate };
 }

@@ -36,7 +36,14 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 function PaperFilterSection() {
     const { hiddenPaperIds, togglePaperVisibility } = useProgressStore()
-    const { papers, isLoading } = usePapers()
+    const { papers, isLoading, mutate } = usePapers()
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true)
+        await mutate()
+        setTimeout(() => setIsRefreshing(false), 500)
+    }
 
     if (isLoading) {
         return <div className="text-sm text-muted-foreground">加载试卷列表...</div>
@@ -51,10 +58,22 @@ function PaperFilterSection() {
 
     return (
         <div className="space-y-4">
-            <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
-                <FileText className="h-4 w-4" />
-                试卷筛选
-            </h3>
+            <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                    <FileText className="h-4 w-4" />
+                    试卷筛选
+                </h3>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    title="刷新试卷列表"
+                >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                </Button>
+            </div>
             <div className="p-4 border rounded-lg bg-card/50">
                 <div className="text-xs text-muted-foreground mb-3">
                     关闭的试卷将不会出现在练习列表中。
@@ -67,7 +86,14 @@ function PaperFilterSection() {
                                     <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 truncate block" title={paper.name}>
                                         {paper.name}
                                     </label>
-                                    <p className="text-xs text-muted-foreground">{paper.year}年</p>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <span>{paper.year}年</span>
+                                        {paper.sourceUrl !== undefined && (
+                                            <span className="px-1.5 py-0.5 bg-secondary rounded text-[10px] truncate max-w-[120px]" title={paper.sourceUrl || '本地数据'}>
+                                                {paper.sourceUrl === '' ? '本地' : (paper.sourceUrl.includes('github') ? 'GitHub' : '远程')}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <Switch
                                     checked={!hiddenPaperIds.includes(paper.id)}

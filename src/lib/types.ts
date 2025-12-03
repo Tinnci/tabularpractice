@@ -28,6 +28,7 @@ export interface Paper {
   groupId: string;      // 关联到 PaperGroup.id
   year: number;         // 2023
   name: string;         // "2023年考研数学一真题"
+  sourceUrl?: string;   // 来源 URL
 }
 
 // 3. 题目定义
