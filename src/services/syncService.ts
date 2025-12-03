@@ -13,6 +13,8 @@ export interface SyncData {
     timesLastModified?: Record<string, number>;
 }
 
+import { SyncDataSchema } from '@/lib/schema';
+
 export const syncService = {
     async fetchGist(token: string, gistId: string): Promise<SyncData | null> {
         const headers = {
@@ -27,7 +29,14 @@ export const syncService = {
                 const gist = await res.json();
                 const file = gist.files["tabular-practice-data.json"];
                 if (file) {
-                    return JSON.parse(file.content);
+                    const jsonContent = JSON.parse(file.content);
+                    // Validate data using Zod schema
+                    const parsed = SyncDataSchema.safeParse(jsonContent);
+                    if (!parsed.success) {
+                        console.error("Sync data validation failed:", parsed.error);
+                        throw new Error("Invalid sync data format");
+                    }
+                    return parsed.data as SyncData;
                 }
             } else if (res.status === 404) {
                 return null;

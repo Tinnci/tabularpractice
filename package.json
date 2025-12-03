@@ -51,6 +51,7 @@
     "swr": "^2.3.6",
     "tailwind-merge": "^3.4.0",
     "typegpu": "^0.8.2",
+    "zod": "^4.1.13",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
