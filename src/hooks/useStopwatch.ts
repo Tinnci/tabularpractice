@@ -12,12 +12,20 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
     const startTimeRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0); // 暂停时已过去的时间
 
+    const animateRef = useRef<((time: number) => void) | null>(null);
+
     const animate = useCallback((time: number) => {
         if (startTimeRef.current > 0) {
             setElapsed(savedElapsedRef.current + (time - startTimeRef.current));
         }
-        requestRef.current = requestAnimationFrame(animate);
+        if (animateRef.current) {
+            requestRef.current = requestAnimationFrame(animateRef.current);
+        }
     }, []);
+
+    useEffect(() => {
+        animateRef.current = animate;
+    }, [animate]);
 
     const start = useCallback(() => {
         if (isRunning) return;

@@ -99,7 +99,6 @@ export default function PracticePage() {
                 .filter(q => !!q) as Question[];
 
             if (restoredQueue.length > 0) {
-                // eslint-disable-next-line react-hooks/exhaustive-deps
                 setQueue(restoredQueue);
                 setCurrentIndex(practiceSession.currentIndex);
                 setSelectedTypes(new Set(practiceSession.settings.types));
@@ -112,7 +111,8 @@ export default function PracticePage() {
                 setIsModalOpen(true);
             }
         }
-    }, [practiceSession, mergedQuestions, isStarted]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [practiceSession, mergedQuestions]);
 
     // Derived Data
     const allTags = useMemo(() => {
