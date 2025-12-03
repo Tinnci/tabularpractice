@@ -217,7 +217,7 @@ function QuestionsContent() {
       img.src = finalUrl;
     };
 
-    preloadImage(nextQuestion.contentImg || nextQuestion.imageUrl, nextQuestion.sourceUrl);
+    preloadImage(nextQuestion.contentImg, nextQuestion.sourceUrl);
     preloadImage(nextQuestion.answerImg, nextQuestion.sourceUrl);
     preloadImage(nextQuestion.analysisImg, nextQuestion.sourceUrl);
   }, [currentIndex, filteredQuestions, lowDataMode, repoBaseUrl]);

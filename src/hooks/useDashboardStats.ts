@@ -1,6 +1,7 @@
 import { useProgressStore } from "@/lib/store";
 import { usePaperGroups, useQuestions } from "@/hooks/useQuestions";
 import { useMemo } from "react";
+import { SUBJECT_CONFIG, getSubjectKey } from "@/lib/subjectConfig";
 
 // 定义统计结构
 export type SubjectStat = {
@@ -11,15 +12,6 @@ export type SubjectStat = {
     confused: number;
     failed: number;
     unanswered: number;
-};
-
-// 科目名称映射表 (可扩展)
-const SUBJECT_DISPLAY_MAP: Record<string, string> = {
-    math: "数学",
-    english: "英语",
-    politics: "政治",
-    cs: "计算机统考",
-    art: "艺术概论",
 };
 
 export function useDashboardStats() {
@@ -34,30 +26,14 @@ export function useDashboardStats() {
 
         // 预处理 PaperGroups，确定有哪些“科目”
         (paperGroups || []).forEach(group => {
-            let subjectId = group.id; // 默认用 group id 作为科目 id
-            let subjectName = group.name;
-
-            // 归类逻辑：合并 math1, math2 -> math
-            if (group.id.startsWith('math')) { subjectId = 'math'; subjectName = '数学'; }
-            else if (group.id.startsWith('english')) { subjectId = 'english'; subjectName = '英语'; }
-            else if (group.id.startsWith('politics')) { subjectId = 'politics'; subjectName = '政治'; }
-            // 其他保持原样，或尝试从 ID 提取前缀
-            else {
-                const match = group.id.match(/^([a-z]+)/);
-                if (match) {
-                    // 尝试使用映射表优化名称
-                    if (SUBJECT_DISPLAY_MAP[match[1]]) {
-                        subjectId = match[1];
-                        subjectName = SUBJECT_DISPLAY_MAP[match[1]];
-                    }
-                }
-            }
+            const subjectKey = getSubjectKey(group.id);
+            const config = SUBJECT_CONFIG[subjectKey] || SUBJECT_CONFIG['other'];
 
             // 初始化 Map
-            if (!statsMap[subjectId]) {
-                statsMap[subjectId] = {
-                    id: subjectId,
-                    name: subjectName,
+            if (!statsMap[subjectKey]) {
+                statsMap[subjectKey] = {
+                    id: subjectKey,
+                    name: config.label,
                     total: 0, mastered: 0, confused: 0, failed: 0, unanswered: 0
                 };
             }
@@ -75,28 +51,21 @@ export function useDashboardStats() {
             else totalStat.unanswered++;
 
             // 确定科目
-            let subjectId = 'other';
-            // 基于 ID 前缀的 fallback 逻辑
-            if (q.id.startsWith('math') || q.paperId.startsWith('math')) subjectId = 'math';
-            else if (q.id.startsWith('english') || q.paperId.startsWith('english')) subjectId = 'english';
-            else if (q.id.startsWith('politics') || q.paperId.startsWith('politics')) subjectId = 'politics';
-            else {
-                // 尝试提取前缀 (e.g. cs-408 -> cs)
-                const match = q.paperId.match(/^([a-z]+)/);
-                if (match) subjectId = match[1];
-            }
+            // 优先使用 paperId 来判断科目，因为它通常包含科目信息 (e.g. math1-2023)
+            const subjectKey = getSubjectKey(q.paperId) || getSubjectKey(q.id);
+            const config = SUBJECT_CONFIG[subjectKey] || SUBJECT_CONFIG['other'];
 
             // 如果 map 里没有(比如刚初始化的专业课)，补上
-            if (!statsMap[subjectId]) {
-                statsMap[subjectId] = {
-                    id: subjectId,
-                    name: SUBJECT_DISPLAY_MAP[subjectId] || subjectId.toUpperCase(),
+            if (!statsMap[subjectKey]) {
+                statsMap[subjectKey] = {
+                    id: subjectKey,
+                    name: config.label,
                     total: 0, mastered: 0, confused: 0, failed: 0, unanswered: 0
                 };
             }
 
             // 更新分科统计
-            const s = statsMap[subjectId];
+            const s = statsMap[subjectKey];
             s.total++;
             if (status === 'mastered') s.mastered++;
             else if (status === 'confused') s.confused++;
@@ -107,3 +76,4 @@ export function useDashboardStats() {
         return { total: totalStat, subjects: Object.values(statsMap) };
     }, [progress, questionsIndex, paperGroups]);
 }
+

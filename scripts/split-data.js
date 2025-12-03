@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const sourcePath = path.join(__dirname, '../src/data/questions.json');
+const sourcePath = path.join(__dirname, '../raw-data/questions.json');
 const publicDataDir = path.join(__dirname, '../public/data');
 const papersDir = path.join(publicDataDir, 'papers');
 

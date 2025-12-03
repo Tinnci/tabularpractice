@@ -520,9 +520,9 @@ export function QuestionModal({
                                                 <div className="w-full p-2">
                                                     <MarkdownContent content={currentQuestion.contentMd} />
                                                 </div>
-                                            ) : (currentQuestion.contentImg || currentQuestion.imageUrl) ? (
+                                            ) : (currentQuestion.contentImg) ? (
                                                 <RemoteImage
-                                                    src={currentQuestion.contentImg || currentQuestion.imageUrl || ''}
+                                                    src={currentQuestion.contentImg || ''}
                                                     alt="题目"
                                                     question={currentQuestion}
                                                 />

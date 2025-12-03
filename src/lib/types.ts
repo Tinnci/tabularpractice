@@ -53,7 +53,7 @@ export interface Question {
   videoUrl?: string;    // 视频链接 (B站链接，如 https://www.bilibili.com/video/BV1xxxx?t=120)
 
   // 保留向后兼容
-  imageUrl?: string;    // 废弃，使用 contentImg
+
 
   // 新增：答案和标签名
   answer?: string;
