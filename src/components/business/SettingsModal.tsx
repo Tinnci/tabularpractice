@@ -21,17 +21,16 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle } from "lucide-react"
-import { useProgressStore } from "@/lib/store"
-import { toast } from "sonner"
-import { Status, type RepoSource, type BackupData } from "@/lib/types"
-
-import { Switch } from "@/components/ui/switch"
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle } from "lucide-react"
+import { useProgressStore } from "@/lib/store"
+import { toast } from "sonner"
+import { Status, type BackupData } from "@/lib/types"
+import { Switch } from "@/components/ui/switch"
 
 export function SettingsModal() {
     const [open, setOpen] = useState(false)

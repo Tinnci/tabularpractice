@@ -12,19 +12,19 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
     const startTimeRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0); // 暂停时已过去的时间
 
-    const animate = (time: number) => {
+    const animate = useCallback((time: number) => {
         if (startTimeRef.current > 0) {
             setElapsed(savedElapsedRef.current + (time - startTimeRef.current));
         }
         requestRef.current = requestAnimationFrame(animate);
-    };
+    }, []);
 
     const start = useCallback(() => {
         if (isRunning) return;
         setIsRunning(true);
         startTimeRef.current = performance.now();
         requestRef.current = requestAnimationFrame(animate);
-    }, [isRunning]);
+    }, [isRunning, animate]);
 
     const pause = useCallback(() => {
         if (!isRunning) return;
@@ -45,7 +45,11 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
     }, []);
 
     const toggle = useCallback(() => {
-        isRunning ? pause() : start();
+        if (isRunning) {
+            pause();
+        } else {
+            start();
+        }
     }, [isRunning, pause, start]);
 
     // 智能暂停逻辑：监听页面可见性

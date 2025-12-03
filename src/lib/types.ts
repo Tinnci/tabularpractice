@@ -96,3 +96,14 @@ export interface BackupData {
   _draftCount?: number;
   _zip?: unknown; // 引用 JSZip 实例
 }
+
+export interface PracticeSession {
+  isActive: boolean;
+  queueIds: string[];
+  currentIndex: number;
+  settings: {
+    types: string[];
+    tags: string[];
+    isShuffle: boolean;
+  };
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useContextQuestions } from "@/hooks/useContextQuestions";
 import { QuestionModal } from "@/components/business/QuestionModal";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useStopwatch } from "@/hooks/useStopwatch";
-import { Timer, Pause, Play, RefreshCcw, Dumbbell, Filter, Shuffle, Tag, RotateCcw } from "lucide-react";
+import { Timer, Pause, Play, Dumbbell, Filter, Shuffle, Tag, RotateCcw } from "lucide-react";
 import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
@@ -19,7 +19,7 @@ import { pinyin } from "pinyin-pro";
 
 export default function PracticePage() {
     const { mergedQuestions } = useContextQuestions();
-    const { updateStatus, addTime } = useProgressStore();
+    const { updateStatus, addTime, practiceSession, setPracticeSession, updatePracticeSessionProgress } = useProgressStore();
 
     // Create a map of tag ID to label
     const tagMap = useMemo(() => {
@@ -82,7 +82,37 @@ export default function PracticePage() {
         smartPause: true
     });
 
-    // ... (Derived Data and Handlers remain the same)
+    // Performance Optimization: Use ref to access elapsed time in callbacks without triggering re-renders
+    // Performance Optimization: Use ref to access elapsed time in callbacks without triggering re-renders
+    const elapsedRef = useRef(0);
+    useEffect(() => {
+        elapsedRef.current = elapsed;
+    }, [elapsed]);
+
+    // Restore session
+    useEffect(() => {
+        if (!isStarted && practiceSession && practiceSession.isActive && mergedQuestions.length > 0) {
+            // Reconstruct queue
+            const queueMap = new Map(mergedQuestions.map(q => [q.id, q]));
+            const restoredQueue = practiceSession.queueIds
+                .map(id => queueMap.get(id))
+                .filter(q => !!q) as Question[];
+
+            if (restoredQueue.length > 0) {
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+                setQueue(restoredQueue);
+                setCurrentIndex(practiceSession.currentIndex);
+                setSelectedTypes(new Set(practiceSession.settings.types));
+                setSelectedTags(new Set(practiceSession.settings.tags));
+                setIsShuffle(practiceSession.settings.isShuffle);
+                setIsStarted(true);
+                // Don't auto-open modal on restore, let user click "Continue"
+                // Or maybe open it? The user might have refreshed while in the middle of a question.
+                // Let's open it if they were in the middle.
+                setIsModalOpen(true);
+            }
+        }
+    }, [practiceSession, mergedQuestions, isStarted]);
 
     // Derived Data
     const allTags = useMemo(() => {
@@ -148,6 +178,18 @@ export default function PracticePage() {
         setIsStarted(true);
         setIsModalOpen(true);
 
+        // Save session
+        setPracticeSession({
+            isActive: true,
+            queueIds: filtered.map(q => q.id),
+            currentIndex: 0,
+            settings: {
+                types: Array.from(selectedTypes),
+                tags: Array.from(selectedTags),
+                isShuffle
+            }
+        });
+
         // Start timer
         resetTimer();
         startTimer();
@@ -156,38 +198,43 @@ export default function PracticePage() {
     const handleEndSession = () => {
         // Save time for current question
         if (queue[currentIndex]) {
-            addTime(queue[currentIndex].id, elapsed);
+            addTime(queue[currentIndex].id, elapsedRef.current);
         }
         setIsStarted(false);
         setQueue([]);
         setCurrentIndex(0);
         setIsModalOpen(false);
         resetTimer();
+        setPracticeSession(null);
     };
 
     const handleNext = useCallback(() => {
         if (currentIndex < queue.length - 1) {
             // Save time for current question
             if (queue[currentIndex]) {
-                addTime(queue[currentIndex].id, elapsed);
+                addTime(queue[currentIndex].id, elapsedRef.current);
             }
             resetTimer();
             startTimer();
-            setCurrentIndex(prev => prev + 1);
+            const newIndex = currentIndex + 1;
+            setCurrentIndex(newIndex);
+            updatePracticeSessionProgress(newIndex);
         }
-    }, [currentIndex, queue, resetTimer, startTimer, elapsed, addTime]);
+    }, [currentIndex, queue, resetTimer, startTimer, addTime, updatePracticeSessionProgress]);
 
     const handlePrev = useCallback(() => {
         if (currentIndex > 0) {
             // Save time for current question
             if (queue[currentIndex]) {
-                addTime(queue[currentIndex].id, elapsed);
+                addTime(queue[currentIndex].id, elapsedRef.current);
             }
             resetTimer();
             startTimer();
-            setCurrentIndex(prev => prev - 1);
+            const newIndex = currentIndex - 1;
+            setCurrentIndex(newIndex);
+            updatePracticeSessionProgress(newIndex);
         }
-    }, [currentIndex, queue, resetTimer, startTimer, elapsed, addTime]);
+    }, [currentIndex, queue, resetTimer, startTimer, addTime, updatePracticeSessionProgress]);
 
     // Current Question
     const currentQuestion = queue[currentIndex];

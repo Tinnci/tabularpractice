@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { Status, NotesMap, Question, Paper, PaperGroup, RepoSource } from './types'
+import { Status, NotesMap, Question, Paper, PaperGroup, RepoSource, PracticeSession } from './types'
 import { syncService, SyncData } from '@/services/syncService'
 
 interface ProgressState {
@@ -104,6 +104,11 @@ interface ProgressState {
     // AI Settings
     geminiApiKey: string | null;
     setGeminiApiKey: (key: string | null) => void;
+
+    // Practice Session Persistence
+    practiceSession: PracticeSession | null;
+    setPracticeSession: (session: PracticeSession | null) => void;
+    updatePracticeSessionProgress: (index: number) => void;
 }
 
 let syncTimer: NodeJS.Timeout | null = null;
@@ -144,6 +149,22 @@ export const useProgressStore = create<ProgressState>()(
             customPapers: {},
             customPaperGroups: {},
             geminiApiKey: null,
+
+
+
+            practiceSession: null,
+            setPracticeSession: (session) => set({ practiceSession: session }),
+            updatePracticeSessionProgress: (index) => set((state) => {
+                if (state.practiceSession) {
+                    return {
+                        practiceSession: {
+                            ...state.practiceSession,
+                            currentIndex: index
+                        }
+                    };
+                }
+                return {};
+            }),
 
             setGeminiApiKey: (key) => set({ geminiApiKey: key }),
 
