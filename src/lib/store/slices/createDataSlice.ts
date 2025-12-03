@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 import { Status, NotesMap, Question, Paper, PaperGroup, PracticeSession } from '@/lib/types';
-import { SyncData } from '@/services/syncService';
+import { syncService, SyncData } from '@/services/syncService';
 import { StoreState } from '../types';
 
 export interface DataSlice {
@@ -146,25 +146,37 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
 
         if (isNewFormat(data)) {
             set((state) => {
-                let newRepoSources = state.repoSources;
-                if (data.repoSources && Array.isArray(data.repoSources)) {
-                    const existingUrls = new Set(state.repoSources.map(s => s.url));
-                    const uniqueNewSources = data.repoSources.filter(s => !existingUrls.has(s.url));
-                    newRepoSources = [...state.repoSources, ...uniqueNewSources];
-                }
+                // Construct SyncData from current state to perform a safe merge
+                const currentLocalData: SyncData = {
+                    version: 3,
+                    timestamp: new Date().toISOString(),
+                    progress: state.progress,
+                    progressLastModified: state.progressLastModified,
+                    notes: state.notes,
+                    notesLastModified: state.notesLastModified,
+                    times: state.times,
+                    timesLastModified: state.timesLastModified,
+                    stars: state.stars,
+                    repoSources: state.repoSources
+                };
+
+                // Merge current local data with the incoming data
+                // This handles the race condition where local state might have changed during sync
+                const merged = syncService.mergeData(currentLocalData, data);
 
                 return {
-                    progress: data.progress,
-                    progressLastModified: data.progressLastModified || {},
-                    notes: data.notes || {},
-                    notesLastModified: data.notesLastModified || {},
-                    times: data.times || {},
-                    timesLastModified: data.timesLastModified || {},
-                    stars: data.stars || {},
-                    repoSources: newRepoSources
+                    progress: merged.progress,
+                    progressLastModified: merged.progressLastModified,
+                    notes: merged.notes,
+                    notesLastModified: merged.notesLastModified,
+                    times: merged.times,
+                    timesLastModified: merged.timesLastModified,
+                    stars: merged.stars,
+                    repoSources: merged.repoSources
                 };
             });
         } else {
+            // Legacy format: overwrite progress as we can't merge reliably without timestamps
             set({ progress: data as Record<string, Status> });
         }
     },
