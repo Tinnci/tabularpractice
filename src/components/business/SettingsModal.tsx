@@ -45,7 +45,7 @@ export function SettingsModal() {
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const {
-        progress, notes, importData,
+        importData,
         repoSources, addRepoSource, removeRepoSource, toggleRepoSource,
         githubToken, gistId, lastSyncedTime, syncStatus,
         setGithubToken, setGistId,
@@ -221,17 +221,18 @@ export function SettingsModal() {
                 importData(pendingImportData);
 
                 // 2. 如果是 ZIP 备份，恢复草稿
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if ((pendingImportData as any)._zip) {
+                const importDataWithZip = pendingImportData as { _zip?: unknown };
+                if (importDataWithZip._zip) {
                     const { draftStore } = await import('@/lib/draftStore');
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const zip = (pendingImportData as any)._zip;
+                    const zip = importDataWithZip._zip as any;
                     const draftsFolder = zip.folder("drafts");
 
                     if (draftsFolder) {
                         const draftsToRestore: Record<string, string> = {};
                         const promises: Promise<void>[] = [];
 
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         draftsFolder.forEach((relativePath: string, file: any) => {
                             if (!file.dir) {
                                 promises.push(
@@ -657,10 +658,8 @@ export function SettingsModal() {
                                         <div>题库源: {pendingImportData.repoSources.length} (将合并)</div>
                                     )}
 
-                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                    {'_draftCount' in pendingImportData && (pendingImportData as any)._draftCount > 0 && (
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        <div>手写草稿: {(pendingImportData as any)._draftCount} 份</div>
+                                    {'_draftCount' in pendingImportData && (pendingImportData as unknown as { _draftCount: number })._draftCount > 0 && (
+                                        <div>手写草稿: {(pendingImportData as unknown as { _draftCount: number })._draftCount} 份</div>
                                     )}
                                 </div>
                             )}
