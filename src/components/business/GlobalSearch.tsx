@@ -107,21 +107,17 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
             {/* 触发按钮 (放在 Navbar) */}
             <Button
                 variant="outline"
-                // 1. 修改父级容器：添加 active:scale-95 提供点击反馈
-                className="relative h-9 w-9 p-0 xl:w-64 xl:justify-start xl:px-4 xl:py-2 overflow-hidden transition-all duration-300 ease-in-out hover:w-64 hover:justify-start hover:px-4 hover:bg-muted/50 group active:scale-95"
+                className="group h-9 px-2.5 overflow-hidden transition-all duration-300 ease-in-out hover:bg-muted/50 active:scale-95"
                 onClick={() => setOpen(true)}
             >
-                {/* 2. 修改图标：添加 group-hover:-rotate-12 group-hover:scale-110 */}
-                {/* 这会让放大镜在悬停时微微向左旋转并放大，显得很顽皮 */}
-                <Search className="h-4 w-4 shrink-0 opacity-50 xl:mr-2 group-hover:mr-2 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-12 group-hover:text-foreground" />
+                <Search className="h-4 w-4 shrink-0 opacity-50 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-12 group-hover:text-foreground" />
 
-                <span className="hidden xl:inline-flex group-hover:inline-flex whitespace-nowrap transition-colors duration-300 group-hover:text-foreground">搜索题目...</span>
-
-                {/* 3. 修改 KBD 徽标：添加 translate-x 动画 */}
-                {/* 原本是 hidden -> flex 可能导致布局跳动，建议保持 flex 但控制 opacity 和 position */}
-                <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium xl:flex group-hover:flex transition-all duration-300 opacity-50 group-hover:opacity-100 group-hover:bg-background">
-                    <span className="text-xs">⌘</span>K
-                </kbd>
+                <div className="max-w-0 opacity-0 group-hover:max-w-[12rem] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden flex items-center">
+                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors mr-2">搜索题目...</span>
+                    <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium flex text-muted-foreground bg-background/50">
+                        <span className="text-xs">⌘</span>K
+                    </kbd>
+                </div>
             </Button>
 
             <CommandDialog open={open} onOpenChange={setOpen}>
