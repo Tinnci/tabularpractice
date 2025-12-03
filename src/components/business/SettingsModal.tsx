@@ -22,9 +22,9 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle } from "lucide-react"
-import { useProgressStore, type RepoSource } from "@/lib/store"
+import { useProgressStore } from "@/lib/store"
 import { toast } from "sonner"
-import { Status } from "@/lib/types"
+import { Status, type RepoSource } from "@/lib/types"
 
 import { Switch } from "@/components/ui/switch"
 import {

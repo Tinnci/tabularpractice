@@ -105,7 +105,7 @@ export function QuestionModal({
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
 
     // 笔记系统状态
-    const { notes, updateNote, stars, toggleStar, updateDraft, syncStatus, syncData } = useProgressStore();
+    const { notes, updateNote, stars, toggleStar, syncStatus, syncData } = useProgressStore();
     const [noteContent, setNoteContent] = useState("");
     const [isEditingNote, setIsEditingNote] = useState(false);
 
@@ -146,40 +146,42 @@ export function QuestionModal({
 
     // 加载草稿内容
     useEffect(() => {
-        if (question && canvasRef.current && visibleViews.has('draft')) {
-            // 仅在切换题目或切换到草稿视图时加载
-            // 直接从 store 读取最新状态，避免订阅 drafts 导致重绘
-            const currentDrafts = useProgressStore.getState().drafts;
+        const loadDraft = async () => {
+            if (question && canvasRef.current && visibleViews.has('draft')) {
+                // 重置画布
+                canvasRef.current.clearCanvas();
 
-            // 重置画布
-            canvasRef.current.clearCanvas();
-            // 如果有保存的草稿，加载它
-            const savedDraft = currentDrafts[question.id];
-            if (savedDraft) {
                 try {
-                    const paths = JSON.parse(savedDraft);
+                    // 从 IndexedDB 读取
+                    const { draftStore } = await import('@/lib/draftStore');
+                    const savedDraft = await draftStore.getDraft(question.id);
 
-                    // 颜色自适应转换逻辑
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const transformedPaths = paths.map((path: any) => {
-                        // 如果是黑色且当前是深色模式 -> 转为白色
-                        if (path.strokeColor === "#000000" && theme === 'dark') {
-                            return { ...path, strokeColor: "#FFFFFF" };
-                        }
-                        // 如果是白色且当前是浅色模式 -> 转为黑色
-                        if (path.strokeColor === "#FFFFFF" && theme !== 'dark') {
-                            return { ...path, strokeColor: "#000000" };
-                        }
-                        return path;
-                    });
+                    if (savedDraft) {
+                        const paths = JSON.parse(savedDraft);
 
-                    canvasRef.current.loadPaths(transformedPaths);
+                        // 颜色自适应转换逻辑
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const transformedPaths = paths.map((path: any) => {
+                            // 如果是黑色且当前是深色模式 -> 转为白色
+                            if (path.strokeColor === "#000000" && theme === 'dark') {
+                                return { ...path, strokeColor: "#FFFFFF" };
+                            }
+                            // 如果是白色且当前是浅色模式 -> 转为黑色
+                            if (path.strokeColor === "#FFFFFF" && theme !== 'dark') {
+                                return { ...path, strokeColor: "#000000" };
+                            }
+                            return path;
+                        });
+
+                        canvasRef.current.loadPaths(transformedPaths);
+                    }
                 } catch (e) {
                     console.error("Failed to load draft", e);
                 }
             }
-        }
-    }, [question, visibleViews, theme]); // 移除 drafts 依赖
+        };
+        loadDraft();
+    }, [question, visibleViews, theme]);
 
     // 自动保存笔记
     const handleNoteBlur = () => {
@@ -204,17 +206,19 @@ export function QuestionModal({
         if (question && canvasRef.current) {
             try {
                 const paths = await canvasRef.current.exportPaths();
-                // 获取最新 drafts 状态，避免将其加入依赖项导致函数频繁重建
-                const currentDrafts = useProgressStore.getState().drafts;
-                // 只有当有笔画时才保存，或者如果之前有保存过（清空也算保存）
-                if (paths.length > 0 || currentDrafts[question.id]) {
-                    updateDraft(question.id, JSON.stringify(paths));
+                const { draftStore } = await import('@/lib/draftStore');
+
+                if (paths.length > 0) {
+                    await draftStore.saveDraft(question.id, JSON.stringify(paths));
+                } else {
+                    // 如果为空，删除草稿
+                    await draftStore.deleteDraft(question.id);
                 }
             } catch (e) {
                 console.error("Failed to save draft", e);
             }
         }
-    }, [question, updateDraft]);
+    }, [question]);
 
     // 防抖保存草稿，避免每笔画都触发昂贵的 exportPaths 和 store 更新
     const saveDraftTimeoutRef = useRef<NodeJS.Timeout | null>(null);

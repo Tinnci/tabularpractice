@@ -98,8 +98,7 @@ export function formatTimestamp(seconds: number): string {
 }
 
 
-import { Question, Paper, PaperGroup } from "@/lib/types";
-import { type RepoSource } from "@/lib/store";
+import { Question, Paper, PaperGroup, RepoSource } from "@/lib/types";
 
 export function derivePapersFromQuestions(questions: Question[], groups: PaperGroup[]): Paper[] {
   const papersMap = new Map<string, Paper>();
