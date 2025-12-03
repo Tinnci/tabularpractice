@@ -1,4 +1,4 @@
-import { get, set, del, keys } from 'idb-keyval';
+import { get, set, del, keys, entries, setMany } from 'idb-keyval';
 
 const PREFIX = 'draft-';
 
@@ -24,22 +24,20 @@ export const draftStore = {
 
     // Helper to migrate from localStorage if needed
     migrateFromLocalStorage: async (legacyDrafts: Record<string, string>) => {
-        const promises = Object.entries(legacyDrafts).map(([id, content]) =>
-            set(`${PREFIX}${id}`, content)
+        const entriesToSave: [string, string][] = Object.entries(legacyDrafts).map(
+            ([id, content]) => [`${PREFIX}${id}`, content]
         );
-        await Promise.all(promises);
+        await setMany(entriesToSave);
     },
 
     // Export all drafts for backup
     getAllDrafts: async (): Promise<Record<string, string>> => {
-        const allKeys = await keys();
-        const draftKeys = allKeys.filter((k): k is string => typeof k === 'string' && k.startsWith(PREFIX));
-
+        const allEntries = await entries();
         const drafts: Record<string, string> = {};
-        for (const key of draftKeys) {
-            const content = await get<string>(key);
-            if (content) {
-                drafts[key.replace(PREFIX, '')] = content;
+
+        for (const [key, value] of allEntries) {
+            if (typeof key === 'string' && key.startsWith(PREFIX)) {
+                drafts[key.replace(PREFIX, '')] = value as string;
             }
         }
         return drafts;
@@ -47,9 +45,9 @@ export const draftStore = {
 
     // Import drafts from backup
     importDrafts: async (drafts: Record<string, string>) => {
-        const promises = Object.entries(drafts).map(([id, content]) =>
-            set(`${PREFIX}${id}`, content)
+        const entriesToSave: [string, string][] = Object.entries(drafts).map(
+            ([id, content]) => [`${PREFIX}${id}`, content]
         );
-        await Promise.all(promises);
+        await setMany(entriesToSave);
     }
 };

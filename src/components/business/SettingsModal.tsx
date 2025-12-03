@@ -24,7 +24,7 @@ import {
 import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle } from "lucide-react"
 import { useProgressStore } from "@/lib/store"
 import { toast } from "sonner"
-import { Status, type RepoSource } from "@/lib/types"
+import { Status, type RepoSource, type BackupData } from "@/lib/types"
 
 import { Switch } from "@/components/ui/switch"
 import {
@@ -36,12 +36,7 @@ import {
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
     const [importConfirmOpen, setImportConfirmOpen] = useState(false)
-    const [pendingImportData, setPendingImportData] = useState<{
-        progress: Record<string, Status>;
-        notes?: Record<string, string>;
-        stars?: Record<string, boolean>;
-        repoSources?: RepoSource[];
-    } | Record<string, Status> | null>(null)
+    const [pendingImportData, setPendingImportData] = useState<BackupData | Record<string, Status> | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const {
@@ -177,7 +172,7 @@ export function SettingsModal() {
                 if (!dataFile) throw new Error("无效的备份文件：缺少 tabular-data.json");
 
                 const dataStr = await dataFile.async("string");
-                const parsedData = JSON.parse(dataStr);
+                const parsedData = JSON.parse(dataStr) as BackupData;
 
                 // 预览草稿数量
                 const draftsFolder = zip.folder("drafts");
@@ -220,12 +215,11 @@ export function SettingsModal() {
                 // 1. 恢复核心数据
                 importData(pendingImportData);
 
-                // 2. 如果是 ZIP 备份，恢复草稿
-                const importDataWithZip = pendingImportData as { _zip?: unknown };
-                if (importDataWithZip._zip) {
+                // 2. 如果是 ZIP 备份，恢复草稿 (检查 _zip 属性是否存在)
+                if ('_zip' in pendingImportData && pendingImportData._zip) {
                     const { draftStore } = await import('@/lib/draftStore');
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const zip = importDataWithZip._zip as any;
+                    const zip = pendingImportData._zip as any;
                     const draftsFolder = zip.folder("drafts");
 
                     if (draftsFolder) {
@@ -658,8 +652,8 @@ export function SettingsModal() {
                                         <div>题库源: {pendingImportData.repoSources.length} (将合并)</div>
                                     )}
 
-                                    {'_draftCount' in pendingImportData && (pendingImportData as unknown as { _draftCount: number })._draftCount > 0 && (
-                                        <div>手写草稿: {(pendingImportData as unknown as { _draftCount: number })._draftCount} 份</div>
+                                    {'_draftCount' in pendingImportData && typeof pendingImportData._draftCount === 'number' && pendingImportData._draftCount > 0 && (
+                                        <div>手写草稿: {pendingImportData._draftCount} 份</div>
                                     )}
                                 </div>
                             )}

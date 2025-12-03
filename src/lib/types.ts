@@ -77,3 +77,19 @@ export interface PaperDetail {
   tags?: string[];
   questions: Record<string, Question>;
 }
+
+// 备份数据结构定义
+export interface BackupData {
+  version: number;
+  timestamp: string;
+  progress: Record<string, Status>;
+  notes: NotesMap;
+  stars: Record<string, boolean>;
+  repoSources: RepoSource[];
+  progressLastModified?: Record<string, number>;
+  notesLastModified?: Record<string, number>;
+
+  // 运行时附加的字段 (不在 JSON 文件中，但加载到内存时存在)
+  _draftCount?: number;
+  _zip?: unknown; // 引用 JSZip 实例
+}
