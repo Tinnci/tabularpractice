@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Question, Status } from "@/lib/types";
 import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
-import { useStopwatch } from "@/hooks/useStopwatch";
+import { useQuestionTimer } from "@/hooks/useQuestionTimer";
+import { QuestionTimer } from "@/components/business/QuestionTimer";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sketch-canvas";
@@ -25,7 +26,7 @@ import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
     Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2,
-    Maximize2, Minimize2, Play, Pause
+    Maximize2, Minimize2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from 'remark-math';
@@ -108,42 +109,10 @@ export function QuestionModal({
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
 
     // 计时器逻辑
-    const { addTime } = useProgressStore();
-    const { elapsed, isRunning, start, pause, reset, formattedTime } = useStopwatch({
-        autoStart: true,
-        smartPause: true
+    const { isRunning, reset, formattedTime, toggle } = useQuestionTimer({
+        questionId: question?.id,
+        visibleViews
     });
-    const activeQuestionIdRef = useRef<string | null>(question?.id || null);
-
-    // 使用 Ref 追踪 elapsed，避免 useEffect 频繁触发
-    const elapsedRef = useRef(elapsed);
-    elapsedRef.current = elapsed;
-
-    // 当题目 ID 变化时，保存上一题时间
-    useEffect(() => {
-        const handleSaveTime = () => {
-            const currentId = activeQuestionIdRef.current;
-            if (currentId && elapsedRef.current > 1000) {
-                addTime(currentId, elapsedRef.current);
-            }
-        };
-
-        if (question?.id !== activeQuestionIdRef.current) {
-            handleSaveTime();
-            reset(true);
-            activeQuestionIdRef.current = question?.id || null;
-        }
-    }, [question?.id, addTime, reset]);
-
-    // 专门处理 Modal 关闭时的保存
-    useEffect(() => {
-        if (!isOpen && activeQuestionIdRef.current) {
-            if (elapsedRef.current > 1000) {
-                addTime(activeQuestionIdRef.current, elapsedRef.current);
-            }
-            reset(false);
-        }
-    }, [isOpen, addTime, reset]);
 
     // 笔记系统状态
     const { notes, updateNote, stars, toggleStar, syncStatus, syncData } = useProgressStore();
@@ -317,8 +286,14 @@ export function QuestionModal({
             case "3":
                 if (question) onUpdateStatus(question.id, 'failed');
                 break;
+            case " ": // Space key
+                if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    toggle();
+                }
+                break;
         }
-    }, [isOpen, hasPrev, hasNext, onPrev, onNext, onClose, question, onUpdateStatus]);
+    }, [isOpen, hasPrev, hasNext, onPrev, onNext, onClose, question, onUpdateStatus, toggle]);
 
     useEffect(() => {
         window.addEventListener("keydown", handleKeyDown);
@@ -363,18 +338,6 @@ export function QuestionModal({
         setVisibleViews(newSet);
     };
 
-    const TimerUI = (
-        <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-full text-xs font-mono ml-2 sm:ml-4 shrink-0">
-            <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className={cn("min-w-[40px] text-center", isRunning ? "text-primary" : "text-muted-foreground")}>
-                {formattedTime}
-            </span>
-            <button onClick={() => isRunning ? pause() : start()} className="hover:bg-background rounded p-1 transition-colors">
-                {isRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-            </button>
-        </div>
-    );
-
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className={cn(
@@ -393,7 +356,15 @@ export function QuestionModal({
                                 <span className="sm:hidden text-muted-foreground">#</span>
                                 <span>{currentQuestion.number}</span>
                                 <span className="hidden sm:inline">第 {currentQuestion.number} 题</span>
-                                {question && TimerUI}
+                                {question && (
+                                    <QuestionTimer
+                                        formattedTime={formattedTime}
+                                        isRunning={isRunning}
+                                        toggle={toggle}
+                                        reset={() => reset(false)}
+                                        className="ml-2 sm:ml-4"
+                                    />
+                                )}
                                 {/* 收藏按钮 */}
                                 <Button
                                     variant="ghost"
