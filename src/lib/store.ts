@@ -1,7 +1,21 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware'
 import { Status, NotesMap, Question, Paper, PaperGroup, RepoSource, PracticeSession } from './types'
 import { syncService, SyncData } from '@/services/syncService'
+import { get, set, del } from 'idb-keyval';
+
+// IndexedDB Storage Adapter
+const idbStorage: StateStorage = {
+    getItem: async (name: string): Promise<string | null> => {
+        return (await get(name)) || null;
+    },
+    setItem: async (name: string, value: string): Promise<void> => {
+        await set(name, value);
+    },
+    removeItem: async (name: string): Promise<void> => {
+        await del(name);
+    },
+};
 
 interface ProgressState {
     // 核心数据：记录题目ID对应的状态
@@ -149,8 +163,6 @@ export const useProgressStore = create<ProgressState>()(
             customPapers: {},
             customPaperGroups: {},
             geminiApiKey: null,
-
-
 
             practiceSession: null,
             setPracticeSession: (session) => set({ practiceSession: session }),
@@ -412,21 +424,13 @@ export const useProgressStore = create<ProgressState>()(
         }),
         {
             name: 'tabular-progress-storage',
-            storage: createJSONStorage(() => localStorage),
+            storage: createJSONStorage(() => idbStorage),
             version: 2, // 增加版本号
             migrate: (persistedState: unknown, version: number) => {
                 const state = persistedState as ProgressState & { drafts?: Record<string, string> };
 
                 // 迁移逻辑
                 if (version < 2) {
-                    // 如果有旧的 drafts，这里其实很难直接迁移到 IndexedDB 因为这里是同步的
-                    // 我们只能丢弃或者暂时保留在内存中？
-                    // 实际上，由于我们改变了 store 结构，旧的 drafts 会被丢弃。
-                    // 如果用户非常在意草稿，这是一个 breaking change。
-                    // 但考虑到这是一个重构任务，且我们没有简便的方法在 migrate 中做 async 操作。
-                    // 我们可以在组件挂载时做一次性的迁移检查（如果 localStorage 还有旧数据）。
-                    // 但这里我们只负责 store 的结构迁移。
-
                     return {
                         ...state,
                         progressLastModified: {},

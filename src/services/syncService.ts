@@ -109,16 +109,20 @@ export const syncService = {
         });
 
         // Merge Times
-        // For times, we might want to take the larger value if timestamps are close?
-        // Or strictly follow LastModified. Let's follow LastModified for consistency.
+        // Use Math.max to prevent data loss (accumulative nature of time)
         if (remote.times) {
             Object.entries(remote.times).forEach(([id, time]) => {
-                const localTime = mergedTimesLastModified[id] || 0;
-                const remoteTime = remote.timesLastModified?.[id] || 0;
+                const localValue = mergedTimes[id] || 0;
+                const remoteValue = time;
 
-                if (remoteTime > localTime || !mergedTimes[id]) {
-                    mergedTimes[id] = time;
-                    mergedTimesLastModified[id] = remoteTime;
+                // Always take the larger value
+                if (remoteValue > localValue) {
+                    mergedTimes[id] = remoteValue;
+                    // We take the remote timestamp if we take the remote value, 
+                    // or keep local if we keep local. 
+                    // But strictly speaking, if we merge (max), the new "value" is the max.
+                    // The timestamp should probably reflect the source of the max value.
+                    mergedTimesLastModified[id] = remote.timesLastModified?.[id] || Date.now();
                 }
             });
         }

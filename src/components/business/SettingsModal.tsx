@@ -344,8 +344,9 @@ export function SettingsModal() {
                                                 <TooltipTrigger asChild>
                                                     <HelpCircle className="h-3 w-3 text-muted-foreground/70 cursor-help" />
                                                 </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>需要具有 Gist 权限的 Personal Access Token</p>
+                                                <TooltipContent className="max-w-[300px]">
+                                                    <p>推荐使用 <strong>Fine-grained PAT</strong> 以获得更好的安全性。</p>
+                                                    <p className="mt-1 text-xs text-muted-foreground">仅需授予 <strong>Gist</strong> 的 Read and Write 权限。</p>
                                                 </TooltipContent>
                                             </Tooltip>
                                         </div>

@@ -113,16 +113,22 @@ export function usePaperDetail(paperId: string | null) {
     const fetchPaperDetail = async () => {
         if (!paperId) return null;
 
-        for (const baseUrl of enabledUrls) {
+        const promises = enabledUrls.map(async (baseUrl) => {
             const target = baseUrl ? baseUrl : '/data';
             try {
                 const res = await fetch(`${target}/papers/${paperId}/index.json`);
-                if (res.ok) return await res.json();
-            } catch {
-                continue;
+                if (!res.ok) throw new Error(`Failed to fetch from ${target}`);
+                return await res.json();
+            } catch (e) {
+                throw e;
             }
+        });
+
+        try {
+            return await Promise.any(promises);
+        } catch (error) {
+            throw new Error("Paper not found in any active source");
         }
-        throw new Error("Paper not found in any active source");
     };
 
     const { data, error, isLoading } = useSWR<PaperDetail>(
