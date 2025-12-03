@@ -90,18 +90,18 @@ export default function DashboardPage() {
           <Card className="bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-800 col-span-2">
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-medium text-red-700 dark:text-red-400 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" /> 错题本
+                <AlertCircle className="w-4 h-4" /> 错题攻克
               </CardTitle>
-              <Link href="/questions?status=failed">
+              <Link href="/mistakes">
                 <Button variant="ghost" size="sm" className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30">
-                  去攻克 <ArrowRight className="w-3 h-3 ml-1" />
+                  开始复习 <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
               </Link>
             </CardHeader>
             <CardContent className="flex items-end justify-between">
               <div>
-                <div className="text-4xl font-bold text-red-600 dark:text-red-400">{totalFailed}</div>
-                <p className="text-xs text-red-600/60 dark:text-red-400/60 mt-1">亟待解决</p>
+                <div className="text-4xl font-bold text-red-600 dark:text-red-400">{totalFailed + totalConfused}</div>
+                <p className="text-xs text-red-600/60 dark:text-red-400/60 mt-1">待复习 (错题 + 疑惑)</p>
               </div>
             </CardContent>
           </Card>

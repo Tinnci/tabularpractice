@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
+import { memo } from 'react';
 import { cn } from "@/lib/utils"
 import { Question, Status } from "@/lib/types"
 import { useProgressStore } from "@/lib/store"
@@ -34,7 +35,7 @@ const hoverGlows: Record<Status, string> = {
     failed: "hover:shadow-[0_8px_20px_-4px_rgba(239,68,68,0.25)] hover:border-red-500/50 dark:hover:shadow-[0_8px_20px_-4px_rgba(239,68,68,0.15)]",
 }
 
-export function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
+export const QuestionCard = memo(function QuestionCard({ question, onClick, isDimmed = false, height = 64, heightMode = 'fixed' }: Props) {
     const status = question.status || 'unanswered';
 
     // 性能优化：使用细粒度的 Selector 避免全量订阅导致的渲染风暴
@@ -170,4 +171,4 @@ export function QuestionCard({ question, onClick, isDimmed = false, height = 64,
             </CardContent>
         </Card>
     )
-}
+});

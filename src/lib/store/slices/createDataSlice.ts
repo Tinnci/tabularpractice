@@ -63,7 +63,7 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
                 history: newHistory
             };
         });
-        get().triggerAutoSync();
+
     },
 
     updateNote: (id, content) => {
@@ -71,7 +71,7 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
             notes: { ...state.notes, [id]: content },
             notesLastModified: { ...state.notesLastModified, [id]: Date.now() }
         }));
-        get().triggerAutoSync();
+
     },
 
     addTime: (id, delta) => {
@@ -82,7 +82,7 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
                 timesLastModified: { ...state.timesLastModified, [id]: Date.now() }
             };
         });
-        get().triggerAutoSync();
+
     },
 
     toggleStar: (id) => {
@@ -95,7 +95,7 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
             }
             return { stars: newStars };
         });
-        get().triggerAutoSync();
+
     },
 
     getStats: () => {
