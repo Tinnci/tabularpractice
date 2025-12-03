@@ -78,6 +78,7 @@ export function useQuestions() {
     if (enabledUrls.length === 0) enabledUrls.push('');
 
     const customQuestions = useProgressStore(state => state.customQuestions);
+    const hiddenPaperIds = useProgressStore(state => state.hiddenPaperIds);
 
     const { data, error, isLoading } = useSWR<Question[]>(
         ['questions-index', ...enabledUrls], // Key 包含所有 URL，变化时自动重刷
@@ -89,7 +90,12 @@ export function useQuestions() {
     );
 
     // Merge custom questions
-    const questionsIndex = data ? [...data, ...Object.values(customQuestions)] : Object.values(customQuestions);
+    let questionsIndex = data ? [...data, ...Object.values(customQuestions)] : Object.values(customQuestions);
+
+    // Filter hidden papers
+    if (hiddenPaperIds && hiddenPaperIds.length > 0) {
+        questionsIndex = questionsIndex.filter(q => !hiddenPaperIds.includes(q.paperId));
+    }
 
     return {
         questionsIndex,

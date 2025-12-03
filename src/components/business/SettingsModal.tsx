@@ -26,11 +26,61 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle } from "lucide-react"
+import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle, FileText } from "lucide-react"
 import { useProgressStore } from "@/lib/store"
 import { toast } from "sonner"
 import { Status, type BackupData } from "@/lib/types"
 import { Switch } from "@/components/ui/switch"
+import { usePapers } from "@/hooks/usePapers"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+function PaperFilterSection() {
+    const { hiddenPaperIds, togglePaperVisibility } = useProgressStore()
+    const { papers, isLoading } = usePapers()
+
+    if (isLoading) {
+        return <div className="text-sm text-muted-foreground">加载试卷列表...</div>
+    }
+
+    if (!papers || papers.length === 0) {
+        return <div className="text-sm text-muted-foreground">暂无试卷数据</div>
+    }
+
+    // Sort papers by year (descending)
+    const sortedPapers = [...papers].sort((a, b) => b.year - a.year)
+
+    return (
+        <div className="space-y-4">
+            <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                <FileText className="h-4 w-4" />
+                试卷筛选
+            </h3>
+            <div className="p-4 border rounded-lg bg-card/50">
+                <div className="text-xs text-muted-foreground mb-3">
+                    关闭的试卷将不会出现在练习列表中。
+                </div>
+                <ScrollArea className="h-[200px] pr-3">
+                    <div className="space-y-3">
+                        {sortedPapers.map(paper => (
+                            <div key={paper.id} className="flex items-center justify-between">
+                                <div className="space-y-0.5 overflow-hidden mr-2">
+                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 truncate block" title={paper.name}>
+                                        {paper.name}
+                                    </label>
+                                    <p className="text-xs text-muted-foreground">{paper.year}年</p>
+                                </div>
+                                <Switch
+                                    checked={!hiddenPaperIds.includes(paper.id)}
+                                    onCheckedChange={() => togglePaperVisibility(paper.id)}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </div>
+        </div>
+    )
+}
 
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
@@ -479,135 +529,102 @@ export function SettingsModal() {
                             </div>
                         </div>
 
-                        {/* 右栏：偏好设置 */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
-                                <Settings className="h-4 w-4" />
-                                偏好设置
-                            </h3>
-
-                            {/* 省流量模式 */}
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                        省流量模式
-                                    </label>
-                                    <p className="text-xs text-muted-foreground">
-                                        开启后将关闭图片的自动预加载功能，仅在查看时加载。
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={useProgressStore(state => state.lowDataMode)}
-                                    onCheckedChange={(checked) => useProgressStore.getState().setLowDataMode(checked)}
-                                />
-                            </div>
-
+                        {/* 右栏：外观设置 + 试卷筛选 */}
+                        <div className="space-y-6">
                             {/* 外观设置 */}
-                            <div className="space-y-3 pt-2">
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">外观调整</h4>
-
-                                {/* 卡片宽度 */}
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-xs">
-                                        <span>卡片宽度</span>
-                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.cardWidth}px</span>
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                                    <Settings className="h-4 w-4" />
+                                    外观设置
+                                </h3>
+                                <div className="space-y-4 p-4 border rounded-lg bg-card/50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <label className="text-sm font-medium leading-none">
+                                                紧凑模式
+                                            </label>
+                                            <p className="text-xs text-muted-foreground">
+                                                完全去除卡片内边距
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={useProgressStore.getState().appearance.compactMode}
+                                            onCheckedChange={(checked) => useProgressStore.getState().setAppearance({ compactMode: checked })}
+                                        />
                                     </div>
-                                    <input
-                                        type="range"
-                                        min="100"
-                                        max="300"
-                                        step="4"
-                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-                                        value={useProgressStore(state => state.appearance.cardWidth)}
-                                        onChange={(e) => useProgressStore.getState().setAppearance({ cardWidth: parseInt(e.target.value) })}
-                                    />
-                                </div>
 
-                                {/* 卡片高度 */}
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-xs">
-                                        <span>卡片高度</span>
-                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.cardHeight}px</span>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="40"
-                                        max="120"
-                                        step="4"
-                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-                                        value={useProgressStore(state => state.appearance.cardHeight)}
-                                        onChange={(e) => useProgressStore.getState().setAppearance({ cardHeight: parseInt(e.target.value) })}
-                                        disabled={useProgressStore(state => state.appearance.heightMode) === 'auto'}
-                                    />
-                                </div>
+                                    <div className="space-y-3 pt-2 border-t">
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between text-xs">
+                                                <span>卡片宽度</span>
+                                                <span className="text-muted-foreground">{useProgressStore.getState().appearance.cardWidth}px</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="140"
+                                                max="300"
+                                                step="10"
+                                                className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                                value={useProgressStore(state => state.appearance.cardWidth)}
+                                                onChange={(e) => useProgressStore.getState().setAppearance({ cardWidth: parseInt(e.target.value) })}
+                                            />
+                                        </div>
 
-                                {/* 高度模式切换 */}
-                                <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                    <div className="space-y-0.5">
-                                        <label className="text-xs font-medium leading-none">
-                                            自适应高度
-                                        </label>
-                                        <p className="text-xs text-muted-foreground">
-                                            根据图片内容调整卡片高度
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={useProgressStore(state => state.appearance.heightMode) === 'auto'}
-                                        onCheckedChange={(checked) => useProgressStore.getState().setAppearance({ heightMode: checked ? 'auto' : 'fixed' })}
-                                    />
-                                </div>
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between text-xs">
+                                                <span>卡片高度</span>
+                                                <span className="text-muted-foreground">{useProgressStore.getState().appearance.cardHeight}px</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="48"
+                                                max="120"
+                                                step="4"
+                                                className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                                value={useProgressStore(state => state.appearance.cardHeight)}
+                                                onChange={(e) => useProgressStore.getState().setAppearance({ cardHeight: parseInt(e.target.value) })}
+                                            />
+                                        </div>
 
-                                {/* 紧凑模式切换 */}
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <label className="text-xs font-medium leading-none">
-                                            紧凑模式
-                                        </label>
-                                        <p className="text-xs text-muted-foreground">
-                                            完全去除卡片内边距（仅自适应模式）
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={useProgressStore(state => state.appearance.compactMode)}
-                                        onCheckedChange={(checked) => useProgressStore.getState().setAppearance({ compactMode: checked })}
-                                        disabled={useProgressStore(state => state.appearance.heightMode) !== 'auto'}
-                                    />
-                                </div>
+                                        {/* 列间距 */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between text-xs">
+                                                <span>列间距</span>
+                                                <span className="text-muted-foreground">{useProgressStore.getState().appearance.columnSpacing}px</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="48"
+                                                step="4"
+                                                className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                                value={useProgressStore(state => state.appearance.columnSpacing)}
+                                                onChange={(e) => useProgressStore.getState().setAppearance({ columnSpacing: parseInt(e.target.value) })}
+                                            />
+                                        </div>
 
-                                {/* 列间距 (年份间距) */}
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-xs">
-                                        <span>年份间距</span>
-                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.columnSpacing}px</span>
+                                        {/* 行间距 (题目间距) */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between text-xs">
+                                                <span>题目间距</span>
+                                                <span className="text-muted-foreground">{useProgressStore.getState().appearance.rowSpacing}px</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="24"
+                                                step="2"
+                                                className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                                                value={useProgressStore(state => state.appearance.rowSpacing)}
+                                                onChange={(e) => useProgressStore.getState().setAppearance({ rowSpacing: parseInt(e.target.value) })}
+                                            />
+                                        </div>
                                     </div>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="48"
-                                        step="4"
-                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-                                        value={useProgressStore(state => state.appearance.columnSpacing)}
-                                        onChange={(e) => useProgressStore.getState().setAppearance({ columnSpacing: parseInt(e.target.value) })}
-                                    />
-                                </div>
-
-                                {/* 行间距 (题目间距) */}
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-xs">
-                                        <span>题目间距</span>
-                                        <span className="text-muted-foreground">{useProgressStore.getState().appearance.rowSpacing}px</span>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="24"
-                                        step="2"
-                                        className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-                                        value={useProgressStore(state => state.appearance.rowSpacing)}
-                                        onChange={(e) => useProgressStore.getState().setAppearance({ rowSpacing: parseInt(e.target.value) })}
-                                    />
                                 </div>
                             </div>
+
+                            {/* 试卷筛选 */}
+                            <PaperFilterSection />
                         </div>
                     </div>
                     {/* 隐藏的文件输入框 */}

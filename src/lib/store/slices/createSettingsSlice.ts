@@ -25,6 +25,9 @@ export interface SettingsSlice {
     setAppearance: (settings: Partial<SettingsSlice['appearance']>) => void;
     setGeminiApiKey: (key: string | null) => void;
     setRepoBaseUrl: (url: string) => void;
+
+    hiddenPaperIds: string[];
+    togglePaperVisibility: (paperId: string) => void;
 }
 
 export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice> = (set) => ({
@@ -43,6 +46,7 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
     },
     geminiApiKey: null,
     repoBaseUrl: '',
+    hiddenPaperIds: [],
 
     addRepoSource: (name, url) => set((state) => ({
         repoSources: [
@@ -70,4 +74,13 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
     setGeminiApiKey: (key) => set({ geminiApiKey: key }),
 
     setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),
+
+    togglePaperVisibility: (paperId) => set((state) => {
+        const isHidden = state.hiddenPaperIds.includes(paperId);
+        return {
+            hiddenPaperIds: isHidden
+                ? state.hiddenPaperIds.filter(id => id !== paperId)
+                : [...state.hiddenPaperIds, paperId]
+        };
+    }),
 });

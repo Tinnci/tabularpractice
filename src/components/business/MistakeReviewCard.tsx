@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Question, Status } from "@/lib/types";
 import { useProgressStore } from "@/lib/store";
-import { getImageUrl, cn } from "@/lib/utils";
+import { getImageUrl } from "@/lib/utils";
 import { Eye, CheckCircle, XCircle, HelpCircle, FileText } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 
@@ -18,11 +18,6 @@ export function MistakeReviewCard({ question, onNext }: Props) {
     const repoBaseUrl = useProgressStore(state => state.repoBaseUrl);
     const repoSources = useProgressStore(state => state.repoSources);
     const notes = useProgressStore(state => state.notes[question.id]);
-
-    // Reset state when question changes
-    useEffect(() => {
-        setIsRevealed(false);
-    }, [question.id]);
 
     const handleStatusChange = (status: Status) => {
         updateStatus(question.id, status);

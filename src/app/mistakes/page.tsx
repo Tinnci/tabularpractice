@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useMistakes } from '@/hooks/useMistakes';
 import { MistakeReviewCard } from '@/components/business/MistakeReviewCard';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, AlertCircle, CheckCircle2, BrainCircuit, XCircle, HelpCircle } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { Question } from '@/lib/types';
 
 export default function MistakesPage() {
     const router = useRouter();
@@ -60,6 +59,7 @@ export default function MistakesPage() {
                 <main className="flex-1 overflow-hidden p-4 md:p-6 max-w-4xl mx-auto w-full">
                     {currentQuestion ? (
                         <MistakeReviewCard
+                            key={currentQuestion.id}
                             question={currentQuestion}
                             onNext={handleNextQuestion}
                         />
@@ -67,7 +67,7 @@ export default function MistakesPage() {
                         <div className="flex flex-col items-center justify-center h-full gap-4">
                             <CheckCircle2 className="w-16 h-16 text-green-500" />
                             <h2 className="text-2xl font-bold">All Caught Up!</h2>
-                            <p className="text-muted-foreground">You've reviewed all your mistakes for now.</p>
+                            <p className="text-muted-foreground">You&apos;ve reviewed all your mistakes for now.</p>
                             <Button onClick={handleExitReview}>Back to Dashboard</Button>
                         </div>
                     )}
@@ -145,7 +145,7 @@ export default function MistakesPage() {
                     <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
                         <CheckCircle2 className="w-16 h-16 text-muted-foreground/50" />
                         <h2 className="text-xl font-semibold text-muted-foreground">No Mistakes Found</h2>
-                        <p className="text-sm text-muted-foreground">Great job! You don't have any failed or confused questions yet.</p>
+                        <p className="text-sm text-muted-foreground">Great job! You don&apos;t have any failed or confused questions yet.</p>
                     </CardContent>
                 </Card>
             )}

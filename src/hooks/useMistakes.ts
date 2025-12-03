@@ -1,7 +1,6 @@
 import { useProgressStore } from '@/lib/store';
 import { useQuestions } from '@/hooks/useQuestions';
 import { useMemo } from 'react';
-import { Question } from '@/lib/types';
 
 export function useMistakes() {
     const progress = useProgressStore(state => state.progress);
@@ -25,9 +24,9 @@ export function useMistakes() {
         return { failed, confused, total: mistakes.length };
     }, [mistakes, progress]);
 
-    return { 
-        mistakes, 
+    return {
+        mistakes,
         stats,
-        isLoading 
+        isLoading
     };
 }
