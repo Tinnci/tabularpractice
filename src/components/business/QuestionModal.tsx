@@ -111,7 +111,8 @@ export function QuestionModal({
     // 计时器逻辑
     const { isRunning, reset, formattedTime, toggle } = useQuestionTimer({
         questionId: question?.id,
-        visibleViews
+        visibleViews,
+        isOpen
     });
 
     // 笔记系统状态
@@ -287,10 +288,10 @@ export function QuestionModal({
                 if (question) onUpdateStatus(question.id, 'failed');
                 break;
             case " ": // Space key
-                if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                    toggle();
-                }
+                // 防止在输入笔记时触发暂停
+                if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
+                e.preventDefault();
+                toggle();
                 break;
         }
     }, [isOpen, hasPrev, hasNext, onPrev, onNext, onClose, question, onUpdateStatus, toggle]);
