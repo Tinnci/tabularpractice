@@ -41,7 +41,7 @@ interface ProgressState {
     setFilterYear: (year: 'all' | string) => void;
     setFilterStarred: (starred: boolean) => void;
     getStats: () => { mastered: number; confused: number; failed: number; total: number };
-    importData: (data: any) => void;
+    importData: (data: unknown) => void;
     importProgress: (newProgress: Record<string, Status>) => void;
 
     // 废弃：repoBaseUrl 不再作为单一数据源依据，保留仅为兼容
@@ -274,7 +274,7 @@ export const useProgressStore = create<ProgressState>()(
 
             importData: (data) => {
                 // 检查是否是新版格式 (包含 progress 字段)
-                const isNewFormat = (d: any): d is SyncData => {
+                const isNewFormat = (d: unknown): d is SyncData => {
                     return typeof d === 'object' && d !== null && 'progress' in d;
                 };
 

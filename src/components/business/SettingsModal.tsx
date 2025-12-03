@@ -109,117 +109,162 @@ export function SettingsModal() {
     };
 
     // 导出功能
-    const handleExport = () => {
+    const handleExport = async () => {
         try {
-            const exportData = {
-                version: 2, // 升级版本号
+            const { default: JSZip } = await import('jszip');
+            const { saveAs } = await import('file-saver');
+            const { draftStore } = await import('@/lib/draftStore');
+
+            const zip = new JSZip();
+            const state = useProgressStore.getState();
+
+            // 1. 添加核心数据
+            const coreData = {
+                version: 3,
                 timestamp: new Date().toISOString(),
-                progress,
-                notes,
-                stars: useProgressStore.getState().stars,
-                repoSources: useProgressStore.getState().repoSources
+                progress: state.progress,
+                notes: state.notes,
+                stars: state.stars,
+                repoSources: state.repoSources,
+                progressLastModified: state.progressLastModified,
+                notesLastModified: state.notesLastModified
             };
+            zip.file("tabular-data.json", JSON.stringify(coreData, null, 2));
 
-            const dataStr = JSON.stringify(exportData, null, 2)
-            const blob = new Blob([dataStr], { type: "application/json" })
-            const url = URL.createObjectURL(blob)
+            // 2. 添加草稿数据
+            const drafts = await draftStore.getAllDrafts();
+            const draftsFolder = zip.folder("drafts");
+            if (draftsFolder) {
+                Object.entries(drafts).forEach(([id, content]) => {
+                    draftsFolder.file(`${id}.json`, content);
+                });
+            }
 
-            const date = new Date()
-            const timestamp = date.toISOString().split('T')[0].replace(/-/g, '')
-            const filename = `tabular-practice-backup-${timestamp}.json`
+            // 3. 生成并下载
+            const content = await zip.generateAsync({ type: "blob" });
+            const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            saveAs(content, `tabular-backup-${date}.zip`);
 
-            const link = document.createElement("a")
-            link.href = url
-            link.download = filename
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            URL.revokeObjectURL(url)
-
-            toast.success("备份文件已下载", {
-                description: `包含进度、笔记、收藏和题库源配置`,
-            })
+            toast.success("完整备份已下载", {
+                description: `包含进度、笔记、收藏、题库源及所有手写草稿`,
+            });
         } catch (error) {
-            console.error("Export failed:", error)
+            console.error("Export failed:", error);
             toast.error("导出失败", {
                 description: "生成备份文件时出现错误",
-            })
+            });
         }
-    }
+    };
 
     // 触发文件选择
     const triggerImport = () => {
-        fileInputRef.current?.click()
-    }
+        fileInputRef.current?.click();
+    };
 
     // 处理文件选择
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        e.target.value = '';
 
-        e.target.value = ''
+        try {
+            if (file.name.endsWith('.zip')) {
+                // 处理 ZIP 完整备份
+                const { default: JSZip } = await import('jszip');
+                const zip = await JSZip.loadAsync(file);
 
-        if (!file.name.endsWith('.json')) {
-            toast.error("文件格式错误", {
-                description: "请上传 .json 格式的备份文件",
-            })
-            return
-        }
+                const dataFile = zip.file("tabular-data.json");
+                if (!dataFile) throw new Error("无效的备份文件：缺少 tabular-data.json");
 
-        const reader = new FileReader()
-        reader.onload = (event) => {
-            try {
-                const content = event.target?.result as string
-                const parsedData = JSON.parse(content)
+                const dataStr = await dataFile.async("string");
+                const parsedData = JSON.parse(dataStr);
 
-                if (typeof parsedData !== 'object' || parsedData === null) {
-                    throw new Error("Invalid JSON structure")
+                // 预览草稿数量
+                const draftsFolder = zip.folder("drafts");
+                let draftCount = 0;
+                if (draftsFolder) {
+                    draftsFolder.forEach(() => { draftCount++; });
                 }
 
-                let isValid = false;
-                if ('progress' in parsedData) {
-                    const progressKeys = Object.keys(parsedData.progress || {});
-                    if (progressKeys.length > 0) isValid = true;
-                } else {
-                    const keys = Object.keys(parsedData);
-                    if (keys.length > 0) isValid = true;
-                }
+                setPendingImportData({ ...parsedData, _draftCount: draftCount, _zip: zip });
+                setImportConfirmOpen(true);
 
-                if (!isValid) {
-                    toast.warning("文件为空或不包含进度数据")
-                    return
-                }
-
-                setPendingImportData(parsedData)
-                setImportConfirmOpen(true)
-
-            } catch (error) {
-                console.error("Import parsing failed:", error)
-                toast.error("解析失败", {
-                    description: "备份文件内容损坏或格式不正确",
-                })
+            } else if (file.name.endsWith('.json')) {
+                // 处理旧版 JSON 备份
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const content = event.target?.result as string;
+                        const parsedData = JSON.parse(content);
+                        setPendingImportData(parsedData);
+                        setImportConfirmOpen(true);
+                    } catch (e) {
+                        console.error(e);
+                        toast.error("解析失败", { description: "JSON 文件格式错误" });
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                toast.error("不支持的文件格式", { description: "请上传 .zip 或 .json 备份文件" });
             }
+        } catch (error) {
+            console.error("Import failed:", error);
+            toast.error("读取失败", { description: "文件可能已损坏" });
         }
-        reader.readAsText(file)
-    }
+    };
 
     // 确认导入
-    const confirmImport = () => {
+    const confirmImport = async () => {
         if (pendingImportData) {
-            importData(pendingImportData)
-            setImportConfirmOpen(false)
-            setPendingImportData(null)
-            setOpen(false)
+            try {
+                // 1. 恢复核心数据
+                importData(pendingImportData);
 
-            toast.success("导入成功", {
-                description: "刷题进度已恢复，页面即将刷新...",
-            })
+                // 2. 如果是 ZIP 备份，恢复草稿
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if ((pendingImportData as any)._zip) {
+                    const { draftStore } = await import('@/lib/draftStore');
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const zip = (pendingImportData as any)._zip;
+                    const draftsFolder = zip.folder("drafts");
 
-            setTimeout(() => {
-                window.location.reload()
-            }, 1500)
+                    if (draftsFolder) {
+                        const draftsToRestore: Record<string, string> = {};
+                        const promises: Promise<void>[] = [];
+
+                        draftsFolder.forEach((relativePath: string, file: any) => {
+                            if (!file.dir) {
+                                promises.push(
+                                    file.async("string").then((content: string) => {
+                                        const id = relativePath.replace('.json', '');
+                                        draftsToRestore[id] = content;
+                                    })
+                                );
+                            }
+                        });
+
+                        await Promise.all(promises);
+                        await draftStore.importDrafts(draftsToRestore);
+                    }
+                }
+
+                setImportConfirmOpen(false);
+                setPendingImportData(null);
+                setOpen(false);
+
+                toast.success("导入成功", {
+                    description: "数据已完全恢复，页面即将刷新...",
+                });
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } catch (error) {
+                console.error("Restore failed:", error);
+                toast.error("恢复失败", { description: "写入数据时发生错误" });
+            }
         }
-    }
+    };
 
     return (
         <>
@@ -256,12 +301,12 @@ export function SettingsModal() {
                                                 onClick={handleExport}
                                             >
                                                 <Download className="h-6 w-6 text-muted-foreground" />
-                                                <span className="text-sm font-medium">导出进度</span>
-                                                <span className="text-xs text-muted-foreground font-normal">备份到本地 JSON</span>
+                                                <span className="text-sm font-medium">完整备份</span>
+                                                <span className="text-xs text-muted-foreground font-normal">导出 ZIP (含草稿)</span>
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>导出为 .json 格式</p>
+                                            <p>导出为 .zip 格式，包含所有进度和手写草稿</p>
                                         </TooltipContent>
                                     </Tooltip>
 
@@ -278,7 +323,7 @@ export function SettingsModal() {
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>支持 .json 格式备份文件</p>
+                                            <p>支持 .zip (完整) 或 .json (旧版) 格式</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </div>
@@ -610,6 +655,12 @@ export function SettingsModal() {
 
                                     {'repoSources' in pendingImportData && pendingImportData.repoSources && (
                                         <div>题库源: {pendingImportData.repoSources.length} (将合并)</div>
+                                    )}
+
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                    {'_draftCount' in pendingImportData && (pendingImportData as any)._draftCount > 0 && (
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                        <div>手写草稿: {(pendingImportData as any)._draftCount} 份</div>
                                     )}
                                 </div>
                             )}
