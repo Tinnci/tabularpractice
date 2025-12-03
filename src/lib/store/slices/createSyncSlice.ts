@@ -1,0 +1,103 @@
+import { StateCreator } from 'zustand';
+import { syncService, SyncData } from '@/services/syncService';
+import { StoreState } from '../types';
+
+export interface SyncSlice {
+    githubToken: string | null;
+    gistId: string | null;
+    lastSyncedTime: string | null;
+    syncStatus: 'idle' | 'syncing' | 'success' | 'error';
+
+    setGithubToken: (token: string | null) => void;
+    setGistId: (id: string | null) => void;
+    setLastSyncedTime: (time: string | null) => void;
+    setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
+
+    syncData: (isAutoSync?: boolean) => Promise<void>;
+    triggerAutoSync: () => void;
+}
+
+let syncTimer: NodeJS.Timeout | null = null;
+
+export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set, get) => ({
+    githubToken: null,
+    gistId: null,
+    lastSyncedTime: null,
+    syncStatus: 'idle',
+
+    setGithubToken: (token) => set({ githubToken: token }),
+    setGistId: (id) => set({ gistId: id }),
+    setLastSyncedTime: (time) => set({ lastSyncedTime: time }),
+    setSyncStatus: (status) => set({ syncStatus: status }),
+
+    syncData: async (isAutoSync = false) => {
+        const {
+            githubToken, gistId,
+            progress, progressLastModified,
+            notes, notesLastModified,
+            times, timesLastModified,
+            stars, repoSources,
+            importData
+        } = get();
+
+        if (!githubToken) return;
+
+        set({ syncStatus: 'syncing' });
+
+        try {
+            const currentData: SyncData = {
+                version: 3,
+                timestamp: new Date().toISOString(),
+                progress,
+                progressLastModified,
+                notes,
+                notesLastModified,
+                times,
+                timesLastModified,
+                stars,
+                repoSources
+            };
+
+            let targetGistId = gistId;
+            let mergedData = currentData;
+
+            if (targetGistId) {
+                const remoteData = await syncService.fetchGist(githubToken, targetGistId);
+                if (remoteData) {
+                    mergedData = syncService.mergeData(currentData, remoteData);
+                } else {
+                    targetGistId = null; // Gist not found
+                }
+            }
+
+            const result = await syncService.uploadGist(githubToken, targetGistId, mergedData);
+
+            if (!targetGistId) {
+                set({ gistId: result.id });
+            }
+            set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success' });
+
+            if (!isAutoSync) {
+                importData(mergedData);
+            }
+
+            setTimeout(() => set({ syncStatus: 'idle' }), 3000);
+
+        } catch (error) {
+            console.error(error);
+            set({ syncStatus: 'error' });
+        }
+    },
+
+    triggerAutoSync: () => {
+        const { githubToken } = get();
+        if (!githubToken) return;
+
+        if (syncTimer) clearTimeout(syncTimer);
+        set({ syncStatus: 'syncing' });
+
+        syncTimer = setTimeout(() => {
+            get().syncData(true);
+        }, 5000); // 5s debounce
+    },
+});

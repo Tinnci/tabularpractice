@@ -126,7 +126,7 @@ export function usePaperDetail(paperId: string | null) {
 
         try {
             return await Promise.any(promises);
-        } catch (error) {
+        } catch {
             throw new Error("Paper not found in any active source");
         }
     };
