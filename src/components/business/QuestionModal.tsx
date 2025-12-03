@@ -109,18 +109,22 @@ export function QuestionModal({
 
     // 计时器逻辑
     const { addTime } = useProgressStore();
-    const { elapsed, isRunning, start, pause, reset } = useStopwatch({
+    const { elapsed, isRunning, start, pause, reset, formattedTime } = useStopwatch({
         autoStart: true,
         smartPause: true
     });
     const activeQuestionIdRef = useRef<string | null>(question?.id || null);
 
-    // 当题目 ID 变化 或 Modal 关闭时，保存时间
+    // 使用 Ref 追踪 elapsed，避免 useEffect 频繁触发
+    const elapsedRef = useRef(elapsed);
+    elapsedRef.current = elapsed;
+
+    // 当题目 ID 变化时，保存上一题时间
     useEffect(() => {
         const handleSaveTime = () => {
             const currentId = activeQuestionIdRef.current;
-            if (currentId && elapsed > 1000) {
-                addTime(currentId, elapsed);
+            if (currentId && elapsedRef.current > 1000) {
+                addTime(currentId, elapsedRef.current);
             }
         };
 
@@ -129,17 +133,17 @@ export function QuestionModal({
             reset(true);
             activeQuestionIdRef.current = question?.id || null;
         }
-    }, [question?.id, elapsed, addTime, reset]);
+    }, [question?.id, addTime, reset]);
 
     // 专门处理 Modal 关闭时的保存
     useEffect(() => {
         if (!isOpen && activeQuestionIdRef.current) {
-            if (elapsed > 1000) {
-                addTime(activeQuestionIdRef.current, elapsed);
+            if (elapsedRef.current > 1000) {
+                addTime(activeQuestionIdRef.current, elapsedRef.current);
             }
             reset(false);
         }
-    }, [isOpen, elapsed, addTime, reset]);
+    }, [isOpen, addTime, reset]);
 
     // 笔记系统状态
     const { notes, updateNote, stars, toggleStar, syncStatus, syncData } = useProgressStore();
@@ -363,7 +367,7 @@ export function QuestionModal({
         <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-full text-xs font-mono ml-2 sm:ml-4 shrink-0">
             <Clock className="w-3 h-3 text-muted-foreground" />
             <span className={cn("min-w-[40px] text-center", isRunning ? "text-primary" : "text-muted-foreground")}>
-                {formatTimestamp(Math.floor(elapsed / 1000))}
+                {formattedTime}
             </span>
             <button onClick={() => isRunning ? pause() : start()} className="hover:bg-background rounded p-1 transition-colors">
                 {isRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
