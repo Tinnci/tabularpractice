@@ -89,6 +89,9 @@ export interface BackupData {
   progressLastModified?: Record<string, number>;
   notesLastModified?: Record<string, number>;
 
+  times?: Record<string, number>;
+  timesLastModified?: Record<string, number>;
+
   // 运行时附加的字段 (不在 JSON 文件中，但加载到内存时存在)
   _draftCount?: number;
   _zip?: unknown; // 引用 JSZip 实例

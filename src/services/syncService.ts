@@ -9,6 +9,8 @@ export interface SyncData {
     notesLastModified?: Record<string, number>; // New: Timestamp for each note
     stars: Record<string, boolean>;
     repoSources: RepoSource[];
+    times?: Record<string, number>;
+    timesLastModified?: Record<string, number>;
 }
 
 export const syncService = {
@@ -80,6 +82,9 @@ export const syncService = {
         const mergedNotes = { ...local.notes };
         const mergedNotesLastModified = { ...(local.notesLastModified || {}) };
 
+        const mergedTimes = { ...(local.times || {}) };
+        const mergedTimesLastModified = { ...(local.timesLastModified || {}) };
+
         // Merge Progress
         Object.entries(remote.progress).forEach(([id, status]) => {
             const localTime = mergedProgressLastModified[id] || 0;
@@ -103,6 +108,21 @@ export const syncService = {
             }
         });
 
+        // Merge Times
+        // For times, we might want to take the larger value if timestamps are close?
+        // Or strictly follow LastModified. Let's follow LastModified for consistency.
+        if (remote.times) {
+            Object.entries(remote.times).forEach(([id, time]) => {
+                const localTime = mergedTimesLastModified[id] || 0;
+                const remoteTime = remote.timesLastModified?.[id] || 0;
+
+                if (remoteTime > localTime || !mergedTimes[id]) {
+                    mergedTimes[id] = time;
+                    mergedTimesLastModified[id] = remoteTime;
+                }
+            });
+        }
+
         // Merge Stars (Simple merge for now as they are booleans and less critical, or use simple union)
         const mergedStars = { ...remote.stars, ...local.stars };
 
@@ -121,6 +141,8 @@ export const syncService = {
             progressLastModified: mergedProgressLastModified,
             notes: mergedNotes,
             notesLastModified: mergedNotesLastModified,
+            times: mergedTimes,
+            timesLastModified: mergedTimesLastModified,
             stars: mergedStars,
             repoSources: newRepoSources
         };

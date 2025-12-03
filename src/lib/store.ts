@@ -12,6 +12,10 @@ interface ProgressState {
     notes: NotesMap;
     notesLastModified: Record<string, number>; // Timestamp for sync conflict resolution
 
+    // 核心数据：记录题目ID对应的做题时长 (毫秒)
+    times: Record<string, number>;
+    timesLastModified: Record<string, number>;
+
     // 核心数据：记录题目收藏状态
     stars: Record<string, boolean>;
     // 核心数据：记录每日刷题活动
@@ -32,6 +36,7 @@ interface ProgressState {
 
     updateStatus: (id: string, status: Status) => void;
     updateNote: (id: string, content: string) => void;
+    addTime: (id: string, delta: number) => void;
     toggleStar: (id: string) => void;
     setSelectedTagId: (id: string | null) => void;
     setCurrentGroupId: (id: string) => void;
@@ -111,6 +116,8 @@ export const useProgressStore = create<ProgressState>()(
             history: {},
             notes: {},
             notesLastModified: {},
+            times: {},
+            timesLastModified: {},
             stars: {},
             selectedTagId: null,
             currentGroupId: 'math1',
@@ -231,6 +238,17 @@ export const useProgressStore = create<ProgressState>()(
                 get().triggerAutoSync();
             },
 
+            addTime: (id, delta) => {
+                set((state) => {
+                    const currentTime = state.times[id] || 0;
+                    return {
+                        times: { ...state.times, [id]: currentTime + delta },
+                        timesLastModified: { ...state.timesLastModified, [id]: Date.now() }
+                    };
+                });
+                get().triggerAutoSync();
+            },
+
             toggleStar: (id) => {
                 set((state) => {
                     const newStars = { ...state.stars };
@@ -292,6 +310,8 @@ export const useProgressStore = create<ProgressState>()(
                             progressLastModified: data.progressLastModified || {},
                             notes: data.notes || {},
                             notesLastModified: data.notesLastModified || {},
+                            times: data.times || {},
+                            timesLastModified: data.timesLastModified || {},
                             stars: data.stars || {},
                             repoSources: newRepoSources
                         };
@@ -306,7 +326,7 @@ export const useProgressStore = create<ProgressState>()(
 
             // GitHub Sync Implementation
             syncData: async (isAutoSync = false) => {
-                const { githubToken, gistId, progress, progressLastModified, notes, notesLastModified, stars, repoSources, importData } = get();
+                const { githubToken, gistId, progress, progressLastModified, notes, notesLastModified, times, timesLastModified, stars, repoSources, importData } = get();
 
                 if (!githubToken) return;
 
@@ -320,6 +340,8 @@ export const useProgressStore = create<ProgressState>()(
                         progressLastModified,
                         notes,
                         notesLastModified,
+                        times,
+                        timesLastModified,
                         stars,
                         repoSources
                     };

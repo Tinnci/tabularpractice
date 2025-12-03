@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Play, Shuffle, Tag, Filter, RotateCcw, Dumbbell } from "lucide-react";
+import { useStopwatch } from "@/hooks/useStopwatch";
+import { Timer, Pause, Play, RefreshCcw, Dumbbell, Filter, Shuffle, Tag, RotateCcw } from "lucide-react";
 import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
@@ -18,7 +19,7 @@ import { pinyin } from "pinyin-pro";
 
 export default function PracticePage() {
     const { mergedQuestions } = useContextQuestions();
-    const { updateStatus } = useProgressStore();
+    const { updateStatus, addTime } = useProgressStore();
 
     // Create a map of tag ID to label
     const tagMap = useMemo(() => {
@@ -66,6 +67,22 @@ export default function PracticePage() {
     const [queue, setQueue] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Timer Hook
+    const {
+        elapsed,
+        formattedTime,
+        isRunning,
+        toggle: toggleTimer,
+        reset: resetTimer,
+        start: startTimer,
+        pause: pauseTimer
+    } = useStopwatch({
+        autoStart: false,
+        smartPause: true
+    });
+
+    // ... (Derived Data and Handlers remain the same)
 
     // Derived Data
     const allTags = useMemo(() => {
@@ -130,26 +147,47 @@ export default function PracticePage() {
         setCurrentIndex(0);
         setIsStarted(true);
         setIsModalOpen(true);
+
+        // Start timer
+        resetTimer();
+        startTimer();
     };
 
     const handleEndSession = () => {
+        // Save time for current question
+        if (queue[currentIndex]) {
+            addTime(queue[currentIndex].id, elapsed);
+        }
         setIsStarted(false);
         setQueue([]);
         setCurrentIndex(0);
         setIsModalOpen(false);
+        resetTimer();
     };
 
     const handleNext = useCallback(() => {
         if (currentIndex < queue.length - 1) {
+            // Save time for current question
+            if (queue[currentIndex]) {
+                addTime(queue[currentIndex].id, elapsed);
+            }
+            resetTimer();
+            startTimer();
             setCurrentIndex(prev => prev + 1);
         }
-    }, [currentIndex, queue.length]);
+    }, [currentIndex, queue, resetTimer, startTimer, elapsed, addTime]);
 
     const handlePrev = useCallback(() => {
         if (currentIndex > 0) {
+            // Save time for current question
+            if (queue[currentIndex]) {
+                addTime(queue[currentIndex].id, elapsed);
+            }
+            resetTimer();
+            startTimer();
             setCurrentIndex(prev => prev - 1);
         }
-    }, [currentIndex]);
+    }, [currentIndex, queue, resetTimer, startTimer, elapsed, addTime]);
 
     // Current Question
     const currentQuestion = queue[currentIndex];
@@ -157,7 +195,16 @@ export default function PracticePage() {
     if (isStarted) {
         return (
             <div className="container mx-auto p-6 max-w-4xl h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
-                <Card className="w-full max-w-md text-center p-8 shadow-xl border-primary/20">
+                <Card className="w-full max-w-md text-center p-8 shadow-xl border-primary/20 relative">
+                    {/* Timer UI */}
+                    <div className="absolute top-4 right-4 flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1">
+                        <Timer className={cn("w-4 h-4", isRunning ? "text-primary animate-pulse" : "text-muted-foreground")} />
+                        <span className="font-mono font-bold text-lg min-w-[60px]">{formattedTime}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={toggleTimer}>
+                            {isRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                        </Button>
+                    </div>
+
                     <div className="mb-6 flex justify-center">
                         <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
                             <Dumbbell className="h-10 w-10 text-primary" />
@@ -169,7 +216,10 @@ export default function PracticePage() {
                     </p>
 
                     <div className="flex flex-col gap-4">
-                        <Button size="lg" onClick={() => setIsModalOpen(true)} className="w-full gap-2">
+                        <Button size="lg" onClick={() => {
+                            setIsModalOpen(true);
+                            startTimer();
+                        }} className="w-full gap-2">
                             <Play className="w-4 h-4" /> Continue Practice
                         </Button>
                         <Button variant="outline" onClick={handleEndSession} className="w-full gap-2">
@@ -180,7 +230,10 @@ export default function PracticePage() {
 
                 <QuestionModal
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        pauseTimer();
+                    }}
                     question={currentQuestion}
                     onNext={handleNext}
                     onPrev={handlePrev}
