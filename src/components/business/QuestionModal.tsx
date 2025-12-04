@@ -37,6 +37,7 @@ import { useProgressStore } from "@/lib/store";
 import { Switch } from "@/components/ui/switch";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import { SUBJECT_TAGS_MAP, TagNode } from "@/data/subject-tags";
 
 interface Props {
     isOpen: boolean;
@@ -51,6 +52,94 @@ interface Props {
 }
 
 type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft';
+
+// --- Helper: 扁平化标签树 ---
+const useTagLabelMap = () => {
+    return useMemo(() => {
+        const map = new Map<string, string>();
+        const traverse = (nodes: TagNode[]) => {
+            nodes.forEach(node => {
+                map.set(node.id, node.label);
+                if (node.children) traverse(node.children);
+            });
+        };
+        // 遍历所有科目的标签树
+        Object.values(SUBJECT_TAGS_MAP).forEach(traverse);
+        return map;
+    }, []);
+};
+
+// --- Component: 智能标签列表 ---
+const SmartTagList = ({
+    tags = [],
+    tagNames = [],
+    limit = 2,
+    className
+}: {
+    tags: string[],
+    tagNames?: string[],
+    limit?: number,
+    className?: string
+}) => {
+    const labelMap = useTagLabelMap();
+
+    // 预处理所有标签的最终显示文本
+    const displayTags = useMemo(() => {
+        return tags.map((tagId, index) => {
+            // 优先级: 1. 后端传回的名称 -> 2. 本地映射的中文 -> 3. 原始ID
+            return tagNames?.[index] || labelMap.get(tagId) || tagId;
+        });
+    }, [tags, tagNames, labelMap]);
+
+    if (displayTags.length === 0) return null;
+
+    // 分割为“可见部分”和“隐藏部分”
+    const visibleTags = displayTags.slice(0, limit);
+    const hiddenTags = displayTags.slice(limit);
+    const hasHidden = hiddenTags.length > 0;
+
+    return (
+        <div className={cn("flex items-center gap-2 flex-wrap", className)}>
+            {visibleTags.map((tag, index) => (
+                <Badge
+                    key={index}
+                    variant="outline"
+                    className="text-xs font-normal text-muted-foreground bg-muted/30 whitespace-nowrap h-6 px-2 hover:bg-muted/50 cursor-default border-muted-foreground/20"
+                >
+                    {tag}
+                </Badge>
+            ))}
+
+            {hasHidden && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Badge
+                                variant="secondary"
+                                className="text-xs h-6 px-1.5 cursor-default hover:bg-secondary/80 transition-colors"
+                                title="查看更多知识点"
+                            >
+                                +{hiddenTags.length}
+                            </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" align="end" className="max-w-[250px] p-3">
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-sm text-muted-foreground">包含知识点</h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {hiddenTags.map((tag, idx) => (
+                                        <Badge key={idx} variant="outline" className="text-xs font-normal">
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
+        </div>
+    );
+};
 
 // 通用 Markdown 渲染组件
 const MarkdownContent = ({ content }: { content: string }) => (
@@ -121,28 +210,28 @@ const CopyButton = ({ text, img, question }: { text?: string | null, img?: strin
                 // 注意：这需要图片服务器支持 CORS，否则会抛出错误
                 const response = await fetch(url);
                 const blob = await response.blob();
-                
+
                 // Safari/Chrome 均支持的写入方式
                 await navigator.clipboard.write([
                     new ClipboardItem({ [blob.type]: blob })
                 ]);
             }
-            
+
             // 成功反馈
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
             console.error("Copy failed:", err);
-            
+
             // 降级处理：如果图片数据复制失败（通常是跨域问题），则复制图片链接
             if (!text && img) {
-                 const url = getImageUrl(img, question, repoBaseUrl, repoSources);
-                 if (url) {
+                const url = getImageUrl(img, question, repoBaseUrl, repoSources);
+                if (url) {
                     await navigator.clipboard.writeText(url);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                     // 可选：这里可以用 sonner 提示 "已复制图片链接"
-                 }
+                }
             }
         }
     };
@@ -535,17 +624,13 @@ export function QuestionModal({
                             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                         </Button>
                     </div>
-                    {/* 标签 (桌面端显示) */}
-                    <div className="hidden sm:flex items-center gap-2 flex-wrap">
-                        {(currentQuestion.tagNames || currentQuestion.tags || []).map((tag, index) => (
-                            <Badge
-                                key={index}
-                                variant="outline"
-                                className="text-xs font-normal text-muted-foreground bg-muted/30 whitespace-normal text-left h-auto py-0.5 hover:rotate-3 hover:scale-105 transition-transform duration-200 origin-bottom-left cursor-default"
-                            >
-                                {tag}
-                            </Badge>
-                        ))}
+                    {/* 标签 (桌面端显示) - 限制显示 2 个，防止挤占空间 */}
+                    <div className="hidden sm:flex ml-auto shrink-0 pl-2">
+                        <SmartTagList
+                            tags={currentQuestion.tags || []}
+                            tagNames={currentQuestion.tagNames}
+                            limit={2}
+                        />
                     </div>
                 </div>
 
@@ -566,13 +651,14 @@ export function QuestionModal({
                             )}>
 
 
-                                {/* 移动端标签显示 (桌面端在顶部) */}
-                                <div className="sm:hidden flex flex-wrap gap-1.5 px-0.5 mb-1 opacity-80">
-                                    {(currentQuestion.tagNames || currentQuestion.tags || []).map((tag, index) => (
-                                        <Badge key={index} variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-muted text-muted-foreground border-0 hover:rotate-3 hover:scale-105 transition-transform duration-200 origin-bottom-left cursor-default">
-                                            {tag}
-                                        </Badge>
-                                    ))}
+                                {/* 移动端标签显示 - 移动端可以多显示几个，或者全显示 */}
+                                <div className="sm:hidden mb-2">
+                                    <SmartTagList
+                                        tags={currentQuestion.tags || []}
+                                        tagNames={currentQuestion.tagNames}
+                                        limit={5} // 移动端允许换行，可以多显示一些
+                                        className="gap-1.5"
+                                    />
                                 </div>
 
                                 {/* 题目区域 */}
@@ -582,9 +668,9 @@ export function QuestionModal({
                                             <div className="flex items-center gap-2">
                                                 <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 题目描述
                                             </div>
-                                            <CopyButton 
-                                                text={currentQuestion.contentMd} 
-                                                img={currentQuestion.contentImg} 
+                                            <CopyButton
+                                                text={currentQuestion.contentMd}
+                                                img={currentQuestion.contentImg}
                                                 question={currentQuestion}
                                             />
                                         </div>
@@ -663,9 +749,9 @@ export function QuestionModal({
                                             <div className="flex items-center gap-2">
                                                 <Eye className="w-4 h-4" /> 参考答案
                                             </div>
-                                            <CopyButton 
-                                                text={currentQuestion.answerMd || (currentQuestion.answer ? `答案：${currentQuestion.answer}` : null)} 
-                                                img={currentQuestion.answerImg} 
+                                            <CopyButton
+                                                text={currentQuestion.answerMd || (currentQuestion.answer ? `答案：${currentQuestion.answer}` : null)}
+                                                img={currentQuestion.answerImg}
                                                 question={currentQuestion}
                                             />
                                         </div>
@@ -698,9 +784,9 @@ export function QuestionModal({
                                             <div className="flex items-center gap-2">
                                                 <FileText className="w-4 h-4" /> 详细解析
                                             </div>
-                                            <CopyButton 
-                                                text={currentQuestion.analysisMd} 
-                                                img={currentQuestion.analysisImg} 
+                                            <CopyButton
+                                                text={currentQuestion.analysisMd}
+                                                img={currentQuestion.analysisImg}
                                                 question={currentQuestion}
                                             />
                                         </div>
