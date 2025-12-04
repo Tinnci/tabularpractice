@@ -49,7 +49,8 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
 
     updateStatus: (id, status) => {
         set((state) => {
-            const today = new Date().toISOString().split('T')[0];
+            const date = new Date();
+            const today = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             const currentCount = state.history[today] || 0;
 
             const newHistory = { ...state.history };

@@ -36,10 +36,25 @@ export function useQuestionTimer({ questionId, visibleViews, isOpen }: UseQuesti
         if (isReviewing && isRunning) {
             pause();
         } else if (!isReviewing && !isRunning && elapsed > 0) {
-            // 可选策略：切回题目视图时，自动恢复计时
             start();
         }
     }, [visibleViews, isRunning, pause, start, elapsed, isOpen, questionId]);
+
+    // Handle browser tab visibility changes
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            const isReviewing = visibleViews.has('answer') || visibleViews.has('analysis') || visibleViews.has('video');
+
+            if (document.hidden && isRunning) {
+                pause();
+            } else if (!document.hidden && !isRunning && !isReviewing && isOpen && questionId) {
+                start();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [isRunning, pause, start, visibleViews, isOpen, questionId]);
 
     // 3. 安全保存逻辑 (封装 store 交互)
     const saveTime = useCallback(() => {

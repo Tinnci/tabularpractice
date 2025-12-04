@@ -124,7 +124,10 @@ export const syncService = {
                 const localValue = mergedTimes[id] || 0;
                 const remoteValue = time;
 
-                // Always take the larger value
+                // Always take the larger value (Max Strategy)
+                // Note: This is a safe heuristic to avoid data loss (rollback), but it doesn't support 
+                // true incremental sync (e.g. adding 5s from device A and 5s from device B = 10s).
+                // To support that, we would need to track 'lastSyncedValue' in the schema.
                 if (remoteValue > localValue) {
                     mergedTimes[id] = remoteValue;
                     // We take the remote timestamp if we take the remote value, 

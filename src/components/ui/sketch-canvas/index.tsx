@@ -6,6 +6,8 @@ import React, {
     useImperativeHandle,
     forwardRef,
     useId,
+    useEffect,
+    useCallback
 } from "react";
 import { SvgPath } from "./SvgPath";
 import {
@@ -15,6 +17,34 @@ import {
     Point,
     ExportedPath,
 } from "./types";
+
+function drawPathOnCanvas(ctx: CanvasRenderingContext2D, path: CanvasPath) {
+    const points = path.paths;
+    const len = points.length;
+    if (len < 1) return;
+
+    ctx.beginPath();
+    const a = points[0];
+
+    ctx.moveTo(a.x, a.y);
+
+    if (len < 2) {
+        // Draw a dot
+        ctx.lineTo(a.x + 0.1, a.y + 0.1);
+    } else {
+        // Draw quadratic curves
+        for (let i = 1; i < len - 1; i++) {
+            const midX = (points[i].x + points[i + 1].x) / 2;
+            const midY = (points[i].y + points[i + 1].y) / 2;
+            ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+        }
+        // Connect the last point
+        const last = points[len - 1];
+        ctx.lineTo(last.x, last.y);
+    }
+
+    ctx.stroke();
+}
 
 const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProps>(
     (
@@ -41,6 +71,7 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
 
         // --- Refs ---
         const svgRef = useRef<SVGSVGElement>(null);
+        const canvasRef = useRef<HTMLCanvasElement>(null);
         const isDrawingRef = useRef(false);
         const currentPathRef = useRef<CanvasPath | null>(null);
         const isEraserModeRef = useRef(false);
@@ -59,6 +90,64 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
             };
         };
 
+        // --- Canvas Rendering ---
+        const redraw = useCallback(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            paths.forEach(path => {
+                ctx.lineWidth = path.strokeWidth;
+                ctx.strokeStyle = path.strokeColor;
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+
+                if (!path.drawMode) {
+                    ctx.globalCompositeOperation = "destination-out";
+                } else {
+                    ctx.globalCompositeOperation = "source-over";
+                }
+
+                drawPathOnCanvas(ctx, path);
+            });
+        }, [paths]);
+
+        // Handle Resize
+        useEffect(() => {
+            const canvas = canvasRef.current;
+            const svg = svgRef.current;
+            if (!canvas || !svg) return;
+
+            const updateSize = () => {
+                const rect = svg.getBoundingClientRect();
+                // Only update if dimensions actually changed to avoid unnecessary redraws
+                if (canvas.width !== rect.width || canvas.height !== rect.height) {
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                    redraw();
+                }
+            };
+
+            updateSize();
+
+            // Use ResizeObserver for more robust resizing
+            const resizeObserver = new ResizeObserver(() => {
+                updateSize();
+            });
+            resizeObserver.observe(svg);
+
+            return () => resizeObserver.disconnect();
+        }, [redraw]);
+
+        // Redraw when paths change
+        useEffect(() => {
+            redraw();
+        }, [redraw]);
+
+
         // --- Event Handlers ---
 
         const handlePointerDown = (e: React.PointerEvent) => {
@@ -75,7 +164,7 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
             const newPath: CanvasPath = {
                 paths: [point],
                 strokeWidth: isEraser ? eraserWidth : strokeWidth,
-                strokeColor: isEraser ? "#000000" : strokeColor, // Eraser uses mask, color doesn't matter much but #000000 for mask
+                strokeColor: isEraser ? "#000000" : strokeColor,
                 drawMode: !isEraser,
                 startTimestamp: Date.now(),
             };
@@ -195,15 +284,11 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
 
         // --- Rendering ---
 
-        const drawPaths = paths.filter(p => p.drawMode);
-        const eraserPaths = paths.filter(p => !p.drawMode);
+        // We only render the CURRENT active path in SVG.
+        // The history is rendered on the Canvas.
 
-        // Also consider the current path
         const activeDrawPath = currentPath && currentPath.drawMode ? currentPath : null;
         const activeEraserPath = currentPath && !currentPath.drawMode ? currentPath : null;
-
-        const id = useId();
-        const maskId = `react-sketch-canvas-mask-${id}`;
 
         return (
             <div
@@ -216,57 +301,56 @@ const ReactSketchCanvas = forwardRef<ReactSketchCanvasRef, ReactSketchCanvasProp
                     ...style,
                 }}
             >
+                {/* Background Canvas for Rasterized Paths */}
+                <canvas
+                    ref={canvasRef}
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        display: "block",
+                        background: canvasColor,
+                        pointerEvents: "none" // Let events pass through to SVG
+                    }}
+                />
+
+                {/* Foreground SVG for Active Interaction */}
                 <svg
                     ref={svgRef}
                     width="100%"
                     height="100%"
-                    style={{ display: "block", background: canvasColor }}
+                    style={{
+                        display: "block",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        // SVG background must be transparent to see canvas behind
+                        background: "transparent"
+                    }}
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
                     onPointerLeave={handlePointerUp}
                 >
-                    <defs>
-                        <mask id={maskId}>
-                            {/* White fills everything (reveal) */}
-                            <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                            {/* Black strokes hide (erase) */}
-                            {eraserPaths.map((path, i) => (
-                                <SvgPath
-                                    key={`erase-${i}`}
-                                    points={path.paths}
-                                    strokeColor="black"
-                                    strokeWidth={path.strokeWidth}
-                                />
-                            ))}
-                            {activeEraserPath && (
-                                <SvgPath
-                                    points={activeEraserPath.paths}
-                                    strokeColor="black"
-                                    strokeWidth={activeEraserPath.strokeWidth}
-                                />
-                            )}
-                        </mask>
-                    </defs>
+                    {/* Active Drawing Path */}
+                    {activeDrawPath && (
+                        <SvgPath
+                            points={activeDrawPath.paths}
+                            strokeColor={activeDrawPath.strokeColor}
+                            strokeWidth={activeDrawPath.strokeWidth}
+                        />
+                    )}
 
-                    {/* Group for Drawings, with Mask applied */}
-                    <g mask={`url(#${maskId})`}>
-                        {drawPaths.map((path, i) => (
-                            <SvgPath
-                                key={`draw-${i}`}
-                                points={path.paths}
-                                strokeColor={path.strokeColor}
-                                strokeWidth={path.strokeWidth}
-                            />
-                        ))}
-                        {activeDrawPath && (
-                            <SvgPath
-                                points={activeDrawPath.paths}
-                                strokeColor={activeDrawPath.strokeColor}
-                                strokeWidth={activeDrawPath.strokeWidth}
-                            />
-                        )}
-                    </g>
+                    {/* Active Eraser Path (Simulated with canvasColor stroke) */}
+                    {activeEraserPath && (
+                        <SvgPath
+                            points={activeEraserPath.paths}
+                            strokeColor={canvasColor} // Simulate erasing by drawing with background color
+                            strokeWidth={activeEraserPath.strokeWidth}
+                        />
+                    )}
                 </svg>
             </div>
         );
