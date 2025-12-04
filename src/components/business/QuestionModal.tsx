@@ -24,6 +24,7 @@ import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sk
 import { GpuSketchCanvas } from "@/components/ui/sketch-canvas/gpu";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
+    Copy,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
     Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2,
     Maximize2, Minimize2
@@ -100,6 +101,71 @@ const RemoteImage = ({ src, alt, className, question }: { src: string, alt: stri
         </div>
     )
 }
+
+const CopyButton = ({ text, img, question }: { text?: string | null, img?: string | null, question: Question }) => {
+    const [copied, setCopied] = useState(false);
+    const { repoBaseUrl, repoSources } = useProgressStore();
+
+    const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            if (text) {
+                // 1. 优先复制 Markdown 文本
+                await navigator.clipboard.writeText(text);
+            } else if (img) {
+                // 2. 尝试复制图片
+                const url = getImageUrl(img, question, repoBaseUrl, repoSources);
+                if (!url) return;
+
+                // 获取图片 Blob 并写入剪贴板
+                // 注意：这需要图片服务器支持 CORS，否则会抛出错误
+                const response = await fetch(url);
+                const blob = await response.blob();
+                
+                // Safari/Chrome 均支持的写入方式
+                await navigator.clipboard.write([
+                    new ClipboardItem({ [blob.type]: blob })
+                ]);
+            }
+            
+            // 成功反馈
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error("Copy failed:", err);
+            
+            // 降级处理：如果图片数据复制失败（通常是跨域问题），则复制图片链接
+            if (!text && img) {
+                 const url = getImageUrl(img, question, repoBaseUrl, repoSources);
+                 if (url) {
+                    await navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                    // 可选：这里可以用 sonner 提示 "已复制图片链接"
+                 }
+            }
+        }
+    };
+
+    // 如果既没有文本也没有图片，不渲染按钮
+    if (!text && !img) return null;
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 hover:bg-background/50 data-[state=open]:bg-muted"
+            onClick={handleCopy}
+            title={text ? "复制 Markdown" : "复制图片"}
+        >
+            {copied ? (
+                <Check className="w-3.5 h-3.5 text-green-600" />
+            ) : (
+                <Copy className="w-3.5 h-3.5 text-muted-foreground/70 hover:text-foreground" />
+            )}
+        </Button>
+    );
+};
 
 export function QuestionModal({
     isOpen, onClose, question, onUpdateStatus,
@@ -512,8 +578,15 @@ export function QuestionModal({
                                 {/* 题目区域 */}
                                 {visibleViews.has('question') && (
                                     <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                                        <div className="bg-muted/50 border-b px-3 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-                                            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 题目描述
+                                        <div className="bg-muted/50 border-b px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                                            <div className="flex items-center gap-2">
+                                                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 题目描述
+                                            </div>
+                                            <CopyButton 
+                                                text={currentQuestion.contentMd} 
+                                                img={currentQuestion.contentImg} 
+                                                question={currentQuestion}
+                                            />
                                         </div>
                                         <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
                                             {currentQuestion.contentMd ? (
@@ -586,8 +659,15 @@ export function QuestionModal({
                                 {/* 答案区域 */}
                                 {visibleViews.has('answer') && (
                                     <div className="bg-card rounded-xl border border-green-100 dark:border-green-900 shadow-sm overflow-hidden">
-                                        <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
-                                            <Eye className="w-4 h-4" /> 参考答案
+                                        <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+                                            <div className="flex items-center gap-2">
+                                                <Eye className="w-4 h-4" /> 参考答案
+                                            </div>
+                                            <CopyButton 
+                                                text={currentQuestion.answerMd || (currentQuestion.answer ? `答案：${currentQuestion.answer}` : null)} 
+                                                img={currentQuestion.answerImg} 
+                                                question={currentQuestion}
+                                            />
                                         </div>
                                         <div className="p-4 sm:p-6 flex justify-center">
                                             {currentQuestion.answerMd ? (
@@ -614,8 +694,15 @@ export function QuestionModal({
                                 {/* 解析区域 */}
                                 {visibleViews.has('analysis') && (
                                     <div className="bg-card rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm overflow-hidden">
-                                        <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
-                                            <FileText className="w-4 h-4" /> 详细解析
+                                        <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="w-4 h-4" /> 详细解析
+                                            </div>
+                                            <CopyButton 
+                                                text={currentQuestion.analysisMd} 
+                                                img={currentQuestion.analysisImg} 
+                                                question={currentQuestion}
+                                            />
                                         </div>
                                         <div className="p-4 sm:p-6 flex justify-center">
                                             {currentQuestion.analysisMd ? (
