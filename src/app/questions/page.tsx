@@ -1,6 +1,7 @@
 "use client"
 
 import { VerticalExamWall } from "@/components/business/VerticalExamWall";
+import { ExamWall } from "@/components/business/ExamWall";
 import { Sidebar } from "@/components/business/Sidebar";
 import { QuestionModal } from "@/components/business/QuestionModal";
 import { GlobalSearch } from "@/components/business/GlobalSearch";
@@ -19,7 +20,7 @@ import {
   SelectLabel
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, Columns, LayoutGrid } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -47,7 +48,9 @@ function QuestionsContent() {
     setFilterType,
     setFilterYear,
     lowDataMode,
-    repoBaseUrl
+    repoBaseUrl,
+    viewMode,
+    setViewMode
   } = useProgressStore();
 
   const { contextQuestions, currentPapers, mergedQuestions, paperGroupsData } = useContextQuestions();
@@ -303,6 +306,15 @@ function QuestionsContent() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0 order-2 sm:order-3 ml-auto sm:ml-0">
+            <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as 'wall' | 'grid')} className="mr-2">
+              <ToggleGroupItem value="wall" aria-label="Wall View" className="h-8 w-8 hover:bg-muted/50">
+                <Columns className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="grid" aria-label="Grid View" className="h-8 w-8 hover:bg-muted/50">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -325,8 +337,14 @@ function QuestionsContent() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden p-4">
-          <VerticalExamWall papers={currentPapers} questions={filteredQuestions} onQuestionClick={handleQuestionClick} highlightTagId={selectedTagId} />
+        <div className="flex-1 overflow-hidden p-4 relative">
+          {viewMode === 'wall' ? (
+            <VerticalExamWall papers={currentPapers} questions={filteredQuestions} onQuestionClick={handleQuestionClick} highlightTagId={selectedTagId} />
+          ) : (
+            <div className="h-full w-full overflow-y-auto">
+              <ExamWall questions={filteredQuestions} onQuestionClick={handleQuestionClick} />
+            </div>
+          )}
         </div>
       </div>
 

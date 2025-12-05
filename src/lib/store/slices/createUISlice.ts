@@ -14,6 +14,7 @@ export interface UISlice {
     filterType: 'all' | 'choice' | 'fill' | 'answer';
     filterYear: 'all' | string;
     filterStarred: boolean;
+    viewMode: 'wall' | 'grid'; // View switcher state
 
     setMobileSidebarOpen: (open: boolean) => void;
     setSelectedTagId: (id: string | null) => void;
@@ -23,6 +24,7 @@ export interface UISlice {
     setFilterType: (type: 'all' | 'choice' | 'fill' | 'answer') => void;
     setFilterYear: (year: 'all' | string) => void;
     setFilterStarred: (starred: boolean) => void;
+    setViewMode: (mode: 'wall' | 'grid') => void;
 }
 
 export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (set) => ({
@@ -35,6 +37,7 @@ export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (set) =>
     filterType: 'all',
     filterYear: 'all',
     filterStarred: false,
+    viewMode: 'wall',
 
     setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
     setSelectedTagId: (id) => set({ selectedTagId: id }),
@@ -56,4 +59,5 @@ export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (set) =>
     setFilterType: (type) => set({ filterType: type }),
     setFilterYear: (year) => set({ filterYear: year }),
     setFilterStarred: (starred) => set({ filterStarred: starred }),
+    setViewMode: (mode) => set({ viewMode: mode }),
 });
