@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
 import { syncService, SyncData } from '@/services/syncService';
 import { StoreState } from '../types';
+import { toast } from 'sonner';
 
 export interface SyncSlice {
     githubToken: string | null;
@@ -80,6 +81,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
 
             if (!isAutoSync) {
                 importData(mergedData);
+                toast.success('同步成功', { description: '数据已安全同步到 Gist' });
             }
 
             setTimeout(() => set({ syncStatus: 'idle' }), 3000);
@@ -87,6 +89,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
         } catch (error) {
             console.error(error);
             set({ syncStatus: 'error' });
+            toast.error('同步失败', { description: '请检查网络或 Token 设置' });
         }
     },
 
@@ -95,7 +98,8 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
         if (!githubToken) return;
 
         if (syncTimer) clearTimeout(syncTimer);
-        set({ syncStatus: 'syncing' });
+        // Do not set 'syncing' status immediately to avoid UI flicker/frequent re-renders
+        // set({ syncStatus: 'syncing' }); 
 
         syncTimer = setTimeout(() => {
             get().syncData(true);
