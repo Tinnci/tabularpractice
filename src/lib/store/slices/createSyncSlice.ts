@@ -9,7 +9,7 @@ export interface SyncSlice {
     lastSyncedTime: string | null;
     syncStatus: 'idle' | 'syncing' | 'success' | 'error';
 
-    pendingConflict: { local: SyncData, remote: SyncData } | null;
+    pendingConflict: { local: SyncData, remote: SyncData, lastServerTime: string } | null;
     resolveConflict: (strategy: 'local' | 'remote' | 'merge') => Promise<void>;
     isDirty: boolean;
 
@@ -69,7 +69,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
                 set({ gistId: result.id });
             }
 
-            set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success' });
+            set({ lastSyncedTime: result.updated_at, syncStatus: 'success' });
             toast.success('冲突已解决', { description: '数据已同步' });
             setTimeout(() => set({ syncStatus: 'idle' }), 3000);
         } catch (error) {
@@ -116,12 +116,18 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
                 const remoteData = await syncService.fetchGist(githubToken, targetGistId);
                 if (remoteData) {
                     const localSyncedTimeMs = lastSyncedTime ? new Date(lastSyncedTime).getTime() : 0;
-                    const remoteTimeMs = new Date(remoteData.timestamp).getTime();
+                    // Use server updated_at for reliable time comparison
+                    const remoteTimeMs = remoteData.updated_at ? new Date(remoteData.updated_at).getTime() : new Date(remoteData.timestamp).getTime();
 
                     // Conflict Detection: Remote is newer than our last sync time
-                    if (remoteTimeMs > localSyncedTimeMs) {
+                    // Using tolerance of 1s to avoid floating point/precision issues
+                    if (remoteTimeMs > localSyncedTimeMs + 1000) {
                         set({
-                            pendingConflict: { local: currentData, remote: remoteData },
+                            pendingConflict: {
+                                local: currentData,
+                                remote: remoteData,
+                                lastServerTime: remoteData.updated_at || new Date().toISOString()
+                            },
                             syncStatus: 'idle'
                         });
                         // Ask user to resolve conflict
@@ -139,7 +145,8 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
             if (!targetGistId) {
                 set({ gistId: result.id });
             }
-            set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success', isDirty: false });
+            // Use server timestamp as the new baseline
+            set({ lastSyncedTime: result.updated_at, syncStatus: 'success', isDirty: false });
 
             if (!isAutoSync) {
                 importData(mergedData);

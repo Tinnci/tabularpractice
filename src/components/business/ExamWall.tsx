@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { QuestionCard } from "./QuestionCard"
 import { Question } from "@/lib/types"
-import { VList } from "virtua";
+import { VList, VListHandle } from "virtua";
 
 interface Props {
     questions: Question[];
@@ -10,19 +10,27 @@ interface Props {
 
 export function ExamWall({ questions, onQuestionClick }: Props) {
     const [columns, setColumns] = useState(2);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<VListHandle>(null);
 
     useEffect(() => {
-        const updateColumns = () => {
-            const width = window.innerWidth;
+        if (!containerRef.current) return;
+
+        const updateColumns = (width: number) => {
             if (width >= 1280) setColumns(8);      // xl
             else if (width >= 1024) setColumns(6); // lg
             else if (width >= 768) setColumns(4);  // md
             else setColumns(2);                    // default
         };
 
-        updateColumns();
-        window.addEventListener('resize', updateColumns);
-        return () => window.removeEventListener('resize', updateColumns);
+        const observer = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                updateColumns(entry.contentRect.width);
+            }
+        });
+
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
     }, []);
 
     const rows = useMemo(() => {
@@ -34,9 +42,9 @@ export function ExamWall({ questions, onQuestionClick }: Props) {
     }, [questions, columns]);
 
     return (
-        <div className="p-4">
+        <div className="p-4" ref={containerRef}>
             {/* VList automatically handles window scrolling if no specific height is set */}
-            <VList>
+            <VList ref={listRef}>
                 {rows.map((row, rowIndex) => (
                     <div
                         key={rowIndex}

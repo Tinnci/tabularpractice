@@ -16,7 +16,7 @@ export interface SyncData {
 import { SyncDataSchema } from '@/lib/schema';
 
 export const syncService = {
-    async fetchGist(token: string, gistId: string): Promise<SyncData | null> {
+    async fetchGist(token: string, gistId: string): Promise<SyncData & { updated_at?: string } | null> {
         const headers = {
             "Authorization": `token ${token}`,
             "Accept": "application/vnd.github.v3+json",
@@ -36,7 +36,7 @@ export const syncService = {
                         console.error("Sync data validation failed:", parsed.error);
                         throw new Error("Invalid sync data format");
                     }
-                    return parsed.data as SyncData;
+                    return { ...parsed.data as SyncData, updated_at: gist.updated_at };
                 }
             } else if (res.status === 404) {
                 return null;
@@ -48,7 +48,7 @@ export const syncService = {
         }
     },
 
-    async uploadGist(token: string, gistId: string | null, data: SyncData): Promise<{ id: string }> {
+    async uploadGist(token: string, gistId: string | null, data: SyncData): Promise<{ id: string, updated_at: string }> {
         const headers = {
             "Authorization": `token ${token}`,
             "Accept": "application/vnd.github.v3+json",
@@ -76,7 +76,8 @@ export const syncService = {
             if (!res.ok) {
                 throw new Error(`Sync failed: ${res.statusText}`);
             }
-            return await res.json();
+            const json = await res.json();
+            return { id: json.id, updated_at: json.updated_at };
         } catch (e) {
             console.error("Upload gist failed", e);
             throw e;
@@ -99,8 +100,8 @@ export const syncService = {
             const localTime = mergedProgressLastModified[id] || 0;
             const remoteTime = remote.progressLastModified?.[id] || 0;
 
-            // If remote is newer, or we don't have it locally
-            if (remoteTime > localTime || !mergedProgress[id]) {
+            // If remote is newer
+            if (remoteTime > localTime) {
                 mergedProgress[id] = status;
                 mergedProgressLastModified[id] = remoteTime;
             }
@@ -111,7 +112,11 @@ export const syncService = {
             const localTime = mergedNotesLastModified[id] || 0;
             const remoteTime = remote.notesLastModified?.[id] || 0;
 
-            if (remoteTime > localTime || !mergedNotes[id]) {
+            // If remote is newer
+            // Note: We strictly follow timestamp to handle "soft deletes" (empty values) correctly.
+            // If local is missing (0) and remote is present (>0), remote wins.
+            // If local is present (>remote) and remote is old, local wins.
+            if (remoteTime > localTime) {
                 mergedNotes[id] = content;
                 mergedNotesLastModified[id] = remoteTime;
             }
