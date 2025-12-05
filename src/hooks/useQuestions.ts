@@ -169,49 +169,6 @@ export function usePaperDetail(paperId: string | null) {
     };
 }
 
-export function useTags() {
-    // Tags 目前通常是通用的，或者每个源都有自己的 tags.json
-    // 简单起见，我们合并所有源的 tags
-    const repoSources = useProgressStore(state => state.repoSources);
-    const enabledUrls = (repoSources && repoSources.length > 0)
-        ? repoSources.filter(s => s.enabled).map(s => s.url)
-        : [''];
-    if (enabledUrls.length === 0) enabledUrls.push('');
-
-    const fetchTags = async () => {
-        const promises = enabledUrls.map(async (baseUrl) => {
-            const target = baseUrl ? baseUrl : '/data';
-            try {
-                const res = await fetch(`${target}/tags.json`);
-                if (!res.ok) return [];
-                return await res.json();
-            } catch { return []; }
-        });
-        const results = await Promise.all(promises);
-        // 去重合并
-        const allTags = results.flat() as Tag[];
-        const uniqueTags = new Map<string, Tag>();
-        allTags.forEach(tag => {
-            if (!uniqueTags.has(tag.id)) uniqueTags.set(tag.id, tag);
-        });
-        return Array.from(uniqueTags.values());
-    };
-
-    const { data, error, isLoading } = useSWR<Tag[]>(
-        ['tags', ...enabledUrls],
-        fetchTags,
-        {
-            revalidateOnFocus: false,
-            dedupingInterval: 600000,
-        }
-    );
-
-    return {
-        tags: data || [],
-        isLoading,
-        isError: error
-    };
-}
 
 export function usePaperGroups() {
     const repoSources = useProgressStore(state => state.repoSources);
