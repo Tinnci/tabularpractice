@@ -100,7 +100,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
             </Card>
 
             {/* Interaction Area */}
-            <Card className="shrink-0 p-4 border-t shadow-lg bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky bottom-0 z-10">
+            <Card className="shrink-0 p-4 border-t shadow-lg bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 sticky bottom-0 z-10 glass">
                 {!isRevealed ? (
                     <Button
                         size="lg"
@@ -113,33 +113,33 @@ export function MistakeReviewCard({ question, onNext }: Props) {
                 ) : (
                     <div className="grid grid-cols-3 gap-4">
                         <Button
-                            variant="destructive"
+                            variant="outline"
                             size="lg"
-                            className="h-14 flex flex-col gap-1 hover:bg-red-600"
+                            className="h-14 flex flex-col gap-1 border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
                             onClick={() => handleStatusChange('failed')}
                         >
                             <XCircle className="w-5 h-5" />
-                            <span className="text-xs font-normal">{DICT.status.stillFailed}</span>
+                            <span className="text-xs font-medium">{DICT.status.stillFailed}</span>
                         </Button>
 
                         <Button
-                            variant="secondary"
+                            variant="outline"
                             size="lg"
-                            className="h-14 flex flex-col gap-1 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-100"
+                            className="h-14 flex flex-col gap-1 border-yellow-200 hover:bg-yellow-50 hover:text-yellow-700 dark:border-yellow-900/50 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400 transition-colors"
                             onClick={() => handleStatusChange('confused')}
                         >
                             <HelpCircle className="w-5 h-5" />
-                            <span className="text-xs font-normal">{DICT.status.confused}</span>
+                            <span className="text-xs font-medium">{DICT.status.confused}</span>
                         </Button>
 
                         <Button
                             variant="default"
                             size="lg"
-                            className="h-14 flex flex-col gap-1 bg-green-600 hover:bg-green-700 text-white"
+                            className="h-14 flex flex-col gap-1 bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20 hover:shadow-green-600/40"
                             onClick={() => handleStatusChange('mastered')}
                         >
                             <CheckCircle className="w-5 h-5" />
-                            <span className="text-xs font-normal">{DICT.status.mastered}</span>
+                            <span className="text-xs font-bold">{DICT.status.mastered}</span>
                         </Button>
                     </div>
                 )}

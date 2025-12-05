@@ -85,27 +85,32 @@ export default function DashboardPage() {
     <div className="container mx-auto p-6 space-y-8 max-w-7xl">
       {/* 1. Hero Section */}
       <div className="flex flex-col lg:flex-row gap-6">
-        <Card className="flex-1 bg-gradient-to-br from-primary/10 via-background to-background border-primary/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-10 opacity-5">
+        <Card className="flex-1 bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/10 relative overflow-hidden shadow-xl shadow-primary/5 group hover:shadow-primary/10 transition-all duration-500">
+          {/* 装饰背景元素 */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+          <div className="absolute top-10 right-10 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700 transform group-hover:scale-110 group-hover:rotate-6">
             <Trophy className="w-64 h-64" />
           </div>
-          <CardContent className="p-4 sm:p-8 flex flex-col justify-center h-full relative z-10">
-            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+
+          <CardContent className="p-6 sm:p-10 flex flex-col justify-center h-full relative z-10">
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
               准备好迎接挑战了吗？
             </h1>
-            <p className="text-muted-foreground mb-6 sm:mb-8 text-base sm:text-lg max-w-xl">
-              保持节奏，每天进步一点点。你已经斩获了 <span className="font-bold text-foreground">{totalMastered}</span> 道真题。
+            <p className="text-muted-foreground/80 mb-8 sm:mb-10 text-lg sm:text-xl max-w-xl leading-relaxed">
+              保持节奏，每天进步一点点。你已经斩获了 <span className="font-bold text-foreground mx-1 text-2xl">{totalMastered}</span> 道真题。
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Link href={lastQuestionId ? `/questions?questionId=${lastQuestionId}` : "/questions"}>
-                <Button size="lg" className="w-full sm:w-auto gap-2 shadow-lg hover:shadow-xl transition-all">
-                  <PlayCircle className="w-5 h-5" />
+                <Button size="lg" className="h-12 px-8 text-base shadow-lg hover:shadow-primary/25 hover:scale-105 transition-all duration-300 rounded-full">
+                  <PlayCircle className="w-5 h-5 mr-2" />
                   {lastQuestionId ? "继续上次刷题" : "开始刷题"}
                 </Button>
               </Link>
               <Link href="/questions?status=unanswered">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 bg-background/50 backdrop-blur-sm">
-                  <Target className="w-5 h-5" />
+                <Button size="lg" variant="outline" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-background/80 border-primary/20 hover:border-primary/40 rounded-full transition-all duration-300">
+                  <Target className="w-5 h-5 mr-2" />
                   今日目标
                 </Button>
               </Link>
@@ -115,35 +120,35 @@ export default function DashboardPage() {
 
         {/* 状态卡片 */}
         <div className="grid grid-cols-2 gap-4 lg:w-1/3">
-          <Card className="bg-green-50/50 dark:bg-green-900/10 border-green-200 dark:border-green-800">
+          <Card className="glass-card border-l-4 border-l-green-500 bg-gradient-to-br from-green-50/10 to-transparent dark:from-green-900/10">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400 flex items-center gap-2">
-                <Trophy className="w-4 h-4" /> 已斩题数
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-green-500" /> 已斩题数
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold text-green-600 dark:text-green-400">{totalMastered}</div>
-              <p className="text-xs text-green-600/60 dark:text-green-400/60 mt-1">熟练掌握</p>
+              <p className="text-xs text-muted-foreground mt-1">熟练掌握</p>
             </CardContent>
           </Card>
-          <Card className="bg-yellow-50/50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800">
+          <Card className="glass-card border-l-4 border-l-yellow-500 bg-gradient-to-br from-yellow-50/10 to-transparent dark:from-yellow-900/10">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-400 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" /> 需复习
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-yellow-500" /> 需复习
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold text-yellow-600 dark:text-yellow-400">{totalConfused}</div>
-              <p className="text-xs text-yellow-600/60 dark:text-yellow-400/60 mt-1">概念模糊</p>
+              <p className="text-xs text-muted-foreground mt-1">概念模糊</p>
             </CardContent>
           </Card>
-          <Card className="bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-800 col-span-2">
+          <Card className="glass-card border-l-4 border-l-red-500 col-span-2 bg-gradient-to-br from-red-50/10 to-transparent dark:from-red-900/10">
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium text-red-700 dark:text-red-400 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" /> 错题攻克
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500" /> 错题攻克
               </CardTitle>
               <Link href="/mistakes">
-                <Button variant="ghost" size="sm" className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30">
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full">
                   开始复习 <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
               </Link>
@@ -151,7 +156,7 @@ export default function DashboardPage() {
             <CardContent className="flex items-end justify-between">
               <div>
                 <div className="text-4xl font-bold text-red-600 dark:text-red-400">{totalFailed + totalConfused}</div>
-                <p className="text-xs text-red-600/60 dark:text-red-400/60 mt-1">待复习 (错题 + 疑惑)</p>
+                <p className="text-xs text-muted-foreground mt-1">待复习 (错题 + 疑惑)</p>
               </div>
             </CardContent>
           </Card>
@@ -161,7 +166,7 @@ export default function DashboardPage() {
       {/* 2. Analysis Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 学科进度对比 */}
-        <Card className="col-span-1 lg:col-span-2">
+        <Card className="glass-card col-span-1 lg:col-span-2">
           <CardHeader>
             <CardTitle>学科进度分布</CardTitle>
             <CardDescription>
@@ -179,14 +184,22 @@ export default function DashboardPage() {
                   >
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={chartColors.grid} />
                     <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={80}
+                      tick={{ fill: 'currentColor', fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <Tooltip
                       cursor={{ fill: chartColors.cursor }}
-                      contentStyle={{ 
-                        borderRadius: '8px', 
-                        border: 'none', 
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+                      contentStyle={{
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                        backgroundColor: resolvedTheme === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                        backdropFilter: 'blur(8px)',
                         color: resolvedTheme === 'dark' ? '#f3f4f6' : '#111827',
                       }}
                     />
@@ -205,7 +218,7 @@ export default function DashboardPage() {
 
         {/* 快速入口 */}
         <div className="space-y-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader><CardTitle>专项突破</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {activeSubjects.map(subject => (
@@ -214,12 +227,13 @@ export default function DashboardPage() {
                   href={`/questions?subject=${subject.id}`}
                   className="block"
                 >
-                  <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors group">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{subject.name}专项</span>
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-transparent bg-muted/30 hover:bg-primary/5 hover:border-primary/20 transition-all duration-300 group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                      <span className="font-medium group-hover:text-primary transition-colors">{subject.name}专项</span>
                       <span className="text-xs text-muted-foreground">({subject.total}题)</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </div>
                 </Link>
               ))}
@@ -235,8 +249,12 @@ export default function DashboardPage() {
       </div>
 
       {/* 底部：热力图 */}
-      <div className="mt-8 p-4 border rounded-xl bg-card/50 shadow-sm">
-        <ActivityHeatmap />
+      <div className="mt-8 p-6 border border-border/50 rounded-xl bg-card/30 backdrop-blur-sm shadow-sm relative overflow-hidden">
+        {/* 背景装饰 */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
+        <div className="relative z-10">
+          <ActivityHeatmap />
+        </div>
       </div>
     </div>
   );

@@ -67,15 +67,15 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                     >
                         {/* 选中指示条 */}
                         {isSelected && (
-                            <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r-full" />
+                            <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-primary rounded-r-full shadow-[0_0_8px_hsl(var(--primary))]" />
                         )}
 
                         {/* 点状图标 - 配方3: 父子联动 (Group Hover) + 光晕 */}
                         <div className={cn(
                             "mr-2.5 h-1.5 w-1.5 rounded-full transition-all duration-300 shrink-0",
                             isSelected
-                                ? "bg-primary scale-125 shadow-[0_0_6px_hsl(var(--primary))]"
-                                : "bg-muted-foreground/40 group-hover/leaf:bg-primary/80 group-hover/leaf:scale-110 group-hover/leaf:shadow-[0_0_4px_hsl(var(--primary)/0.5)]"
+                                ? "bg-primary scale-125 shadow-[0_0_8px_hsl(var(--primary))]"
+                                : "bg-muted-foreground/30 group-hover/leaf:bg-primary/60 group-hover/leaf:scale-110"
                         )} />
 
                         <span className="truncate leading-none">{node.label}</span>
@@ -89,11 +89,13 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     };
 
     return (
-        <div className={cn("flex flex-col h-full bg-background", className)}>
+        <div className={cn("flex flex-col h-full bg-background/80", className)}>
             {/* 标题区 */}
-            <div className="p-3 md:p-4 border-b border-border bg-muted/10 shrink-0">
-                <h2 className="font-semibold text-lg flex items-center gap-2 text-foreground tracking-tight">
-                    <Layers className="w-5 h-5 text-primary" />
+            <div className="p-3 md:p-4 border-b border-border/40 shrink-0">
+                <h2 className="font-semibold text-lg flex items-center gap-2 text-foreground/90 tracking-tight">
+                    <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                        <Layers className="w-4 h-4" />
+                    </div>
                     {sidebarTitle}
                 </h2>
             </div>
@@ -193,8 +195,8 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
 // 2. Desktop Sidebar (保持原样，但内部调用 SidebarContent)
 export function Sidebar({ questions }: { questions?: Question[] }) {
     return (
-        <div className="w-64 flex-shrink-0 border-r border-border h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col">
-            <SidebarContent questions={questions} />
-        </div>
+        <aside className="w-64 flex-shrink-0 border-r border-border/40 h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col glass z-30">
+            <SidebarContent questions={questions} className="bg-transparent" />
+        </aside>
     );
 }

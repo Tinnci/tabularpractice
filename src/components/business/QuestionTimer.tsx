@@ -15,11 +15,11 @@ interface Props {
 export function QuestionTimer({ formattedTime, isRunning, toggle, reset, className }: Props) {
     return (
         <div className={cn(
-            "flex items-center gap-1 pl-1 pr-2 py-0.5 rounded-full border transition-all duration-500",
+            "flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all duration-500",
             // 运行时：蓝色高亮，呼吸灯效果
             isRunning
-                ? "bg-blue-50/80 border-blue-200 text-blue-700 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-300"
-                : "bg-muted/50 border-transparent text-muted-foreground",
+                ? "bg-blue-50/80 border-blue-200 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300 shadow-sm shadow-blue-500/10"
+                : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted/50",
             className
         )}>
             <TooltipProvider>
@@ -47,11 +47,11 @@ export function QuestionTimer({ formattedTime, isRunning, toggle, reset, classNa
             {/* 状态指示灯 */}
             <div className="relative flex h-2 w-2 mx-1">
                 {isRunning && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75 duration-1000"></span>
                 )}
                 <span className={cn(
                     "relative inline-flex rounded-full h-2 w-2 transition-colors duration-300",
-                    isRunning ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-600"
+                    isRunning ? "bg-blue-500 shadow-[0_0_8px_hsl(var(--blue-500))]" : "bg-slate-300 dark:bg-slate-600"
                 )}></span>
             </div>
 

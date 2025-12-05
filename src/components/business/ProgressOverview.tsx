@@ -134,7 +134,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div
-                                    className={cn("h-full bg-yellow-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'confused' && "brightness-110")}
+                                    className={cn("h-full bg-yellow-400 dark:bg-yellow-500 transition-all cursor-pointer hover:opacity-80", filterStatus === 'confused' && "brightness-110")}
                                     style={{ width: `${(stats.confused / total) * 100}%` }}
                                     onClick={() => handleFilterClick('confused')}
                                 />
@@ -262,14 +262,10 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                     {/* 文字详情 */}
                     <div className="grid grid-cols-1 gap-y-1.5 text-xs flex-1 min-w-0">
                         <div
-                            className={cn(
-                                "flex items-center justify-between cursor-pointer rounded px-1 -mx-1 transition-all duration-200 hover:translate-x-1 hover:bg-muted/80 group",
-                                filterStatus === 'mastered' && "bg-muted font-medium"
-                            )}
                             onClick={() => handleFilterClick('mastered')}
                         >
                             <div className="flex items-center gap-1.5 truncate">
-                                <div className="w-2 h-2 rounded-full bg-green-600 dark:bg-green-500 shrink-0" />
+                                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)] shrink-0" />
                                 <span className="text-muted-foreground group-hover:text-foreground truncate">已斩</span>
                             </div>
                             <span className="font-mono font-bold text-foreground ml-1">{stats.mastered}</span>
@@ -282,7 +278,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                             onClick={() => handleFilterClick('confused')}
                         >
                             <div className="flex items-center gap-1.5 truncate">
-                                <div className="w-2 h-2 rounded-full bg-yellow-500 dark:bg-yellow-400 shrink-0" />
+                                <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.6)] shrink-0" />
                                 <span className="text-muted-foreground group-hover:text-foreground truncate">懵圈</span>
                             </div>
                             <span className="font-mono font-bold text-foreground ml-1">{stats.confused}</span>
@@ -295,7 +291,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                             onClick={() => handleFilterClick('failed')}
                         >
                             <div className="flex items-center gap-1.5 truncate">
-                                <div className="w-2 h-2 rounded-full bg-red-600 dark:bg-red-400 shrink-0" />
+                                <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)] shrink-0" />
                                 <span className="text-muted-foreground group-hover:text-foreground truncate">崩盘</span>
                             </div>
                             <span className="font-mono font-bold text-foreground ml-1">{stats.failed}</span>

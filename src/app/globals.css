@@ -131,9 +131,35 @@
   width: 100%;
 }
 
-@media all and (display-mode: standalone) {
-  header {
-    /* Optional: Add extra padding for standalone mode if needed */
-    /* padding-top: env(safe-area-inset-top); */
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-xl bg-background/60 border-b border-border/40 supports-[backdrop-filter]:bg-background/60;
   }
+  
+  .glass-card {
+    @apply backdrop-blur-md bg-card/40 border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-card/60;
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
+  }
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
 }

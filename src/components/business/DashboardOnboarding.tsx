@@ -21,9 +21,9 @@ export function DashboardOnboarding({ subjects }: Props) {
             <div className="text-center space-y-6 py-12">
 
                 {/* 匹配 Navbar 的 Logo - 放大版 */}
-                <div className="flex justify-center mb-6">
-                    <div className="h-20 w-20 bg-primary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 rotate-3 hover:rotate-6 transition-all duration-300">
-                        <span className="text-primary-foreground font-bold text-3xl tracking-tighter">TP</span>
+                <div className="flex justify-center mb-8">
+                    <div className="h-24 w-24 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/30 rotate-3 hover:rotate-6 transition-all duration-500 hover:scale-105">
+                        <span className="text-primary-foreground font-bold text-4xl tracking-tighter">TP</span>
                     </div>
                 </div>
 
@@ -48,34 +48,34 @@ export function DashboardOnboarding({ subjects }: Props) {
 
             {/* 2. Core Features */}
             <div className="grid md:grid-cols-3 gap-6">
-                <Card className="bg-card/50 border-primary/10 hover:border-primary/30 transition-colors">
+                <Card className="glass-card border-primary/5 hover:border-primary/20 group">
                     <CardHeader>
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2 text-blue-600 dark:text-blue-400">
+                        <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300">
                             <Target className="w-6 h-6" />
                         </div>
-                        <CardTitle>{DICT.onboarding.features.precise}</CardTitle>
+                        <CardTitle className="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{DICT.onboarding.features.precise}</CardTitle>
                         <CardDescription>
                             {DICT.onboarding.features.preciseDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
-                <Card className="bg-card/50 border-primary/10 hover:border-primary/30 transition-colors">
+                <Card className="glass-card border-primary/5 hover:border-primary/20 group">
                     <CardHeader>
-                        <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2 text-green-600 dark:text-green-400">
+                        <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-3 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-300">
                             <BarChart2 className="w-6 h-6" />
                         </div>
-                        <CardTitle>{DICT.onboarding.features.tracking}</CardTitle>
+                        <CardTitle className="group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{DICT.onboarding.features.tracking}</CardTitle>
                         <CardDescription>
                             {DICT.onboarding.features.trackingDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
-                <Card className="bg-card/50 border-primary/10 hover:border-primary/30 transition-colors">
+                <Card className="glass-card border-primary/5 hover:border-primary/20 group">
                     <CardHeader>
-                        <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-2 text-orange-600 dark:text-orange-400">
+                        <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform duration-300">
                             <BookOpen className="w-6 h-6" />
                         </div>
-                        <CardTitle>{DICT.onboarding.features.immersive}</CardTitle>
+                        <CardTitle className="group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{DICT.onboarding.features.immersive}</CardTitle>
                         <CardDescription>
                             {DICT.onboarding.features.immersiveDesc}
                         </CardDescription>
@@ -128,7 +128,7 @@ export function DashboardOnboarding({ subjects }: Props) {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {subjects.map(subject => (
                         <Link key={subject.id} href={`/questions?subject=${subject.id}`} className="group">
-                            <Card className="h-full hover:shadow-md transition-all border-muted hover:border-primary/50 cursor-pointer group-hover:-translate-y-1">
+                            <Card className="glass-card h-full cursor-pointer hover:-translate-y-1 hover:border-primary/30 transition-all duration-300">
                                 <CardContent className="p-6 flex items-center justify-between">
                                     <div className="space-y-1">
                                         <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
@@ -138,8 +138,8 @@ export function DashboardOnboarding({ subjects }: Props) {
                                             {DICT.onboarding.totalCount.replace("{count}", String(subject.total))}
                                         </p>
                                     </div>
-                                    <div className="w-8 h-8 rounded-full bg-muted group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                                    <div className="w-10 h-10 rounded-full bg-muted group-hover:bg-primary group-hover:text-primary-foreground flex items-center justify-center transition-all duration-300 shadow-sm">
+                                        <ArrowRight className="w-5 h-5" />
                                     </div>
                                 </CardContent>
                             </Card>
