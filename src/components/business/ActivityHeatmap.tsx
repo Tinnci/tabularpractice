@@ -1,12 +1,26 @@
+"use client";
+
 import { useProgressStore } from "@/lib/store";
-import { ActivityCalendar } from "react-activity-calendar";
 import * as React from "react";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import dynamic from "next/dynamic";
+
+// Dynamically import ActivityCalendar to prevent SSR issues
+const ActivityCalendar = dynamic(
+    () => import('react-activity-calendar').then(mod => mod.ActivityCalendar),
+    { ssr: false }
+);
 
 export function ActivityHeatmap() {
     const history = useProgressStore(state => state.history);
+
+    // Prevent SSR - react-activity-calendar uses browser APIs
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // 转换数据格式适配 react-activity-calendar
     const data = useMemo(() => {
@@ -75,6 +89,22 @@ export function ActivityHeatmap() {
     const totalYearly = useMemo(() => {
         return data.reduce((acc, curr) => acc + curr.count, 0);
     }, [data]);
+
+    // Prevent SSR rendering - ActivityCalendar requires browser APIs
+    if (!mounted) {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-foreground">奋斗热力图</h3>
+                    <div className="text-xs text-muted-foreground space-x-4">
+                        <span>年度总计: <span className="font-bold text-foreground">--</span> 题</span>
+                        <span>连续打卡: <span className="font-bold text-green-600 dark:text-green-400">--</span> 天</span>
+                    </div>
+                </div>
+                <div className="w-full h-[120px] bg-muted/20 rounded animate-pulse" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4">

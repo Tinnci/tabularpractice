@@ -5,17 +5,58 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight, PlayCircle, AlertCircle, BookOpen, Trophy, Target } from "lucide-react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 
 import { DashboardOnboarding } from "@/components/business/DashboardOnboarding";
 import { ActivityHeatmap } from "@/components/business/ActivityHeatmap";
 import { useProgressStore } from "@/lib/store";
 
+// Dynamically import Recharts to prevent SSR issues
+const ResponsiveContainer = dynamic(
+  () => import('recharts').then(mod => mod.ResponsiveContainer),
+  { ssr: false }
+);
+const BarChart = dynamic(
+  () => import('recharts').then(mod => mod.BarChart),
+  { ssr: false }
+);
+const Bar = dynamic(
+  () => import('recharts').then(mod => mod.Bar),
+  { ssr: false }
+);
+const XAxis = dynamic(
+  () => import('recharts').then(mod => mod.XAxis),
+  { ssr: false }
+);
+const YAxis = dynamic(
+  () => import('recharts').then(mod => mod.YAxis),
+  { ssr: false }
+);
+const CartesianGrid = dynamic(
+  () => import('recharts').then(mod => mod.CartesianGrid),
+  { ssr: false }
+);
+const Tooltip = dynamic(
+  () => import('recharts').then(mod => mod.Tooltip),
+  { ssr: false }
+);
+const Legend = dynamic(
+  () => import('recharts').then(mod => mod.Legend),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const { total, subjects } = useDashboardStats();
   const { theme } = useTheme();
   const lastQuestionId = useProgressStore(state => state.lastQuestionId);
+
+  // Prevent SSR issues with Recharts
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 1. 生成图表数据
   // 过滤掉题目数为 0 的科目
@@ -120,25 +161,29 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="h-[250px] sm:h-[350px]">
             <div className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={activeSubjects}
-                  margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-                  layout="vertical"
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme === 'dark' ? '#333' : '#eee'} />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    cursor={{ fill: theme === 'dark' ? '#333' : '#f4f4f5' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="mastered" name="已斩" stackId="a" fill="#16a34a" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="confused" name="懵圈" stackId="a" fill="#eab308" />
-                  <Bar dataKey="failed" name="崩盘" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={activeSubjects}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                    layout="vertical"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme === 'dark' ? '#333' : '#eee'} />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
+                    <Tooltip
+                      cursor={{ fill: theme === 'dark' ? '#333' : '#f4f4f5' }}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Legend />
+                    <Bar dataKey="mastered" name="已斩" stackId="a" fill="#16a34a" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="confused" name="懵圈" stackId="a" fill="#eab308" />
+                    <Bar dataKey="failed" name="崩盘" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full bg-muted/20 rounded animate-pulse" />
+              )}
             </div>
           </CardContent>
         </Card>

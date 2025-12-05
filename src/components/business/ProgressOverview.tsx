@@ -2,16 +2,38 @@
 
 import { useProgressStore } from "@/lib/store";
 import { Question, Status } from "@/lib/types";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+
+// Dynamically import Recharts to prevent SSR issues
+const ResponsiveContainer = dynamic(
+    () => import('recharts').then(mod => mod.ResponsiveContainer),
+    { ssr: false }
+);
+const PieChart = dynamic(
+    () => import('recharts').then(mod => mod.PieChart),
+    { ssr: false }
+);
+const Pie = dynamic(
+    () => import('recharts').then(mod => mod.Pie),
+    { ssr: false }
+);
+const Cell = dynamic(
+    () => import('recharts').then(mod => mod.Cell),
+    { ssr: false }
+);
+const RechartsTooltip = dynamic(
+    () => import('recharts').then(mod => mod.Tooltip),
+    { ssr: false }
+);
 
 export function ProgressOverview({ questions }: { questions: Question[] }) {
     const { theme } = useTheme();
