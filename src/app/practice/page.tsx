@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
 import tagsData from "@/data/tags.json";
 import { pinyin } from "pinyin-pro";
+import { DICT } from "@/lib/i18n";
 
 export default function PracticePage() {
     const { mergedQuestions } = useContextQuestions();
@@ -257,9 +258,11 @@ export default function PracticePage() {
                             <Dumbbell className="h-10 w-10 text-primary" />
                         </div>
                     </div>
-                    <h2 className="text-2xl font-bold mb-2">Practice Session Active</h2>
+                    <h2 className="text-2xl font-bold mb-2">{DICT.practice.sessionActive}</h2>
                     <p className="text-muted-foreground mb-8">
-                        Question {currentIndex + 1} of {queue.length}
+                        {DICT.practice.questionIndex
+                            .replace("{current}", String(currentIndex + 1))
+                            .replace("{total}", String(queue.length))}
                     </p>
 
                     <div className="flex flex-col gap-4">
@@ -267,10 +270,10 @@ export default function PracticePage() {
                             setIsModalOpen(true);
                             startTimer();
                         }} className="w-full gap-2">
-                            <Play className="w-4 h-4" /> Continue Practice
+                            <Play className="w-4 h-4" /> {DICT.practice.continuePractice}
                         </Button>
                         <Button variant="outline" onClick={handleEndSession} className="w-full gap-2">
-                            <RotateCcw className="w-4 h-4" /> End Session
+                            <RotateCcw className="w-4 h-4" /> {DICT.practice.endSession}
                         </Button>
                     </div>
                 </Card>
@@ -299,8 +302,8 @@ export default function PracticePage() {
                     <Dumbbell className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Custom Practice</h1>
-                    <p className="text-muted-foreground">Configure your practice session to focus on specific areas.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{DICT.practice.customPractice}</h1>
+                    <p className="text-muted-foreground">{DICT.practice.configDesc}</p>
                 </div>
             </div>
 
@@ -310,17 +313,17 @@ export default function PracticePage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Filter className="w-5 h-5 text-primary" />
-                            Session Settings
+                            {DICT.practice.sessionSettings}
                         </CardTitle>
                         <CardDescription>
-                            Filter questions by type and tags, or shuffle them for a random challenge.
+                            {DICT.practice.filterDesc}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-8">
 
                         {/* 1. Question Types */}
                         <div className="space-y-3">
-                            <Label className="text-base font-semibold">Question Types</Label>
+                            <Label className="text-base font-semibold">{DICT.practice.questionType}</Label>
                             <div className="flex flex-wrap gap-4">
                                 {['choice', 'fill', 'answer'].map(type => (
                                     <div key={type} className="flex items-center space-x-2">
@@ -330,7 +333,7 @@ export default function PracticePage() {
                                             onCheckedChange={() => toggleType(type)}
                                         />
                                         <Label htmlFor={`type-${type}`} className="capitalize cursor-pointer">
-                                            {type === 'choice' ? 'Multiple Choice' : type === 'fill' ? 'Fill in the Blank' : 'Short Answer'}
+                                            {type === 'choice' ? DICT.wall.choice : type === 'fill' ? DICT.wall.fill : DICT.wall.answer}
                                         </Label>
                                     </div>
                                 ))}
@@ -341,10 +344,10 @@ export default function PracticePage() {
                         <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                             <div className="space-y-0.5">
                                 <Label className="text-base font-semibold flex items-center gap-2">
-                                    <Shuffle className="w-4 h-4" /> Random Shuffle
+                                    <Shuffle className="w-4 h-4" /> {DICT.practice.randomShuffle}
                                 </Label>
                                 <p className="text-sm text-muted-foreground">
-                                    Randomize the order of questions in this session.
+                                    {DICT.practice.randomDesc}
                                 </p>
                             </div>
                             <Switch
@@ -356,11 +359,11 @@ export default function PracticePage() {
                         {/* 3. Tags */}
                         <div className="space-y-3">
                             <Label className="text-base font-semibold flex items-center gap-2">
-                                <Tag className="w-4 h-4" /> Tags ({selectedTags.size} selected)
+                                <Tag className="w-4 h-4" /> {DICT.practice.tagsSelected.replace("{count}", String(selectedTags.size))}
                             </Label>
                             <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-2 border rounded-md bg-background/50">
                                 {allTags.length === 0 && (
-                                    <p className="text-sm text-muted-foreground p-2">No tags available.</p>
+                                    <p className="text-sm text-muted-foreground p-2">{DICT.practice.noTagsAvailable}</p>
                                 )}
                                 {allTags.map(tagId => (
                                     <Badge
@@ -381,7 +384,7 @@ export default function PracticePage() {
                     </CardContent>
                     <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-muted/10 p-6">
                         <div className="text-sm text-muted-foreground">
-                            <span className="font-bold text-foreground">{filteredCount}</span> questions match your criteria.
+                            {DICT.practice.matchCount.replace("{count}", String(filteredCount))}
                         </div>
                         <Button
                             size="lg"
@@ -389,7 +392,7 @@ export default function PracticePage() {
                             disabled={filteredCount === 0}
                             className="w-full sm:w-auto gap-2 shadow-lg hover:shadow-xl transition-all"
                         >
-                            <Play className="w-5 h-5" /> Start Practice
+                            <Play className="w-5 h-5" /> {DICT.practice.startPractice}
                         </Button>
                     </CardFooter>
                 </Card>

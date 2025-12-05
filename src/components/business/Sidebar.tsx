@@ -181,7 +181,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
 
                     {currentTags.length === 0 && (
                         <div className="text-center py-10 text-muted-foreground text-xs">
-                            <p>{DICT.practice.noTags}</p>
+                            <p>{DICT.practice.noTagsAvailable}</p>
                         </div>
                     )}
                 </div>

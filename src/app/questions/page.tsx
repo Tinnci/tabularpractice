@@ -287,7 +287,7 @@ function QuestionsContent() {
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>快捷键: [ 上一年 / ] 下一年</p>
+                    <p>{DICT.shortcuts.toggleYear}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -368,7 +368,7 @@ function QuestionsContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">{DICT.onboarding.loading}</div>}>
       <QuestionsContent />
     </Suspense>
   );
