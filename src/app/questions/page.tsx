@@ -227,7 +227,7 @@ function QuestionsContent() {
   }, [currentIndex, filteredQuestions, lowDataMode, repoBaseUrl]);
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)]">
+    <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
       <Sidebar questions={contextQuestions} />
       <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
         <div className="px-4 sm:px-6 py-3 border-b flex flex-wrap items-center justify-between gap-y-3 gap-x-4 bg-background z-20 shadow-sm">

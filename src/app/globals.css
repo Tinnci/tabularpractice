@@ -134,9 +134,9 @@
 
 @layer utilities {
   .glass {
-    @apply backdrop-blur-xl bg-background/60 border-b border-border/40 supports-[backdrop-filter]:bg-background/60;
+    @apply backdrop-blur-xl bg-background/60 supports-[backdrop-filter]:bg-background/60;
   }
-  
+
   .glass-card {
     @apply backdrop-blur-md bg-card/40 border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-card/60;
   }
