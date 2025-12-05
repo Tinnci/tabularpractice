@@ -49,7 +49,7 @@ const Legend = dynamic(
 
 export default function DashboardPage() {
   const { total, subjects } = useDashboardStats();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const lastQuestionId = useProgressStore(state => state.lastQuestionId);
 
   // Prevent SSR issues with Recharts
@@ -57,6 +57,15 @@ export default function DashboardPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // 图表颜色配置 - 根据主题自动调整
+  const chartColors = {
+    mastered: resolvedTheme === 'dark' ? '#4ade80' : '#22c55e',  // 绿色：深色模式更亮
+    confused: resolvedTheme === 'dark' ? '#fbbf24' : '#f59e0b',  // 橙黄：提高对比度
+    failed: resolvedTheme === 'dark' ? '#f87171' : '#ef4444',    // 红色：深色模式更柔和
+    grid: resolvedTheme === 'dark' ? '#374151' : '#e5e7eb',
+    cursor: resolvedTheme === 'dark' ? 'rgba(55, 65, 81, 0.5)' : 'rgba(244, 244, 245, 0.8)',
+  };
 
   // 1. 生成图表数据
   // 过滤掉题目数为 0 的科目
@@ -168,17 +177,23 @@ export default function DashboardPage() {
                     margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                     layout="vertical"
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme === 'dark' ? '#333' : '#eee'} />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={chartColors.grid} />
                     <XAxis type="number" hide />
                     <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
                     <Tooltip
-                      cursor={{ fill: theme === 'dark' ? '#333' : '#f4f4f5' }}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      cursor={{ fill: chartColors.cursor }}
+                      contentStyle={{ 
+                        borderRadius: '8px', 
+                        border: 'none', 
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        backgroundColor: resolvedTheme === 'dark' ? '#1f2937' : '#ffffff',
+                        color: resolvedTheme === 'dark' ? '#f3f4f6' : '#111827',
+                      }}
                     />
                     <Legend />
-                    <Bar dataKey="mastered" name="已斩" stackId="a" fill="#16a34a" radius={[0, 4, 4, 0]} />
-                    <Bar dataKey="confused" name="懵圈" stackId="a" fill="#eab308" />
-                    <Bar dataKey="failed" name="崩盘" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="mastered" name="已斩" stackId="a" fill={chartColors.mastered} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="confused" name="懵圈" stackId="a" fill={chartColors.confused} />
+                    <Bar dataKey="failed" name="崩盘" stackId="a" fill={chartColors.failed} radius={[0, 0, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
