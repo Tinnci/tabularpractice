@@ -53,7 +53,7 @@ export default function RootLayout({
           <Navbar />
           <AutoSyncManager />
           <SyncConflictModal />
-          <main className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background overflow-x-hidden">
+          <main className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-background via-muted/20 to-background overflow-x-hidden">
             {children}
             <Toaster />
             <SpeedInsights />
