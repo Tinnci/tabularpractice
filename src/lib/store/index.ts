@@ -36,18 +36,12 @@ export const useProgressStore = create<StoreState>()(
                 }
                 return state;
             },
+            partialize: (state) => {
+                // Filter out ephemeral UI state and computed/sync status 
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { mobileSidebarOpen, syncStatus, ...persistedState } = state;
+                return persistedState;
+            },
         }
     )
 );
-
-// Auto-sync subscription
-useProgressStore.subscribe((state, prevState) => {
-    if (
-        state.progress !== prevState.progress ||
-        state.notes !== prevState.notes ||
-        state.times !== prevState.times ||
-        state.stars !== prevState.stars
-    ) {
-        state.triggerAutoSync();
-    }
-});

@@ -33,10 +33,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
     syncData: async (isAutoSync = false) => {
         const {
             githubToken, gistId,
-            progress, progressLastModified,
-            notes, notesLastModified,
-            times, timesLastModified,
-            stars, repoSources,
+            getSyncSnapshot,
             importData
         } = get();
 
@@ -45,17 +42,21 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
         set({ syncStatus: 'syncing' });
 
         try {
+            const dataSnapshot = getSyncSnapshot();
+
             const currentData: SyncData = {
                 version: 3,
                 timestamp: new Date().toISOString(),
-                progress,
-                progressLastModified,
-                notes,
-                notesLastModified,
-                times,
-                timesLastModified,
-                stars,
-                repoSources
+                // Default values if snapshot is partial, though getSyncSnapshot should provide them
+                progress: {},
+                progressLastModified: {},
+                notes: {},
+                notesLastModified: {},
+                times: {},
+                timesLastModified: {},
+                stars: {},
+                repoSources: [],
+                ...dataSnapshot
             };
 
             let targetGistId = gistId;

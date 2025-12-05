@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PwaRegister } from "@/components/PwaRegister";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { AutoSyncManager } from "@/components/business/AutoSyncManager";
+
 
 export const metadata: Metadata = {
   title: "TabularPractice | 真题墙",
@@ -47,6 +49,7 @@ export default function RootLayout({
         >
           <PwaRegister />
           <Navbar />
+          <AutoSyncManager />
           <main className="min-h-screen bg-slate-50/50 dark:bg-background">
             {children}
             <Toaster />

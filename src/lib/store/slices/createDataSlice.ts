@@ -31,6 +31,7 @@ export interface DataSlice {
 
     importData: (data: unknown) => void;
     importProgress: (newProgress: Record<string, Status>) => void;
+    getSyncSnapshot: () => Partial<SyncData>;
 }
 
 export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set, get) => ({
@@ -183,4 +184,20 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
     },
 
     importProgress: (newProgress) => set({ progress: newProgress }),
+
+    getSyncSnapshot: () => {
+        const state = get();
+        return {
+            progress: state.progress,
+            progressLastModified: state.progressLastModified,
+            notes: state.notes,
+            notesLastModified: state.notesLastModified,
+            times: state.times,
+            timesLastModified: state.timesLastModified,
+            stars: state.stars,
+            // repoSources is managed by Settings, but Data needs to include it in the snapshot for now
+            // as DataSlice.getSyncSnapshot is the main entry point for data export.
+            repoSources: state.repoSources
+        };
+    },
 });
