@@ -2,15 +2,20 @@
 
 import { useEffect } from "react";
 import { useProgressStore } from "@/lib/store";
+import { useShallow } from 'zustand/react/shallow';
 
 export function AutoSyncManager() {
     const triggerAutoSync = useProgressStore(state => state.triggerAutoSync);
 
-    // Subscribe to changes in data that should trigger sync
-    const progress = useProgressStore(state => state.progress);
-    const notes = useProgressStore(state => state.notes);
-    const times = useProgressStore(state => state.times);
-    const stars = useProgressStore(state => state.stars);
+    // Use shallow comparison to avoid unnecessary re-renders
+    const { progress, notes, times, stars } = useProgressStore(
+        useShallow(state => ({
+            progress: state.progress,
+            notes: state.notes,
+            times: state.times,
+            stars: state.stars
+        }))
+    );
 
     useEffect(() => {
         triggerAutoSync();
