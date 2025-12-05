@@ -20,7 +20,21 @@ export const DICT = {
         copied: "已复制",
         retry: "重试",
         all: "全部",
-        refresh: "刷新", // Added
+        refresh: "刷新",
+        imageLoadError: "图片加载失败",
+        copyMarkdown: "复制 Markdown",
+        copyImage: "复制图片",
+        unstar: "取消收藏",
+        star: "收藏题目",
+        syncing: "同步中...",
+        syncFailedRetry: "同步失败，点击重试",
+        exitFullscreen: "退出全屏",
+        enterFullscreen: "全屏显示",
+        loadingQuestion: "题目加载中...",
+        preview: "预览",
+        undo: "撤销",
+        shortcutPrev: "快捷键: ←",
+        shortcutNext: "快捷键: →",
     },
 
     // Status Filters
@@ -30,6 +44,9 @@ export const DICT = {
         confused: "懵",
         failed: "崩",
         label: "状态",
+        shortcutMastered: "快捷键: 1",
+        shortcutConfused: "快捷键: 2",
+        shortcutFailed: "快捷键: 3",
     },
 
     // Navigation & Workspace
@@ -85,6 +102,8 @@ export const DICT = {
         matchCount: "{count} 题匹配你的条件。",
         active: "练习进行中",
         questionIndex: "第 {current} 题 / 共 {total} 题",
+        moreTags: "查看更多知识点",
+        includedTags: "包含知识点",
     },
 
     // Settings
@@ -145,6 +164,38 @@ export const DICT = {
         warningOverwrite: "警告：即将覆盖数据",
         warningOverwriteDesc: "此操作将使用导入文件中的数据完全覆盖您当前的刷题进度。当前进度将被永久删除且无法撤销。",
         confirmOverwrite: "确认覆盖",
+    },
+
+    // Exam & Question Modal
+    exam: {
+        questionIndex: "第 {number} 题",
+        video: "视频",
+        answer: "答案",
+        analysis: "解析",
+        note: "笔记",
+        draft: "草稿",
+        questionDesc: "题目描述",
+        contentMissing: "题目内容缺失",
+        videoStartAt: "视频将从 {time} 开始",
+        openInBilibiliMobile: "去 B 站观看 (空降)",
+        openInBilibiliWeb: "在 Bilibili 打开 (支持自动空降)",
+        referenceAnswer: "参考答案",
+        answerLabel: "答案：{answer}",
+        noAnswer: "暂无答案内容",
+        detailedAnalysis: "详细解析",
+        noAnalysis: "暂无解析内容",
+        handwritingDraft: "手写草稿",
+        pen: "画笔",
+        eraser: "橡皮擦",
+        palmRejectionOn: "已开启防误触 (仅限手写笔)",
+        palmRejectionOff: "开启防误触 (仅限手写笔)",
+        clearDraftConfirm: "确定要清空草稿吗？",
+        clearDraft: "清空草稿",
+        gpuOn: "已开启 GPU 加速 (Beta)",
+        gpuOff: "开启 GPU 加速 (Beta)",
+        personalNote: "个人笔记",
+        notePlaceholder: "在此输入 Markdown 笔记... (支持 **加粗**, - 列表, > 引用 等)",
+        startNotePrompt: "点击此处开始记录笔记...",
     },
 
     // Sync Messages

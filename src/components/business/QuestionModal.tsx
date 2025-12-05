@@ -39,6 +39,8 @@ import { cn, getImageUrl } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { SUBJECT_TAGS_MAP, TagNode } from "@/data/subject-tags";
 
+import { DICT } from "@/lib/i18n";
+
 interface Props {
     isOpen: boolean;
     onClose: () => void;
@@ -129,14 +131,14 @@ const SmartTagList = ({
                             <Badge
                                 variant="secondary"
                                 className="text-xs h-6 px-1.5 cursor-default hover:bg-secondary/80 transition-colors"
-                                title="查看更多知识点"
+                                title={DICT.practice.moreTags}
                             >
                                 +{hiddenTags.length}
                             </Badge>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" align="end" className="max-w-[250px] p-3">
                             <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">包含知识点</h4>
+                                <h4 className="font-medium text-sm text-muted-foreground">{DICT.practice.includedTags}</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {hiddenTags.map((tag, idx) => (
                                         <Badge key={idx} variant="outline" className="text-xs font-normal">
@@ -187,7 +189,7 @@ const RemoteImage = ({ src, alt, className, question }: { src: string, alt: stri
             {error ? (
                 <div className="flex flex-col items-center text-muted-foreground text-xs p-4">
                     <ImageOff className="w-6 h-6 mb-2 opacity-50" />
-                    <span>图片加载失败</span>
+                    <span>{DICT.common.imageLoadError}</span>
                 </div>
             ) : (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -257,7 +259,7 @@ const CopyButton = ({ text, img, question }: { text?: string | null, img?: strin
             size="icon"
             className="h-6 w-6 hover:bg-background/50 data-[state=open]:bg-muted"
             onClick={handleCopy}
-            title={text ? "复制 Markdown" : "复制图片"}
+            title={text ? DICT.common.copyMarkdown : DICT.common.copyImage}
         >
             {copied ? (
                 <Check className="w-3.5 h-3.5 text-green-600" />
@@ -506,6 +508,16 @@ export function QuestionModal({
         setVisibleViews(newSet);
     };
 
+    // This code is too long to replace in one go accurately with safe matching without context.
+    // I will split this into chunks.
+    // Chunk 1: Header (Title, Star, Sync, View Toggles, Fullscreen)
+    // Chunk 2: Content Body (Loading, Question, Video, Answer, Analysis)
+    // Chunk 3: Tools (Draft, Note)
+    // Chunk 4: Footer (Prev, Status Buttons, Next)
+
+    // Wait, I can try to replace chunks by finding unique large blocks.
+
+    // Chunk 1: Header to View Toggles
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className={cn(
@@ -514,7 +526,7 @@ export function QuestionModal({
                     ? "sm:max-w-[100vw] sm:h-[100vh] rounded-none"
                     : "sm:max-w-5xl sm:h-[95vh] sm:rounded-xl"
             )}>
-                <DialogTitle className="sr-only">{`第 ${currentQuestion.number} 题`}</DialogTitle>
+                <DialogTitle className="sr-only">{DICT.exam.questionIndex.replace('{number}', String(currentQuestion.number))}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
                 <div className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 h-14 sm:h-auto max-w-[100vw] overflow-hidden">
@@ -523,7 +535,7 @@ export function QuestionModal({
                             <span className="text-sm font-bold text-foreground flex items-center gap-1 sm:gap-2">
                                 <span className="sm:hidden text-muted-foreground">#</span>
                                 <span>{currentQuestion.number}</span>
-                                <span className="hidden sm:inline">第 {currentQuestion.number} 题</span>
+                                <span className="hidden sm:inline">{DICT.exam.questionIndex.replace('{number}', String(currentQuestion.number))}</span>
                                 {question && (
                                     <QuestionTimer
                                         formattedTime={formattedTime}
@@ -539,20 +551,20 @@ export function QuestionModal({
                                     size="icon"
                                     className="h-5 w-5 text-muted-foreground hover:text-yellow-500"
                                     onClick={() => currentQuestion.id && toggleStar(currentQuestion.id)}
-                                    title={isStarred ? "取消收藏" : "收藏题目"}
+                                    title={isStarred ? DICT.common.unstar : DICT.common.star}
                                     disabled={isLoading}
                                 >
                                     <Star className={cn("w-4 h-4", isStarred && "fill-yellow-500 text-yellow-500")} />
                                 </Button>
                                 {syncStatus === 'syncing' && (
-                                    <span title="同步中...">
+                                    <span title={DICT.common.syncing}>
                                         <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
                                     </span>
                                 )}
                                 {syncStatus === 'error' && (
                                     <div
                                         className="w-2 h-2 rounded-full bg-red-500 cursor-pointer hover:bg-red-600 transition-colors"
-                                        title="同步失败，点击重试"
+                                        title={DICT.common.syncFailedRetry}
                                         onClick={() => syncData()}
                                     />
                                 )}
@@ -571,7 +583,7 @@ export function QuestionModal({
                                 >
                                     <MonitorPlay className="h-4 w-4 shrink-0" />
                                     <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
-                                        视频
+                                        {DICT.exam.video}
                                     </span>
                                 </Toggle>
                             )}
@@ -584,7 +596,7 @@ export function QuestionModal({
                             >
                                 <Eye className="h-4 w-4 shrink-0" />
                                 <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
-                                    答案
+                                    {DICT.exam.answer}
                                 </span>
                             </Toggle>
                             <Toggle
@@ -596,7 +608,7 @@ export function QuestionModal({
                             >
                                 <FileText className="h-4 w-4 shrink-0" />
                                 <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
-                                    解析
+                                    {DICT.exam.analysis}
                                 </span>
                             </Toggle>
                             <Toggle
@@ -608,7 +620,7 @@ export function QuestionModal({
                             >
                                 <PenLine className="h-4 w-4 shrink-0" />
                                 <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
-                                    笔记
+                                    {DICT.exam.note}
                                 </span>
                             </Toggle>
                             <Toggle
@@ -620,7 +632,7 @@ export function QuestionModal({
                             >
                                 <Pencil className="h-4 w-4 shrink-0" />
                                 <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
-                                    草稿
+                                    {DICT.exam.draft}
                                 </span>
                             </Toggle>
                         </div>
@@ -631,7 +643,7 @@ export function QuestionModal({
                             size="icon"
                             className="hidden sm:flex h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
                             onClick={() => setIsFullscreen(!isFullscreen)}
-                            title={isFullscreen ? "退出全屏" : "全屏显示"}
+                            title={isFullscreen ? DICT.common.exitFullscreen : DICT.common.enterFullscreen}
                         >
                             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                         </Button>
@@ -651,7 +663,7 @@ export function QuestionModal({
                     {isLoading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground z-50 bg-background/50 backdrop-blur-sm">
                             <Loader2 className="w-8 h-8 animate-spin" />
-                            <span className="text-sm">题目加载中...</span>
+                            <span className="text-sm">{DICT.common.loadingQuestion}</span>
                         </div>
                     ) : (
                         <ScrollArea className="h-full">
@@ -678,7 +690,7 @@ export function QuestionModal({
                                     <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
                                         <div className="bg-muted/50 border-b px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
                                             <div className="flex items-center gap-2">
-                                                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 题目描述
+                                                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {DICT.exam.questionDesc}
                                             </div>
                                             <CopyButton
                                                 text={currentQuestion.contentMd}
@@ -698,7 +710,7 @@ export function QuestionModal({
                                                     question={currentQuestion}
                                                 />
                                             ) : (
-                                                <div className="text-muted-foreground text-sm">题目内容缺失</div>
+                                                <div className="text-muted-foreground text-sm">{DICT.exam.contentMissing}</div>
                                             )}
                                         </div>
                                     </div>
@@ -727,7 +739,7 @@ export function QuestionModal({
                                                     return (
                                                         <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-medium shadow-lg">
                                                             <Clock className="w-4 h-4" />
-                                                            <span>视频将从 {formatTimestamp(timestamp)} 开始</span>
+                                                            <span>{DICT.exam.videoStartAt.replace('{time}', formatTimestamp(timestamp))}</span>
                                                         </div>
                                                     );
                                                 }
@@ -746,8 +758,8 @@ export function QuestionModal({
                                                 >
                                                     <ExternalLink className="w-3 h-3" />
                                                     {/* 提示用户去 App 看，体验更好 */}
-                                                    <span className="sm:hidden">去 B 站观看 (空降)</span>
-                                                    <span className="hidden sm:inline">在 Bilibili 打开 (支持自动空降)</span>
+                                                    <span className="sm:hidden">{DICT.exam.openInBilibiliMobile}</span>
+                                                    <span className="hidden sm:inline">{DICT.exam.openInBilibiliWeb}</span>
                                                 </Button>
                                             </div>
                                         )}
@@ -759,10 +771,10 @@ export function QuestionModal({
                                     <div className="bg-card rounded-xl border border-green-100 dark:border-green-900 shadow-sm overflow-hidden">
                                         <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-green-700 dark:text-green-400">
                                             <div className="flex items-center gap-2">
-                                                <Eye className="w-4 h-4" /> 参考答案
+                                                <Eye className="w-4 h-4" /> {DICT.exam.referenceAnswer}
                                             </div>
                                             <CopyButton
-                                                text={currentQuestion.answerMd || (currentQuestion.answer ? `答案：${currentQuestion.answer}` : null)}
+                                                text={currentQuestion.answerMd || (currentQuestion.answer ? DICT.exam.answerLabel.replace('{answer}', currentQuestion.answer) : null)}
                                                 img={currentQuestion.answerImg}
                                                 question={currentQuestion}
                                             />
@@ -783,7 +795,7 @@ export function QuestionModal({
                                                     {currentQuestion.answer}
                                                 </div>
                                             ) : (
-                                                <span className="text-muted-foreground text-sm">暂无答案内容</span>
+                                                <span className="text-muted-foreground text-sm">{DICT.exam.noAnswer}</span>
                                             )}
                                         </div>
                                     </div>
@@ -794,7 +806,7 @@ export function QuestionModal({
                                     <div className="bg-card rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm overflow-hidden">
                                         <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
                                             <div className="flex items-center gap-2">
-                                                <FileText className="w-4 h-4" /> 详细解析
+                                                <FileText className="w-4 h-4" /> {DICT.exam.detailedAnalysis}
                                             </div>
                                             <CopyButton
                                                 text={currentQuestion.analysisMd}
@@ -814,7 +826,7 @@ export function QuestionModal({
                                                     question={currentQuestion}
                                                 />
                                             ) : (
-                                                <span className="text-muted-foreground text-sm">暂无解析内容</span>
+                                                <span className="text-muted-foreground text-sm">{DICT.exam.noAnalysis}</span>
                                             )}
                                         </div>
                                     </div>
@@ -825,7 +837,7 @@ export function QuestionModal({
                                     <div className="bg-card rounded-xl border border-purple-200 dark:border-purple-900 shadow-sm overflow-hidden flex flex-col h-[500px]">
                                         <div className="bg-purple-50/50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
                                             <div className="flex items-center gap-2">
-                                                <Pencil className="w-4 h-4" /> 手写草稿
+                                                <Pencil className="w-4 h-4" /> {DICT.exam.handwritingDraft}
                                             </div>
                                             <div className="flex items-center gap-1 sm:gap-2">
                                                 <TooltipProvider delayDuration={300}>
@@ -844,7 +856,7 @@ export function QuestionModal({
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="bottom">
-                                                            <p>画笔</p>
+                                                            <p>{DICT.exam.pen}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
 
@@ -863,7 +875,7 @@ export function QuestionModal({
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="bottom">
-                                                            <p>橡皮擦</p>
+                                                            <p>{DICT.exam.eraser}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
 
@@ -881,7 +893,7 @@ export function QuestionModal({
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="bottom">
-                                                            <p>{onlyPenMode ? "已开启防误触 (仅限手写笔)" : "开启防误触 (仅限手写笔)"}</p>
+                                                            <p>{onlyPenMode ? DICT.exam.palmRejectionOn : DICT.exam.palmRejectionOff}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
 
@@ -902,7 +914,7 @@ export function QuestionModal({
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="bottom">
-                                                            <p>撤销</p>
+                                                            <p>{DICT.common.undo}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
 
@@ -913,7 +925,7 @@ export function QuestionModal({
                                                                 size="icon"
                                                                 className="h-9 w-9 text-red-500/70 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90 hover:scale-105"
                                                                 onClick={() => {
-                                                                    if (confirm('确定要清空草稿吗？')) {
+                                                                    if (confirm(DICT.exam.clearDraftConfirm)) {
                                                                         canvasRef.current?.clearCanvas();
                                                                         setTimeout(saveDraft, 100);
                                                                     }
@@ -923,7 +935,7 @@ export function QuestionModal({
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="bottom">
-                                                            <p>清空草稿</p>
+                                                            <p>{DICT.exam.clearDraft}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
 
@@ -941,7 +953,7 @@ export function QuestionModal({
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="bottom">
-                                                            <p>{useGpu ? "已开启 GPU 加速 (Beta)" : "开启 GPU 加速 (Beta)"}</p>
+                                                            <p>{useGpu ? DICT.exam.gpuOn : DICT.exam.gpuOff}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
@@ -978,14 +990,14 @@ export function QuestionModal({
                                     <div className="bg-card rounded-xl border border-orange-200 dark:border-orange-900 shadow-sm overflow-hidden">
                                         <div className="bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-orange-700 dark:text-orange-400">
                                             <div className="flex items-center gap-2">
-                                                <PenLine className="w-4 h-4" /> 个人笔记
+                                                <PenLine className="w-4 h-4" /> {DICT.exam.personalNote}
                                             </div>
                                             <div className="flex items-center gap-2 text-xs select-none">
                                                 <span
                                                     className={cn("cursor-pointer transition-colors", isEditingNote ? "text-muted-foreground" : "font-bold")}
                                                     onClick={() => setIsEditingNote(false)}
                                                 >
-                                                    预览
+                                                    {DICT.common.preview}
                                                 </span>
                                                 <Switch
                                                     checked={isEditingNote}
@@ -996,7 +1008,7 @@ export function QuestionModal({
                                                     className={cn("cursor-pointer transition-colors", isEditingNote ? "font-bold" : "text-muted-foreground")}
                                                     onClick={() => setIsEditingNote(true)}
                                                 >
-                                                    编辑
+                                                    {DICT.common.edit}
                                                 </span>
                                             </div>
                                         </div>
@@ -1006,7 +1018,7 @@ export function QuestionModal({
                                                     value={noteContent}
                                                     onChange={(e) => setNoteContent(e.target.value)}
                                                     onBlur={handleNoteBlur}
-                                                    placeholder="在此输入 Markdown 笔记... (支持 **加粗**, - 列表, > 引用 等)"
+                                                    placeholder={DICT.exam.notePlaceholder}
                                                     className="w-full h-64 p-4 resize-y bg-transparent outline-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50"
                                                     autoFocus
                                                 />
@@ -1018,7 +1030,7 @@ export function QuestionModal({
                                                     {noteContent ? (
                                                         <MarkdownContent content={noteContent} />
                                                     ) : (
-                                                        <span className="text-muted-foreground/50 italic select-none">点击此处开始记录笔记...</span>
+                                                        <span className="text-muted-foreground/50 italic select-none">{DICT.exam.startNotePrompt}</span>
                                                     )}
                                                 </div>
                                             )}
@@ -1046,11 +1058,11 @@ export function QuestionModal({
                                     className="h-10 w-10 sm:h-auto sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
                                     <ChevronLeft className="w-6 h-6 sm:w-5 sm:h-5 sm:mr-1" />
-                                    <span className="hidden sm:inline">上一题</span>
+                                    <span className="hidden sm:inline">{DICT.common.prev}</span>
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>快捷键: ←</p>
+                                <p>{DICT.common.shortcutPrev}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
@@ -1066,11 +1078,11 @@ export function QuestionModal({
                                         className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
                                         <Check className="w-4 h-4" />
-                                        <span className="text-xs sm:text-sm">斩</span>
+                                        <span className="text-xs sm:text-sm">{DICT.status.mastered}</span>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>快捷键: 1</p>
+                                    <p>{DICT.status.shortcutMastered}</p>
                                 </TooltipContent>
                             </Tooltip>
 
@@ -1082,11 +1094,11 @@ export function QuestionModal({
                                         className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
                                         <HelpCircle className="w-4 h-4" />
-                                        <span className="text-xs sm:text-sm">懵</span>
+                                        <span className="text-xs sm:text-sm">{DICT.status.confused}</span>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>快捷键: 2</p>
+                                    <p>{DICT.status.shortcutConfused}</p>
                                 </TooltipContent>
                             </Tooltip>
 
@@ -1098,11 +1110,11 @@ export function QuestionModal({
                                         className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
                                         <X className="w-4 h-4" />
-                                        <span className="text-xs sm:text-sm">崩</span>
+                                        <span className="text-xs sm:text-sm">{DICT.status.failed}</span>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>快捷键: 3</p>
+                                    <p>{DICT.status.shortcutFailed}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
@@ -1119,16 +1131,15 @@ export function QuestionModal({
                                     size="icon"
                                     className="h-10 w-10 sm:h-auto sm:w-auto sm:px-4 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
-                                    <span className="hidden sm:inline">下一题</span>
+                                    <span className="hidden sm:inline">{DICT.common.next}</span>
                                     <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5 sm:ml-1" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>快捷键: →</p>
+                                <p>{DICT.common.shortcutNext}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-
                 </div>
 
             </DialogContent>
