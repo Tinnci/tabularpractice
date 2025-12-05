@@ -207,17 +207,17 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                 </div>
 
                 {/* 2. 桌面端/宽屏：环形图 (hidden md:flex) */}
-                <div className="hidden md:flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-3 overflow-hidden">
                     {/* 环形图 */}
-                    <div className="h-24 w-24 relative flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105" title="点击筛选">
+                    <div className="h-20 w-20 relative flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105" title="点击筛选">
                         <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                             <PieChart>
                                 <Pie
                                     data={data}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={22}
-                                    outerRadius={36}
+                                    innerRadius={18}
+                                    outerRadius={30}
                                     paddingAngle={2}
                                     dataKey="value"
                                     stroke="none"
@@ -254,21 +254,25 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         </ResponsiveContainer>
                         {/* 中心文字 */}
                         <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                            <span className="text-lg font-bold text-foreground">{progressPercentage}%</span>
-                            <span className="text-[10px] text-muted-foreground -mt-0.5">已刷</span>
+                            <span className="text-base font-bold text-foreground">{progressPercentage}%</span>
+                            <span className="text-[9px] text-muted-foreground -mt-0.5">已刷</span>
                         </div>
                     </div>
 
                     {/* 文字详情 */}
-                    <div className="grid grid-cols-1 gap-y-1.5 text-xs flex-1 min-w-0">
+                    <div className="grid grid-cols-1 gap-y-1 text-xs flex-1 min-w-0 overflow-hidden">
                         <div
+                            className={cn(
+                                "flex items-center justify-between cursor-pointer rounded px-1 -mx-1 transition-all duration-200 hover:translate-x-1 hover:bg-muted/80 group",
+                                filterStatus === 'mastered' && "bg-muted font-medium"
+                            )}
                             onClick={() => handleFilterClick('mastered')}
                         >
                             <div className="flex items-center gap-1.5 truncate">
                                 <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)] shrink-0" />
                                 <span className="text-muted-foreground group-hover:text-foreground truncate">已斩</span>
                             </div>
-                            <span className="font-mono font-bold text-foreground ml-1">{stats.mastered}</span>
+                            <span className="font-mono font-bold text-foreground ml-1 shrink-0">{stats.mastered}</span>
                         </div>
                         <div
                             className={cn(
@@ -281,7 +285,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.6)] shrink-0" />
                                 <span className="text-muted-foreground group-hover:text-foreground truncate">懵圈</span>
                             </div>
-                            <span className="font-mono font-bold text-foreground ml-1">{stats.confused}</span>
+                            <span className="font-mono font-bold text-foreground ml-1 shrink-0">{stats.confused}</span>
                         </div>
                         <div
                             className={cn(
@@ -294,7 +298,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)] shrink-0" />
                                 <span className="text-muted-foreground group-hover:text-foreground truncate">崩盘</span>
                             </div>
-                            <span className="font-mono font-bold text-foreground ml-1">{stats.failed}</span>
+                            <span className="font-mono font-bold text-foreground ml-1 shrink-0">{stats.failed}</span>
                         </div>
                         <div
                             className={cn(
@@ -307,7 +311,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 <div className="w-2 h-2 rounded-full bg-muted shrink-0" />
                                 <span className="text-muted-foreground group-hover:text-foreground truncate">剩余</span>
                             </div>
-                            <span className="font-mono font-bold text-muted-foreground ml-1">{stats.unanswered}</span>
+                            <span className="font-mono font-bold text-muted-foreground ml-1 shrink-0">{stats.unanswered}</span>
                         </div>
                     </div>
                 </div>
