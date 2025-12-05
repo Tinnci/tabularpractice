@@ -9,10 +9,15 @@ export interface SyncSlice {
     lastSyncedTime: string | null;
     syncStatus: 'idle' | 'syncing' | 'success' | 'error';
 
+    pendingConflict: { local: SyncData, remote: SyncData } | null;
+    resolveConflict: (strategy: 'local' | 'remote' | 'merge') => Promise<void>;
+    isDirty: boolean;
+
     setGithubToken: (token: string | null) => void;
     setGistId: (id: string | null) => void;
     setLastSyncedTime: (time: string | null) => void;
     setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
+
 
     syncData: (isAutoSync?: boolean) => Promise<void>;
     triggerAutoSync: () => void;
@@ -25,17 +30,61 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
     gistId: null,
     lastSyncedTime: null,
     syncStatus: 'idle',
+    pendingConflict: null,
+    isDirty: false,
 
     setGithubToken: (token) => set({ githubToken: token }),
     setGistId: (id) => set({ gistId: id }),
     setLastSyncedTime: (time) => set({ lastSyncedTime: time }),
     setSyncStatus: (status) => set({ syncStatus: status }),
 
+    resolveConflict: async (strategy) => {
+        const { pendingConflict, githubToken, gistId, importData } = get();
+        if (!pendingConflict || !githubToken) return;
+
+        let finalData: SyncData;
+
+        if (strategy === 'remote') {
+            finalData = pendingConflict.remote;
+        } else if (strategy === 'local') {
+            finalData = pendingConflict.local;
+            // Update timestamp to ensure it overwrites if checked again
+            finalData.timestamp = new Date().toISOString();
+        } else {
+            // Merge
+            finalData = syncService.mergeData(pendingConflict.local, pendingConflict.remote);
+        }
+
+        // Apply to local
+        importData(finalData);
+
+        // Upload to remote
+        try {
+            set({ syncStatus: 'syncing', pendingConflict: null });
+            const targetId = gistId; // Capture current gistId
+
+            const result = await syncService.uploadGist(githubToken, targetId, finalData);
+
+            if (!targetId) {
+                set({ gistId: result.id });
+            }
+
+            set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success' });
+            toast.success('冲突已解决', { description: '数据已同步' });
+            setTimeout(() => set({ syncStatus: 'idle' }), 3000);
+        } catch (error) {
+            console.error(error);
+            set({ syncStatus: 'error' });
+            toast.error('同步失败', { description: '上传数据时出错' });
+        }
+    },
+
     syncData: async (isAutoSync = false) => {
         const {
             githubToken, gistId,
             getSyncSnapshot,
-            importData
+            importData,
+            lastSyncedTime
         } = get();
 
         if (!githubToken) return;
@@ -66,6 +115,19 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
             if (targetGistId) {
                 const remoteData = await syncService.fetchGist(githubToken, targetGistId);
                 if (remoteData) {
+                    const localSyncedTimeMs = lastSyncedTime ? new Date(lastSyncedTime).getTime() : 0;
+                    const remoteTimeMs = new Date(remoteData.timestamp).getTime();
+
+                    // Conflict Detection: Remote is newer than our last sync time
+                    if (remoteTimeMs > localSyncedTimeMs) {
+                        set({
+                            pendingConflict: { local: currentData, remote: remoteData },
+                            syncStatus: 'idle'
+                        });
+                        // Ask user to resolve conflict
+                        return;
+                    }
+
                     mergedData = syncService.mergeData(currentData, remoteData);
                 } else {
                     targetGistId = null; // Gist not found
@@ -77,7 +139,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
             if (!targetGistId) {
                 set({ gistId: result.id });
             }
-            set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success' });
+            set({ lastSyncedTime: new Date().toISOString(), syncStatus: 'success', isDirty: false });
 
             if (!isAutoSync) {
                 importData(mergedData);
@@ -98,8 +160,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
         if (!githubToken) return;
 
         if (syncTimer) clearTimeout(syncTimer);
-        // Do not set 'syncing' status immediately to avoid UI flicker/frequent re-renders
-        // set({ syncStatus: 'syncing' }); 
+        set({ isDirty: true });
 
         syncTimer = setTimeout(() => {
             get().syncData(true);

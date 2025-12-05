@@ -16,9 +16,54 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import { useProgressStore } from "@/lib/store";
+import { useShallow } from 'zustand/react/shallow';
+
+function SyncStatusIndicator() {
+    const { syncStatus, isDirty, lastSyncedTime } = useProgressStore(
+        useShallow(state => ({
+            syncStatus: state.syncStatus,
+            isDirty: state.isDirty,
+            lastSyncedTime: state.lastSyncedTime
+        }))
+    );
+
+    let color = "bg-slate-400"; // Idle/Unknown
+    let tooltip = "未连接同步";
+
+    if (syncStatus === 'syncing') {
+        color = "bg-blue-500 animate-pulse";
+        tooltip = "正在同步...";
+    } else if (syncStatus === 'error') {
+        color = "bg-red-500";
+        tooltip = "同步失败";
+    } else if (isDirty) {
+        color = "bg-yellow-500";
+        tooltip = "有未保存的更改";
+    } else if (syncStatus === 'success' || (lastSyncedTime && !isDirty)) {
+        color = "bg-green-500";
+        tooltip = `已同步 (上次: ${lastSyncedTime ? new Date(lastSyncedTime).toLocaleTimeString() : '未知'})`;
+    }
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div className={`w-2.5 h-2.5 rounded-full ${color} transition-colors duration-300 mr-2 cursor-help`} />
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>{tooltip}</p>
+            </TooltipContent>
+        </Tooltip>
+    );
+}
+
 export function Navbar() {
     const pathname = usePathname();
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+    // Check if sync is enabled to decide whether to show indicator
+    const { githubToken } = useProgressStore(useShallow(state => ({ githubToken: state.githubToken })));
+
 
     return (
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 app-region-drag">
@@ -48,6 +93,9 @@ export function Navbar() {
                     </Link>
 
                     <nav className="flex items-center space-x-2 sm:space-x-6 text-sm font-medium ml-auto app-region-no-drag">
+                        {/* Sync Status Indicator - only show if configured */}
+                        {githubToken && <SyncStatusIndicator />}
+
                         <Link href="/" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname === "/" ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
                             Dashboard
                         </Link>
