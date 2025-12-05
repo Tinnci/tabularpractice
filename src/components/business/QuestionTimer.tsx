@@ -2,6 +2,7 @@ import { Play, Pause, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { DICT } from "@/lib/i18n";
 
 interface Props {
     formattedTime: string;
@@ -34,7 +35,7 @@ export function QuestionTimer({ formattedTime, isRunning, toggle, reset, classNa
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                        <p className="text-xs">{isRunning ? "暂停 (Space)" : "开始 (Space)"}</p>
+                        <p className="text-xs">{isRunning ? `${DICT.common.pause} (Space)` : `${DICT.common.start} (Space)`}</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
@@ -61,7 +62,7 @@ export function QuestionTimer({ formattedTime, isRunning, toggle, reset, classNa
                     size="icon"
                     className="h-5 w-5 ml-1 text-muted-foreground hover:text-red-500 transition-colors"
                     onClick={() => reset()}
-                    title="重置时间"
+                    title={DICT.common.resetTime}
                 >
                     <RotateCcw className="h-3 w-3" />
                 </Button>

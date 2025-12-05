@@ -1,5 +1,4 @@
 "use client"
-
 import * as React from "react"
 import {
     CommandDialog,
@@ -13,6 +12,7 @@ import { Search, BookOpen, Calendar, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState, useMemo } from "react"
 import { useProgressStore } from "@/lib/store"
+import { DICT } from "@/lib/i18n";
 
 import papersData from "@/data/papers.json"
 import paperGroupsData from "@/data/paperGroups.json"
@@ -59,7 +59,7 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
                     q.number.toString(),
                     group?.name,
                     ...q.tags,
-                    q.type === 'choice' ? '选择题' : q.type === 'fill' ? '填空题' : '解答题'
+                    q.type === 'choice' ? DICT.wall.choice : q.type === 'fill' ? DICT.wall.fill : DICT.wall.answer
                 ].filter(Boolean).join(' ').toLowerCase()
             };
         });
@@ -83,7 +83,7 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
         const grouped: Record<string, typeof filteredResults> = {};
 
         filteredResults.forEach(item => {
-            const groupName = item.group?.name || '其他';
+            const groupName = item.group?.name || DICT.common.other;
             if (!grouped[groupName]) {
                 grouped[groupName] = [];
             }
@@ -95,15 +95,14 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
 
     const getStatusBadge = (questionId: string) => {
         const status = progress[questionId];
-        if (status === 'mastered') return <Badge className="ml-auto bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs">已斩</Badge>;
-        if (status === 'confused') return <Badge className="ml-auto bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs">不熟</Badge>;
-        if (status === 'failed') return <Badge className="ml-auto bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs">错题</Badge>;
+        if (status === 'mastered') return <Badge className="ml-auto bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs">{DICT.status.mastered}</Badge>;
+        if (status === 'confused') return <Badge className="ml-auto bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs">{DICT.status.confused}</Badge>;
+        if (status === 'failed') return <Badge className="ml-auto bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs">{DICT.status.failed}</Badge>;
         return null;
     };
 
     return (
         <>
-            {/* 触发按钮 (放在 Navbar) */}
             {/* 触发按钮 (放在 Navbar) */}
             <Button
                 variant="outline"
@@ -113,7 +112,7 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
                 <Search className="h-4 w-4 shrink-0 opacity-50 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-12 group-hover:text-foreground" />
 
                 <div className="max-w-0 opacity-0 group-hover:max-w-[12rem] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden flex items-center">
-                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors mr-2">搜索题目...</span>
+                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors mr-2">{DICT.nav.searchPlaceholder}</span>
                     <kbd className="pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium flex text-muted-foreground bg-background/50">
                         <span className="text-xs">⌘</span>K
                     </kbd>
@@ -122,15 +121,15 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
 
             <CommandDialog open={open} onOpenChange={setOpen}>
                 <CommandInput
-                    placeholder="搜索年份、题号或知识点 (如 '2023 1' 或 '极限')..."
+                    placeholder={DICT.nav.searchDialogPlaceholder}
                     value={search}
                     onValueChange={setSearch}
                 />
                 <CommandList>
                     <CommandEmpty>
                         <div className="py-6 text-center space-y-2">
-                            <p className="text-sm text-muted-foreground">未找到相关题目</p>
-                            <p className="text-xs text-muted-foreground">尝试使用年份、题号或知识点关键词</p>
+                            <p className="text-sm text-muted-foreground">{DICT.nav.searchEmpty}</p>
+                            <p className="text-xs text-muted-foreground">{DICT.nav.searchEmptyHelp}</p>
                         </div>
                     </CommandEmpty>
 
@@ -166,11 +165,11 @@ export function GlobalSearch({ questions, onQuestionSelect }: Props) {
                                         </div>
 
                                         {/* 题号 */}
-                                        <span className="font-semibold text-foreground">第 {question.number} 题</span>
+                                        <span className="font-semibold text-foreground">{DICT.exam.questionIndex.replace("{number}", question.number.toString())}</span>
 
                                         {/* 题型 */}
                                         <Badge variant="outline" className="text-xs group-aria-selected:border-primary/30 transition-colors">
-                                            {question.type === 'choice' ? '选择' : question.type === 'fill' ? '填空' : '解答'}
+                                            {question.type === 'choice' ? DICT.exam.typeChoice : question.type === 'fill' ? DICT.exam.typeFill : DICT.exam.typeEssay}
                                         </Badge>
 
                                         {/* 第一个标签 */}

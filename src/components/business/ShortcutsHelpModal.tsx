@@ -6,6 +6,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Keyboard } from "lucide-react";
+import { DICT } from "@/lib/i18n";
 
 interface Props {
     open: boolean;
@@ -15,19 +16,19 @@ interface Props {
 export function ShortcutsHelpModal({ open, onOpenChange }: Props) {
     const shortcuts = [
         {
-            category: "全局", items: [
-                { keys: ["⌘", "K"], desc: "搜索题目" },
-                { keys: ["?"], desc: "显示快捷键帮助" },
-                { keys: ["[", "]"], desc: "切换年份 (上一年/下一年)" },
+            category: DICT.shortcuts.global, items: [
+                { keys: ["⌘", "K"], desc: DICT.shortcuts.search },
+                { keys: ["?"], desc: DICT.shortcuts.help },
+                { keys: ["[", "]"], desc: DICT.shortcuts.toggleYear },
             ]
         },
         {
-            category: "题目详情页", items: [
-                { keys: ["←", "→"], desc: "上一题 / 下一题" },
-                { keys: ["1"], desc: "标记为：斩 (熟练)" },
-                { keys: ["2"], desc: "标记为：懵 (不熟)" },
-                { keys: ["3"], desc: "标记为：崩 (不会)" },
-                { keys: ["Esc"], desc: "关闭详情页" },
+            category: DICT.shortcuts.questionDetail, items: [
+                { keys: ["←", "→"], desc: DICT.shortcuts.prevNext },
+                { keys: ["1"], desc: DICT.shortcuts.markMastered },
+                { keys: ["2"], desc: DICT.shortcuts.markConfused },
+                { keys: ["3"], desc: DICT.shortcuts.markFailed },
+                { keys: ["Esc"], desc: DICT.shortcuts.close },
             ]
         }
     ];
@@ -38,10 +39,10 @@ export function ShortcutsHelpModal({ open, onOpenChange }: Props) {
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Keyboard className="h-5 w-5" />
-                        快捷键指南
+                        {DICT.shortcuts.title}
                     </DialogTitle>
                     <DialogDescription>
-                        使用键盘快捷键来提高刷题效率。
+                        {DICT.shortcuts.desc}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">

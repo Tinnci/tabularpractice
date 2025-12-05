@@ -6,6 +6,7 @@ import { useProgressStore } from "@/lib/store";
 import { getImageUrl } from "@/lib/utils";
 import { Eye, CheckCircle, XCircle, HelpCircle, FileText } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { DICT } from "@/lib/i18n";
 
 interface Props {
     question: Question;
@@ -36,7 +37,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
             <Card className="flex-1 overflow-y-auto shadow-sm border-2 border-muted">
                 <CardContent className="p-6 space-y-6">
                     <div className="flex items-center justify-between border-b pb-4">
-                        <h3 className="font-bold text-lg text-primary">Question {question.number}</h3>
+                        <h3 className="font-bold text-lg text-primary">{DICT.exam.questionIndex.replace('{number}', String(question.number))}</h3>
                         <div className="flex gap-2">
                             {question.tags.map(tag => (
                                 <span key={tag} className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground">
@@ -65,7 +66,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
                             <div className="space-y-2">
                                 <h4 className="font-semibold flex items-center gap-2 text-blue-600 dark:text-blue-400">
                                     <FileText className="w-4 h-4" />
-                                    Analysis & Answer
+                                    {DICT.exam.analysisAndAnswer}
                                 </h4>
                                 {question.analysisMd && <ReactMarkdown>{question.analysisMd}</ReactMarkdown>}
                                 {analysisUrl && (
@@ -89,7 +90,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
                             {/* User Notes */}
                             {notes && (
                                 <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">My Notes</h4>
+                                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">{DICT.exam.personalNote}</h4>
                                     <p className="text-sm text-yellow-700 dark:text-yellow-300 whitespace-pre-wrap">{notes}</p>
                                 </div>
                             )}
@@ -107,7 +108,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
                         onClick={() => setIsRevealed(true)}
                     >
                         <Eye className="mr-2 w-5 h-5" />
-                        Show Answer & Analysis
+                        {DICT.exam.showAnswer}
                     </Button>
                 ) : (
                     <div className="grid grid-cols-3 gap-4">
@@ -118,7 +119,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
                             onClick={() => handleStatusChange('failed')}
                         >
                             <XCircle className="w-5 h-5" />
-                            <span className="text-xs font-normal">Still Failed</span>
+                            <span className="text-xs font-normal">{DICT.status.stillFailed}</span>
                         </Button>
 
                         <Button
@@ -128,7 +129,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
                             onClick={() => handleStatusChange('confused')}
                         >
                             <HelpCircle className="w-5 h-5" />
-                            <span className="text-xs font-normal">Confused</span>
+                            <span className="text-xs font-normal">{DICT.status.confused}</span>
                         </Button>
 
                         <Button
@@ -138,7 +139,7 @@ export function MistakeReviewCard({ question, onNext }: Props) {
                             onClick={() => handleStatusChange('mastered')}
                         >
                             <CheckCircle className="w-5 h-5" />
-                            <span className="text-xs font-normal">Mastered</span>
+                            <span className="text-xs font-normal">{DICT.status.mastered}</span>
                         </Button>
                     </div>
                 )}

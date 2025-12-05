@@ -35,6 +35,10 @@ export const DICT = {
         undo: "撤销",
         shortcutPrev: "快捷键: ←",
         shortcutNext: "快捷键: →",
+        pause: "暂停",
+        start: "开始",
+        resetTime: "重置时间",
+        other: "其他",
     },
 
     // Status Filters
@@ -44,6 +48,7 @@ export const DICT = {
         confused: "懵",
         failed: "崩",
         label: "状态",
+        stillFailed: "仍未掌握",
         shortcutMastered: "快捷键: 1",
         shortcutConfused: "快捷键: 2",
         shortcutFailed: "快捷键: 3",
@@ -64,6 +69,10 @@ export const DICT = {
         progress: "刷题进度",
         collapseStats: "收起统计",
         expandStats: "展开统计",
+        searchPlaceholder: "搜索题目...",
+        searchDialogPlaceholder: "搜索年份、题号或知识点 (如 '2023 1' 或 '极限')...",
+        searchEmpty: "未找到相关题目",
+        searchEmptyHelp: "尝试使用年份、题号或知识点关键词",
     },
 
     // Question Wall & Filters
@@ -169,10 +178,14 @@ export const DICT = {
     // Exam & Question Modal
     exam: {
         questionIndex: "第 {number} 题",
+        typeChoice: "选择",
+        typeFill: "填空",
+        typeEssay: "解答",
         video: "视频",
         answer: "答案",
         analysis: "解析",
         note: "笔记",
+        hasNote: "有笔记",
         draft: "草稿",
         questionDesc: "题目描述",
         contentMissing: "题目内容缺失",
@@ -196,6 +209,24 @@ export const DICT = {
         personalNote: "个人笔记",
         notePlaceholder: "在此输入 Markdown 笔记... (支持 **加粗**, - 列表, > 引用 等)",
         startNotePrompt: "点击此处开始记录笔记...",
+        analysisAndAnswer: "解析与答案",
+        showAnswer: "查看答案",
+    },
+
+    // Shortcuts
+    shortcuts: {
+        title: "快捷键指南",
+        desc: "使用键盘快捷键来提高刷题效率。",
+        global: "全局",
+        questionDetail: "题目详情页",
+        search: "搜索题目",
+        help: "显示快捷键帮助",
+        toggleYear: "切换年份 (上一年/下一年)",
+        prevNext: "上一题 / 下一题",
+        markMastered: "标记为：斩 (熟练)",
+        markConfused: "标记为：懵 (不熟)",
+        markFailed: "标记为：崩 (不会)",
+        close: "关闭详情页",
     },
 
     // Sync Messages
@@ -203,10 +234,16 @@ export const DICT = {
         success: "同步成功",
         error: "同步失败",
         conflict: "数据冲突",
-        conflictDesc: "检测到云端数据有更新，请选择解决方案。",
-        useLocal: "使用本地",
-        useRemote: "使用云端",
-        merge: "智能合并",
+        conflictDesc: "云端数据有更新的版本。这通常发生在其他设备进行了同步后。请选择如何解决此冲突。",
+        useLocal: "使用本地 (覆盖)",
+        useRemote: "使用云端 (丢失本地)",
+        merge: "智能合并 (推荐)",
+        localTime: "时间: {time}",
+        remoteTime: "时间: {time}",
+        localDesc: "包含您当前设备上所有未同步的更改。",
+        remoteDesc: "来自其他设备的最新同步数据。",
+        localData: "本地数据",
+        remoteData: "云端数据",
     }
 } as const;
 

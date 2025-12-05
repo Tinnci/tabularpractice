@@ -5,6 +5,7 @@ import { Question, Status } from "@/lib/types"
 import { useProgressStore } from "@/lib/store"
 import { PenLine, Star } from "lucide-react"
 import { getImageUrl } from "@/lib/utils"
+import { DICT } from "@/lib/i18n";
 import {
     Tooltip,
     TooltipContent,
@@ -119,7 +120,7 @@ export const QuestionCard = memo(function QuestionCard({ question, onClick, isDi
                         </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>收藏题目</p>
+                        <p>{DICT.common.star}</p>
                     </TooltipContent>
                 </Tooltip>
 
@@ -158,7 +159,7 @@ export const QuestionCard = memo(function QuestionCard({ question, onClick, isDi
                             </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>有笔记</p>
+                            <p>{DICT.exam.hasNote}</p>
                         </TooltipContent>
                     </Tooltip>
                 )}

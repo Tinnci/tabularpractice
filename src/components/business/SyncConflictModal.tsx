@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useProgressStore } from "@/lib/store";
 import { Cloud, Laptop, Merge } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
+import { DICT } from "@/lib/i18n";
 
 export function SyncConflictModal() {
     const { pendingConflict, resolveConflict } = useProgressStore(
@@ -21,34 +22,34 @@ export function SyncConflictModal() {
         <Dialog open={!!pendingConflict} onOpenChange={() => { }}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>检测到数据冲突</DialogTitle>
+                    <DialogTitle>{DICT.sync.conflict}</DialogTitle>
                     <DialogDescription>
-                        云端数据有更新的版本。这通常发生在其他设备进行了同步后。请选择如何解决此冲突。
+                        {DICT.sync.conflictDesc}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid grid-cols-2 gap-4 py-4">
                     <div className="flex flex-col gap-2 p-4 border rounded-lg bg-muted/20">
                         <div className="flex items-center gap-2 font-medium">
-                            <Laptop className="w-4 h-4" /> 本地数据
+                            <Laptop className="w-4 h-4" /> {DICT.sync.localData}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            时间: {localDate}
+                            {DICT.sync.localTime.replace("{time}", localDate)}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                            包含您当前设备上所有未同步的更改。
+                            {DICT.sync.localDesc}
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-2 p-4 border rounded-lg bg-primary/5">
                         <div className="flex items-center gap-2 font-medium text-primary">
-                            <Cloud className="w-4 h-4" /> 云端数据
+                            <Cloud className="w-4 h-4" /> {DICT.sync.remoteData}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            时间: {remoteDate}
+                            {DICT.sync.remoteTime.replace("{time}", remoteDate)}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                            来自其他设备的最新同步数据。
+                            {DICT.sync.remoteDesc}
                         </div>
                     </div>
                 </div>
@@ -60,7 +61,7 @@ export function SyncConflictModal() {
                         className="w-full sm:w-auto"
                     >
                         <Laptop className="w-4 h-4 mr-2" />
-                        使用本地 (覆盖)
+                        {DICT.sync.useLocal}
                     </Button>
                     <Button
                         variant="outline"
@@ -68,14 +69,14 @@ export function SyncConflictModal() {
                         className="w-full sm:w-auto"
                     >
                         <Cloud className="w-4 h-4 mr-2" />
-                        使用云端 (丢失本地)
+                        {DICT.sync.useRemote}
                     </Button>
                     <Button
                         onClick={() => resolveConflict('merge')}
                         className="w-full sm:w-auto"
                     >
                         <Merge className="w-4 h-4 mr-2" />
-                        智能合并 (推荐)
+                        {DICT.sync.merge}
                     </Button>
                 </DialogFooter>
             </DialogContent>
