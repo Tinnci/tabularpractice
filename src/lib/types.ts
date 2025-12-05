@@ -1,5 +1,5 @@
 // 基础枚举
-export type SubjectType = 'unified' | 'self_proposed'; // 统考 | 自命题
+type SubjectType = 'unified' | 'self_proposed'; // 统考 | 自命题
 export type Status = 'unanswered' | 'mastered' | 'confused' | 'failed';
 
 // 笔记类型定义
@@ -64,13 +64,8 @@ export interface Question {
   sourceUrl?: string;
 }
 
-export type Difficulty = 'easy' | 'medium' | 'hard';
 
-export interface Tag {
-  id: string;
-  name: string;
-  parentId: string | null;
-}
+
 
 export interface PaperDetail {
   paperId: string;

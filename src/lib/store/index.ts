@@ -9,7 +9,7 @@ import { createSyncSlice } from './slices/createSyncSlice';
 
 import { StoreState } from './types';
 
-export type { StoreState } from './types';
+
 
 export const useProgressStore = create<StoreState>()(
     persist(

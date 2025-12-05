@@ -1,4 +1,4 @@
-export interface SubjectConfigItem {
+interface SubjectConfigItem {
     id: string;
     label: string;
     color: string;

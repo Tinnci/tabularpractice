@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export interface ShortcutConfig {
+interface ShortcutConfig {
     key: string;
     ctrlKey?: boolean;
     metaKey?: boolean; // Command on Mac
