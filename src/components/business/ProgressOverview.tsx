@@ -210,7 +210,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                 <div className="hidden md:flex items-center gap-4">
                     {/* 环形图 */}
                     <div className="h-24 w-24 relative flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105" title="点击筛选">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                             <PieChart>
                                 <Pie
                                     data={data}
