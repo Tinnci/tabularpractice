@@ -18,6 +18,7 @@ import {
 
 import { useProgressStore } from "@/lib/store";
 import { useShallow } from 'zustand/react/shallow';
+import { DICT } from "@/lib/i18n";
 
 function SyncStatusIndicator() {
     const { syncStatus, isDirty, lastSyncedTime } = useProgressStore(
@@ -29,20 +30,20 @@ function SyncStatusIndicator() {
     );
 
     let color = "bg-slate-400"; // Idle/Unknown
-    let tooltip = "未连接同步";
+    let tooltip: string = DICT.sync.notConnected;
 
     if (syncStatus === 'syncing') {
         color = "bg-blue-500 animate-pulse";
-        tooltip = "正在同步...";
+        tooltip = DICT.common.syncing;
     } else if (syncStatus === 'error') {
         color = "bg-red-500";
-        tooltip = "同步失败";
+        tooltip = DICT.sync.error;
     } else if (isDirty) {
         color = "bg-yellow-500";
-        tooltip = "有未保存的更改";
+        tooltip = DICT.common.unsaved;
     } else if (syncStatus === 'success' || (lastSyncedTime && !isDirty)) {
         color = "bg-green-500";
-        tooltip = `已同步 (上次: ${lastSyncedTime ? new Date(lastSyncedTime).toLocaleTimeString() : '未知'})`;
+        tooltip = DICT.sync.syncedAt.replace("{time}", lastSyncedTime ? new Date(lastSyncedTime).toLocaleTimeString() : DICT.sync.unknown);
     }
 
     return (
@@ -97,24 +98,24 @@ export function Navbar() {
                         {githubToken && <SyncStatusIndicator />}
 
                         <Link href="/" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname === "/" ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
-                            Dashboard
+                            {DICT.nav.dashboard}
                         </Link>
                         <Link href="/questions" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname.startsWith("/questions") ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
-                            Questions
+                            {DICT.nav.questions}
                         </Link>
                         <Link href="/practice" className={cn("transition-all duration-300 hover:text-primary hidden sm:inline-block relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full", pathname.startsWith("/practice") ? "text-foreground font-medium after:w-full" : "text-foreground/60")}>
-                            Practice
+                            {DICT.nav.practice}
                         </Link>
 
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" onClick={() => setIsAiModalOpen(true)}>
                                     <Sparkles className="h-[1.2rem] w-[1.2rem]" />
-                                    <span className="sr-only">AI 导入</span>
+                                    <span className="sr-only">{DICT.nav.aiImportLabel}</span>
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>AI 智能导题</p>
+                                <p>{DICT.nav.aiImport}</p>
                             </TooltipContent>
                         </Tooltip>
 
@@ -125,7 +126,7 @@ export function Navbar() {
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>设置</p>
+                                <p>{DICT.nav.settings}</p>
                             </TooltipContent>
                         </Tooltip>
                         <ModeToggle />

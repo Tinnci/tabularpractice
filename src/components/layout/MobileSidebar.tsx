@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip"
 import { SidebarContent } from "@/components/business/Sidebar";
 import { useProgressStore } from "@/lib/store";
+import { DICT } from "@/lib/i18n";
 
 export function MobileSidebar() {
     const { mobileSidebarOpen, setMobileSidebarOpen } = useProgressStore();
@@ -22,12 +23,12 @@ export function MobileSidebar() {
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="md:hidden -ml-2 mr-2 transition-transform duration-300 hover:scale-110 active:scale-95">
                             <Menu className="h-5 w-5" />
-                            <span className="sr-only">打开目录</span>
+                            <span className="sr-only">{DICT.nav.openMenu}</span>
                         </Button>
                     </SheetTrigger>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>打开目录</p>
+                    <p>{DICT.nav.openMenu}</p>
                 </TooltipContent>
             </Tooltip>
 
@@ -35,27 +36,27 @@ export function MobileSidebar() {
                 {/* Shadcn Sheet (Dialog) 要求必须有 Title 和 Description 以符合无障碍标准。
            使用 sr-only 隐藏它们。
         */}
-                <SheetTitle className="sr-only">考点目录导航</SheetTitle>
-                <SheetDescription className="sr-only">选择章节进行筛选</SheetDescription>
+                <SheetTitle className="sr-only">{DICT.nav.defaultOutline}</SheetTitle>
+                <SheetDescription className="sr-only">{DICT.nav.selectChapter}</SheetDescription>
 
                 {/* 顶部主导航 (移动端独有) */}
                 <div className="p-4 border-b space-y-1 bg-muted/20">
                     <Link href="/" onClick={() => setMobileSidebarOpen(false)}>
                         <Button variant="ghost" className="w-full justify-start gap-2 h-10 font-normal">
                             <LayoutDashboard className="w-4 h-4" />
-                            Dashboard
+                            {DICT.nav.dashboard}
                         </Button>
                     </Link>
                     <Link href="/questions" onClick={() => setMobileSidebarOpen(false)}>
                         <Button variant="ghost" className="w-full justify-start gap-2 h-10 font-normal">
                             <ListTodo className="w-4 h-4" />
-                            Questions
+                            {DICT.nav.questions}
                         </Button>
                     </Link>
                     <Link href="/practice" onClick={() => setMobileSidebarOpen(false)}>
                         <Button variant="ghost" className="w-full justify-start gap-2 h-10 font-normal">
                             <Dumbbell className="w-4 h-4" />
-                            Practice
+                            {DICT.nav.practice}
                         </Button>
                     </Link>
                 </div>

@@ -9,6 +9,7 @@ interface Props {
 }
 
 import { useProgressStore } from "@/lib/store";
+import { DICT } from "@/lib/i18n";
 
 export function DashboardOnboarding({ subjects }: Props) {
     const lastQuestionId = useProgressStore(state => state.lastQuestionId);
@@ -28,18 +29,18 @@ export function DashboardOnboarding({ subjects }: Props) {
 
                 {/* 匹配 Navbar 的文字风格 - 放大版 */}
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
-                    Tabular<span className="font-light text-muted-foreground">Practice</span>
+                    {DICT.onboarding.title}<span className="font-light text-muted-foreground">{DICT.onboarding.subtitle}</span>
                 </h1>
 
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                    您的智能化真题刷题助手。
+                    {DICT.onboarding.heroP1}
                     <br />
-                    告别盲目题海战术，用数据驱动高效复习。
+                    {DICT.onboarding.heroP2}
                 </p>
                 <div className="flex justify-center gap-4 pt-4">
                     <Link href={lastQuestionId ? `/questions?questionId=${lastQuestionId}` : "/questions"}>
                         <Button size="lg" className="h-12 px-8 text-lg gap-2 shadow-lg hover:shadow-xl transition-all">
-                            {lastQuestionId ? "继续刷题" : "开始刷题"} <ArrowRight className="w-5 h-5" />
+                            {lastQuestionId ? DICT.onboarding.continue : DICT.onboarding.start} <ArrowRight className="w-5 h-5" />
                         </Button>
                     </Link>
                 </div>
@@ -52,9 +53,9 @@ export function DashboardOnboarding({ subjects }: Props) {
                         <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2 text-blue-600 dark:text-blue-400">
                             <Target className="w-6 h-6" />
                         </div>
-                        <CardTitle>精准突破</CardTitle>
+                        <CardTitle>{DICT.onboarding.features.precise}</CardTitle>
                         <CardDescription>
-                            按年份、按题型、按知识点筛选题目。哪里不会点哪里，构建完整的知识体系。
+                            {DICT.onboarding.features.preciseDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -63,9 +64,9 @@ export function DashboardOnboarding({ subjects }: Props) {
                         <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2 text-green-600 dark:text-green-400">
                             <BarChart2 className="w-6 h-6" />
                         </div>
-                        <CardTitle>数据追踪</CardTitle>
+                        <CardTitle>{DICT.onboarding.features.tracking}</CardTitle>
                         <CardDescription>
-                            自动生成进度热力图和学科分布图。实时掌握复习进度，拒绝假努力。
+                            {DICT.onboarding.features.trackingDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -74,9 +75,9 @@ export function DashboardOnboarding({ subjects }: Props) {
                         <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-2 text-orange-600 dark:text-orange-400">
                             <BookOpen className="w-6 h-6" />
                         </div>
-                        <CardTitle>沉浸体验</CardTitle>
+                        <CardTitle>{DICT.onboarding.features.immersive}</CardTitle>
                         <CardDescription>
-                            支持 Markdown 笔记、一键跳转 B 站视频讲解。打造最舒适的刷题环境。
+                            {DICT.onboarding.features.immersiveDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -89,9 +90,9 @@ export function DashboardOnboarding({ subjects }: Props) {
                         <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-2 text-purple-600 dark:text-purple-400">
                             <Cloud className="w-6 h-6" />
                         </div>
-                        <CardTitle>数据安全</CardTitle>
+                        <CardTitle>{DICT.onboarding.features.security}</CardTitle>
                         <CardDescription>
-                            支持 GitHub Gist 云同步，多设备无缝切换。数据永不丢失，刷题更安心。
+                            {DICT.onboarding.features.securityDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -100,9 +101,9 @@ export function DashboardOnboarding({ subjects }: Props) {
                         <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-2 text-pink-600 dark:text-pink-400">
                             <Database className="w-6 h-6" />
                         </div>
-                        <CardTitle>无限扩展</CardTitle>
+                        <CardTitle>{DICT.onboarding.features.extensible}</CardTitle>
                         <CardDescription>
-                            开放题库生态。通过设置添加自定义题库源，英语、政治、专业课一网打尽。
+                            {DICT.onboarding.features.extensibleDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -111,9 +112,9 @@ export function DashboardOnboarding({ subjects }: Props) {
                         <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-2 text-indigo-600 dark:text-indigo-400">
                             <Settings className="w-6 h-6" />
                         </div>
-                        <CardTitle>为你而设</CardTitle>
+                        <CardTitle>{DICT.onboarding.features.custom}</CardTitle>
                         <CardDescription>
-                            无论是大屏复习还是碎片时间刷题，完全可自定义的卡片布局与省流模式助你专注。
+                            {DICT.onboarding.features.customDesc}
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -122,7 +123,7 @@ export function DashboardOnboarding({ subjects }: Props) {
             {/* 3. Quick Start Subjects */}
             <div className="space-y-6">
                 <div className="flex items-center gap-2 text-lg font-semibold border-l-4 border-primary pl-3">
-                    选择科目开始
+                    {DICT.onboarding.selectSubject}
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {subjects.map(subject => (
@@ -134,7 +135,7 @@ export function DashboardOnboarding({ subjects }: Props) {
                                             {subject.name}
                                         </h3>
                                         <p className="text-sm text-muted-foreground">
-                                            共 {subject.total} 道真题
+                                            {DICT.onboarding.totalCount.replace("{count}", String(subject.total))}
                                         </p>
                                     </div>
                                     <div className="w-8 h-8 rounded-full bg-muted group-hover:bg-primary/10 flex items-center justify-center transition-colors">
@@ -146,7 +147,7 @@ export function DashboardOnboarding({ subjects }: Props) {
                     ))}
                     {subjects.length === 0 && (
                         <div className="col-span-full text-center py-8 text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
-                            正在加载题库数据...
+                            {DICT.onboarding.loading}
                         </div>
                     )}
                 </div>

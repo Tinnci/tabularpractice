@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, AlertCircle, CheckCircle2, BrainCircuit, XCircle, HelpCircle } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { DICT } from "@/lib/i18n";
 
 export default function MistakesPage() {
     const router = useRouter();
@@ -50,10 +51,12 @@ export default function MistakesPage() {
                 <header className="border-b p-4 flex items-center justify-between bg-card">
                     <Button variant="ghost" onClick={handleExitReview} className="gap-2">
                         <ArrowLeft className="w-4 h-4" />
-                        Exit Review
+                        {DICT.mistakes.exit}
                     </Button>
                     <div className="text-sm font-medium text-muted-foreground">
-                        Question {currentQuestionIndex + 1} of {mistakes.length}
+                        {DICT.mistakes.progress
+                            .replace("{current}", String(currentQuestionIndex + 1))
+                            .replace("{total}", String(mistakes.length))}
                     </div>
                 </header>
                 <main className="flex-1 overflow-hidden p-4 md:p-6 max-w-4xl mx-auto w-full">
@@ -66,9 +69,9 @@ export default function MistakesPage() {
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full gap-4">
                             <CheckCircle2 className="w-16 h-16 text-green-500" />
-                            <h2 className="text-2xl font-bold">All Caught Up!</h2>
-                            <p className="text-muted-foreground">You&apos;ve reviewed all your mistakes for now.</p>
-                            <Button onClick={handleExitReview}>Back to Dashboard</Button>
+                            <h2 className="text-2xl font-bold">{DICT.mistakes.allCaughtUp}</h2>
+                            <p className="text-muted-foreground">{DICT.mistakes.allCaughtUpDesc}</p>
+                            <Button onClick={handleExitReview}>{DICT.mistakes.backToDashboard}</Button>
                         </div>
                     )}
                 </main>
@@ -83,40 +86,40 @@ export default function MistakesPage() {
                     <ArrowLeft className="w-4 h-4" />
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Mistake Notebook</h1>
-                    <p className="text-muted-foreground">Review and conquer your failed and confused questions.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{DICT.mistakes.title}</h1>
+                    <p className="text-muted-foreground">{DICT.mistakes.desc}</p>
                 </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Mistakes</CardTitle>
+                        <CardTitle className="text-sm font-medium">{DICT.mistakes.total}</CardTitle>
                         <AlertCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.total}</div>
-                        <p className="text-xs text-muted-foreground">Questions to review</p>
+                        <p className="text-xs text-muted-foreground">{DICT.mistakes.toReview}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Failed</CardTitle>
+                        <CardTitle className="text-sm font-medium">{DICT.mistakes.failedCount}</CardTitle>
                         <XCircle className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.failed}</div>
-                        <p className="text-xs text-muted-foreground">Need immediate attention</p>
+                        <p className="text-xs text-muted-foreground">{DICT.mistakes.failedDesc}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Confused</CardTitle>
+                        <CardTitle className="text-sm font-medium">{DICT.mistakes.confusedCount}</CardTitle>
                         <HelpCircle className="h-4 w-4 text-yellow-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.confused}</div>
-                        <p className="text-xs text-muted-foreground">Need clarification</p>
+                        <p className="text-xs text-muted-foreground">{DICT.mistakes.confusedDesc}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -128,15 +131,14 @@ export default function MistakesPage() {
                             <BrainCircuit className="w-12 h-12 text-primary" />
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-2xl font-bold">Ready to Review?</h2>
+                            <h2 className="text-2xl font-bold">{DICT.mistakes.readyTitle}</h2>
                             <p className="text-muted-foreground max-w-md mx-auto">
-                                Enter the immersive review mode to focus on your mistakes one by one.
-                                Answers are hidden by default to help you test yourself.
+                                {DICT.mistakes.readyDesc}
                             </p>
                         </div>
                         <Button size="lg" className="px-8 text-lg h-12 shadow-lg hover:shadow-xl transition-all" onClick={handleStartReview}>
                             <Play className="mr-2 w-5 h-5" />
-                            Start Review Session
+                            {DICT.mistakes.startReview}
                         </Button>
                     </CardContent>
                 </Card>
@@ -144,8 +146,8 @@ export default function MistakesPage() {
                 <Card className="bg-muted/50 border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
                         <CheckCircle2 className="w-16 h-16 text-muted-foreground/50" />
-                        <h2 className="text-xl font-semibold text-muted-foreground">No Mistakes Found</h2>
-                        <p className="text-sm text-muted-foreground">Great job! You don&apos;t have any failed or confused questions yet.</p>
+                        <h2 className="text-xl font-semibold text-muted-foreground">{DICT.mistakes.noMistakes}</h2>
+                        <p className="text-sm text-muted-foreground">{DICT.mistakes.noMistakesDesc}</p>
                     </CardContent>
                 </Card>
             )}
