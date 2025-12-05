@@ -20,6 +20,7 @@ export const DICT = {
         copied: "已复制",
         retry: "重试",
         all: "全部",
+        refresh: "刷新", // Added
     },
 
     // Status Filters
@@ -65,6 +66,7 @@ export const DICT = {
         doneCount: "/ {count} 已刷",
         viewWall: "墙视图",
         viewGrid: "列表视图",
+        noPapers: "暂无试卷数据", // Added
     },
 
     // Practice Session
@@ -88,20 +90,61 @@ export const DICT = {
     // Settings
     settings: {
         title: "设置",
-        theme: "外观",
+        desc: "管理您的应用偏好和数据。", // Added
+        theme: "外观设置", // Updated
+        themeDesc: "配色方案与布局", // Unused but good to have
+        appearance: { // New Section
+            compact: "紧凑模式",
+            compactDesc: "完全去除卡片内边距",
+            cardWidth: "卡片宽度",
+            cardHeight: "卡片高度",
+            colSpacing: "列间距",
+            rowSpacing: "题目间距",
+        },
+        paperFilter: "试卷筛选", // Added
+        paperFilterDesc: "关闭的试卷将不会出现在练习列表中。", // Added
+        local: "本地", // Added
+        remote: "远程", // Added
         themeLight: "浅色",
         themeDark: "深色",
         themeSystem: "系统",
         data: "数据管理",
-        sync: "数据同步",
+        backupFull: "完整备份",
+        backupFullDesc: "导出 ZIP (含草稿)",
+        restore: "导入进度",
+        restoreDesc: "恢复备份文件",
+        backupTip: "提示：数据存储在浏览器的 LocalStorage 中。为了防止数据丢失（如清理缓存），建议定期导出备份。",
+        sync: "GitHub 云同步",
         syncDesc: "配置 GitHub Gist 进行多端同步。",
         token: "GitHub Token",
+        tokenTip: "推荐使用 Fine-grained PAT 以获得更好的安全性。仅需授予 Gist 的 Read and Write 权限。",
         gistId: "Gist ID",
-        repo: "题库源",
-        repoDesc: "配置题目数据的来源。",
-        addRepo: "添加源",
-        export: "导出数据",
-        import: "导入数据",
+        gistIdPlaceholder: "自动生成...",
+        lastSync: "上次同步: {time}",
+        neverSync: "从未同步",
+        syncNow: "立即同步",
+        syncing: "同步中...",
+        repo: "题库源配置",
+        repoDesc: "您可以同时启用多个题库源，系统将自动合并所有题目。",
+        savedRepos: "已保存的源",
+        builtin: "内置",
+        addRepo: "添加新源",
+        repoName: "名称 (例如: 数学一真题)",
+        repoUrl: "URL (GitHub Raw 或 API)",
+        repoUrlTip: "提示: URL 应指向包含 index.json 的目录",
+        validate: "验证...",
+        add: "添加",
+        exportSuccess: "完整备份已下载",
+        exportSuccessDesc: "包含进度、笔记、收藏、题库源及所有手写草稿",
+        exportFail: "导出失败",
+        importSuccess: "导入成功",
+        importSuccessDesc: "数据已完全恢复，页面即将刷新...",
+        importFail: "恢复失败",
+        parseFail: "解析失败",
+        unsupportedFormat: "不支持的文件格式",
+        warningOverwrite: "警告：即将覆盖数据",
+        warningOverwriteDesc: "此操作将使用导入文件中的数据完全覆盖您当前的刷题进度。当前进度将被永久删除且无法撤销。",
+        confirmOverwrite: "确认覆盖",
     },
 
     // Sync Messages
