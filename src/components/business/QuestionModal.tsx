@@ -54,6 +54,9 @@ interface Props {
 type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft';
 
 // --- Helper: 扁平化标签树 ---
+import { PINYIN_TO_ID_MAP } from "@/data/legacy-tags";
+
+// --- Helper: 扁平化标签树 ---
 const useTagLabelMap = () => {
     return useMemo(() => {
         const map = new Map<string, string>();
@@ -63,8 +66,17 @@ const useTagLabelMap = () => {
                 if (node.children) traverse(node.children);
             });
         };
-        // 遍历所有科目的标签树
+        // 1. 遍历所有科目的标签树 (Standard ID -> Label)
         Object.values(SUBJECT_TAGS_MAP).forEach(traverse);
+
+        // 2. 补充拼音 ID -> Label 的映射
+        Object.entries(PINYIN_TO_ID_MAP).forEach(([pinyinId, standardId]) => {
+            const label = map.get(standardId);
+            if (label) {
+                map.set(pinyinId, label);
+            }
+        });
+
         return map;
     }, []);
 };
