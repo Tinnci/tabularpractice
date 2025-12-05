@@ -253,14 +253,8 @@ const politicsTags: TagNode[] = [
 ];
 
 // 导出科目的 groupId 前缀映射
-export const SUBJECT_GROUP_PREFIX: Record<string, string> = {
-    math: 'math',
-    english: 'english',
-    politics: 'politics'
-};
-
 // 根据 groupId 推断科目类型
-export function getSubjectFromGroupId(groupId: string): string {
+function getSubjectFromGroupId(groupId: string): string {
     if (groupId.startsWith('math')) return 'math';
     if (groupId.startsWith('english')) return 'english';
     if (groupId.startsWith('politics')) return 'politics';

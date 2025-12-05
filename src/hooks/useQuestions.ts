@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { useProgressStore } from '@/lib/store';
-import { Question, Tag, PaperDetail, PaperGroup } from '@/lib/types';
+import { Question, PaperDetail, PaperGroup } from '@/lib/types';
 
 
 
