@@ -126,6 +126,7 @@ const mathTags: TagNode[] = [
                 ]
             },
             { id: "linear-system", label: "线性方程组", children: [] },
+            { id: "xian-xing-dai-shuxian-xing-fang-cheng-zu", label: "线性方程组", children: [] },
             {
                 id: "eigenvalue",
                 label: "矩阵的特征值与特征向量",
