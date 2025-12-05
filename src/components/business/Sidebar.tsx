@@ -113,7 +113,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                         <Button
                             variant="ghost"
                             className={cn(
-                                "w-full justify-between text-sm h-8 pl-8 pr-2 font-normal relative transition-all duration-200 overflow-hidden",
+                                "w-full justify-between text-sm h-8 pl-6 pr-2 font-normal relative transition-all duration-200 overflow-hidden",
                                 isSelected
                                     ? "bg-primary/10 text-primary font-medium hover:bg-primary/15"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
@@ -134,7 +134,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                                 />
                             )}
 
-                            <div className="flex items-center gap-2 z-10 truncate">
+                            <div className="flex items-center gap-2 z-10 min-w-0 flex-1">
                                 {/* 点状图标 */}
                                 <div className={cn(
                                     "h-1.5 w-1.5 rounded-full transition-all duration-300 shrink-0",
@@ -245,9 +245,9 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                                 <AccordionItem key={category.id} value={category.id} className="border border-border/40 rounded-lg bg-card/30 overflow-hidden shadow-sm">
                                     <AccordionTrigger className="py-2.5 px-3 hover:bg-muted/50 text-sm font-semibold text-foreground/80 hover:no-underline group transition-colors">
                                         <div className="flex flex-col items-start gap-1 w-full mr-2">
-                                            <div className="flex justify-between w-full items-center">
-                                                <span>{category.label}</span>
-                                                <span className="text-[10px] font-normal text-muted-foreground bg-muted/50 px-1.5 rounded-md tabular-nums">
+                                            <div className="flex justify-between w-full items-center gap-2">
+                                                <span className="truncate flex-1 min-w-0 text-left">{category.label}</span>
+                                                <span className="text-[10px] font-normal text-muted-foreground bg-muted/50 px-1.5 rounded-md tabular-nums shrink-0">
                                                     {catStat.finished} / {catStat.total}
                                                 </span>
                                             </div>
@@ -274,8 +274,8 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
 
                                                                 <AccordionTrigger className="py-1.5 px-2 hover:bg-muted/30 rounded-md text-sm font-medium text-foreground/90 hover:no-underline justify-start gap-1 [&[data-state=open]>svg]:rotate-90">
                                                                     <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 transition-transform duration-200" />
-                                                                    <div className="flex-1 flex justify-between items-center pr-2">
-                                                                        <span className="truncate">{child.label}</span>
+                                                                    <div className="flex-1 flex justify-between items-center pr-2 min-w-0 gap-2">
+                                                                        <span className="truncate min-w-0">{child.label}</span>
                                                                         {subStat.total > 0 && (
                                                                             <span className="text-[10px] text-muted-foreground/70 tabular-nums">
                                                                                 {subStat.finished}/{subStat.total}
@@ -314,7 +314,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
 // 2. Desktop Sidebar (保持原样，但内部调用 SidebarContent)
 export function Sidebar({ questions }: { questions?: Question[] }) {
     return (
-        <aside className="w-64 flex-shrink-0 border-r border-border/40 h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col glass z-30">
+        <aside className="w-72 flex-shrink-0 border-r border-border/40 h-[calc(100vh-3.5rem)] sticky top-14 hidden md:flex flex-col glass z-30">
             <SidebarContent questions={questions} className="bg-transparent" />
         </aside>
     );
