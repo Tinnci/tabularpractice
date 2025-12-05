@@ -10,6 +10,7 @@ import { usePaperDetail } from "@/hooks/useQuestions";
 import { Question, Status, PaperGroup } from "@/lib/types";
 import { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useProgressStore } from "@/lib/store";
+import { DICT } from "@/lib/i18n";
 import {
   Select,
   SelectContent,
@@ -231,21 +232,21 @@ function QuestionsContent() {
       <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
         <div className="px-4 sm:px-6 py-3 border-b flex flex-wrap items-center justify-between gap-y-3 gap-x-4 bg-background z-20 shadow-sm">
           <div className="flex items-center gap-3 shrink-0">
-            <h2 className="text-lg font-semibold text-foreground whitespace-nowrap hidden sm:block">真题墙</h2>
+            <h2 className="text-lg font-semibold text-foreground whitespace-nowrap hidden sm:block">{DICT.wall.title}</h2>
             <Select value={currentGroupId} onValueChange={setCurrentGroupId}>
               <SelectTrigger className="w-[140px] sm:w-[180px] h-9 border-dashed sm:border-solid">
-                <SelectValue placeholder="选择试卷组" />
+                <SelectValue placeholder={DICT.wall.selectGroup} />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>统考科目</SelectLabel>
+                  <SelectLabel>{DICT.wall.unified}</SelectLabel>
                   {groupedPaperGroups.unified.map(group => (
                     <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
                   ))}
                 </SelectGroup>
                 {groupedPaperGroups.selfProposed.length > 0 && (
                   <SelectGroup>
-                    <SelectLabel>自命题科目</SelectLabel>
+                    <SelectLabel>{DICT.wall.selfProposed}</SelectLabel>
                     {groupedPaperGroups.selfProposed.map(group => (
                       <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
                     ))}
@@ -258,12 +259,12 @@ function QuestionsContent() {
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-linear-fade flex-1 justify-start sm:justify-center order-3 sm:order-2 w-full sm:w-auto">
             <div className="flex items-center bg-muted/50 p-1 rounded-lg shrink-0">
               <ToggleGroup type="single" value={filterStatus} onValueChange={(v) => setFilterStatus((v as Status | 'all') || 'all')} className="gap-0">
-                <ToggleGroupItem value="all" className="h-7 px-2 text-xs data-[state=on]:bg-white data-[state=on]:shadow-sm dark:data-[state=on]:bg-accent dark:data-[state=on]:text-accent-foreground">全部</ToggleGroupItem>
-                <ToggleGroupItem value="unanswered" className="h-7 px-2 text-xs data-[state=on]:bg-white data-[state=on]:shadow-sm dark:data-[state=on]:bg-accent dark:data-[state=on]:text-accent-foreground">未做</ToggleGroupItem>
+                <ToggleGroupItem value="all" className="h-7 px-2 text-xs data-[state=on]:bg-white data-[state=on]:shadow-sm dark:data-[state=on]:bg-accent dark:data-[state=on]:text-accent-foreground">{DICT.common.all}</ToggleGroupItem>
+                <ToggleGroupItem value="unanswered" className="h-7 px-2 text-xs data-[state=on]:bg-white data-[state=on]:shadow-sm dark:data-[state=on]:bg-accent dark:data-[state=on]:text-accent-foreground">{DICT.status.unanswered}</ToggleGroupItem>
                 <div className="w-px h-4 bg-border mx-1" />
-                <ToggleGroupItem value="mastered" className="h-7 px-2 text-xs data-[state=on]:bg-green-100 data-[state=on]:text-green-700 dark:data-[state=on]:bg-green-900 dark:data-[state=on]:text-green-300">斩</ToggleGroupItem>
-                <ToggleGroupItem value="confused" className="h-7 px-2 text-xs data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-700 dark:data-[state=on]:bg-yellow-900 dark:data-[state=on]:text-yellow-300">懵</ToggleGroupItem>
-                <ToggleGroupItem value="failed" className="h-7 px-2 text-xs data-[state=on]:bg-red-100 data-[state=on]:text-red-700 dark:data-[state=on]:bg-red-900 dark:data-[state=on]:text-red-300">崩</ToggleGroupItem>
+                <ToggleGroupItem value="mastered" className="h-7 px-2 text-xs data-[state=on]:bg-green-100 data-[state=on]:text-green-700 dark:data-[state=on]:bg-green-900 dark:data-[state=on]:text-green-300">{DICT.status.mastered}</ToggleGroupItem>
+                <ToggleGroupItem value="confused" className="h-7 px-2 text-xs data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-700 dark:data-[state=on]:bg-yellow-900 dark:data-[state=on]:text-yellow-300">{DICT.status.confused}</ToggleGroupItem>
+                <ToggleGroupItem value="failed" className="h-7 px-2 text-xs data-[state=on]:bg-red-100 data-[state=on]:text-red-700 dark:data-[state=on]:bg-red-900 dark:data-[state=on]:text-red-300">{DICT.status.failed}</ToggleGroupItem>
               </ToggleGroup>
             </div>
 
@@ -274,10 +275,10 @@ function QuestionsContent() {
                     <div>
                       <Select value={filterYear} onValueChange={setFilterYear}>
                         <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
-                          <span>{filterYear === 'all' ? '年份' : filterYear}</span>
+                          <span>{filterYear === 'all' ? DICT.wall.year : filterYear}</span>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">全部年份</SelectItem>
+                          <SelectItem value="all">{DICT.wall.allYears}</SelectItem>
                           {availableYears.map(year => (
                             <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                           ))}
@@ -293,13 +294,13 @@ function QuestionsContent() {
 
               <Select value={filterType} onValueChange={(val) => setFilterType(val as 'all' | 'choice' | 'fill' | 'answer')}>
                 <SelectTrigger className="w-[80px] h-8 text-xs bg-transparent border-none hover:bg-muted/50">
-                  <span>{filterType === 'all' ? '题型' : (filterType === 'choice' ? '选择' : filterType === 'fill' ? '填空' : '解答')}</span>
+                  <span>{filterType === 'all' ? DICT.wall.type : (filterType === 'choice' ? DICT.wall.choice : filterType === 'fill' ? DICT.wall.fill : DICT.wall.answer)}</span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部题型</SelectItem>
-                  <SelectItem value="choice">选择题</SelectItem>
-                  <SelectItem value="fill">填空题</SelectItem>
-                  <SelectItem value="answer">解答题</SelectItem>
+                  <SelectItem value="all">{DICT.wall.allTypes}</SelectItem>
+                  <SelectItem value="choice">{DICT.wall.choice}</SelectItem>
+                  <SelectItem value="fill">{DICT.wall.fill}</SelectItem>
+                  <SelectItem value="answer">{DICT.wall.answer}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -323,7 +324,7 @@ function QuestionsContent() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>快捷键帮助 (?)</p>
+                  <p>{DICT.nav.shortcuts}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -331,8 +332,8 @@ function QuestionsContent() {
             <GlobalSearch questions={mergedQuestions} onQuestionSelect={(id) => updateUrl({ questionId: id })} />
 
             <div className="hidden lg:flex flex-col items-end text-[10px] text-muted-foreground border-l pl-3 leading-tight">
-              <span>{filteredQuestions.length} 题</span>
-              <span>/ {Object.keys(progress).length} 已刷</span>
+              <span>{DICT.wall.totalCount.replace('{count}', filteredQuestions.length.toString())}</span>
+              <span>{DICT.wall.doneCount.replace('{count}', Object.keys(progress).length.toString())}</span>
             </div>
           </div>
         </div>

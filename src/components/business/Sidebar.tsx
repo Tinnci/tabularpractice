@@ -21,10 +21,10 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-
 import { Question } from "@/lib/types";
 
 import { useContextQuestions } from "@/hooks/useContextQuestions";
+import { DICT } from "@/lib/i18n";
 
 export function SidebarContent({ className, onSelect, questions }: { className?: string, onSelect?: () => void, questions?: Question[] }) {
     const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
@@ -35,10 +35,10 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     }, [currentGroupId]);
 
     const sidebarTitle = useMemo(() => {
-        if (filterSubject === 'math') return '数学考点';
-        if (filterSubject === 'english') return '英语题型';
-        if (filterSubject === 'politics') return '政治大纲';
-        return '考点目录';
+        if (filterSubject === 'math') return DICT.nav.mathOutline;
+        if (filterSubject === 'english') return DICT.nav.englishOutline;
+        if (filterSubject === 'politics') return DICT.nav.politicsOutline;
+        return DICT.nav.defaultOutline;
     }, [filterSubject]);
 
     const { contextQuestions } = useContextQuestions();
@@ -107,12 +107,12 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-xs text-muted-foreground hover:text-foreground">
-                                            <span className="flex items-center gap-2"><PieChart className="w-3 h-3" /> 刷题进度</span>
+                                            <span className="flex items-center gap-2"><PieChart className="w-3 h-3" /> {DICT.nav.progress}</span>
                                             <ChevronRight className={cn("w-3 h-3 transition-transform", isStatsOpen && "rotate-90")} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        <p>{isStatsOpen ? "收起统计" : "展开统计"}</p>
+                                        <p>{isStatsOpen ? DICT.nav.collapseStats : DICT.nav.expandStats}</p>
                                     </TooltipContent>
                                 </Tooltip>
                             </div>
@@ -138,7 +138,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                         onClick={() => { setSelectedTagId(null); onSelect?.(); }}
                     >
                         <Hash className="mr-2 h-4 w-4" />
-                        全部题目
+                        {DICT.common.all}
                     </Button>
 
                     {/* 使用 Accordion 实现一级菜单 */}
@@ -181,7 +181,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
 
                     {currentTags.length === 0 && (
                         <div className="text-center py-10 text-muted-foreground text-xs">
-                            <p>暂无目录数据</p>
+                            <p>{DICT.practice.noTags}</p>
                         </div>
                     )}
                 </div>
