@@ -46,6 +46,11 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     // 使用传入的 questions (上下文感知) 或回退到 hook 计算的 contextQuestions
     const displayQuestions = questions || contextQuestions;
 
+
+    // 获取进度状态 (用于计算完成度)
+    // 提到 useMemo 之前
+    const progress = useProgressStore(state => state.progress);
+
     // 4. 计算每个 Tag 的统计数据 (递归)
     const tagStats = useMemo(() => {
         const stats: Record<string, { total: number, finished: number }> = {};
@@ -74,11 +79,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                 const relatedQs = getRelatedQuestions(node);
                 const total = relatedQs.length;
                 const finished = relatedQs.filter(q => {
-                    const status = useProgressStore.getState().progress[q.id]; // Access directly or via prop if reactive needed. 
-                    // Note: We are inside a component, useProgressStore hook usage at top level is better for reactivity.
-                    // However, for performance in deep trees, passing map is better.
-                    // Let's rely on the store state captured in a reactive map if possible.
-                    // Actually, let's use the 'progress' from the store which we need to fetch.
+                    const status = progress[q.id];
                     return status === 'mastered' || status === 'confused' || status === 'failed';
                 }).length;
 
@@ -92,10 +93,9 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
 
         computeStats(currentTags);
         return stats;
-    }, [displayQuestions, currentTags, useProgressStore.getState().progress]); // Add progress dependency to update on interactive changes
+    }, [displayQuestions, currentTags, progress]);
 
-    // 获取进度状态的辅助 hook 封装
-    const progress = useProgressStore(state => state.progress);
+
 
 
     // 渲染叶子节点 (最终的知识点) - 增强 UI

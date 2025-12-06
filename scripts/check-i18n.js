@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * i18n 硬编码检测脚本
  * 
@@ -58,7 +59,7 @@ function checkFile(filePath) {
 
   lines.forEach((line, index) => {
     const lineNumber = index + 1;
-    
+
     // 跳过注释行
     const trimmedLine = line.trim();
     if (trimmedLine.startsWith('//') || trimmedLine.startsWith('*') || trimmedLine.startsWith('/*')) {
@@ -130,9 +131,9 @@ function generateReport() {
   console.log('📊 i18n 硬编码检测报告');
   console.log('='.repeat(60));
 
-  const total = results.jsxHardcoded.length + 
-                results.stringHardcoded.length + 
-                results.templateHardcoded.length;
+  const total = results.jsxHardcoded.length +
+    results.stringHardcoded.length +
+    results.templateHardcoded.length;
 
   if (total === 0) {
     console.log('\n✅ 太棒了！没有检测到硬编码的中文字符串。');
@@ -203,16 +204,16 @@ function generateReport() {
  */
 async function main() {
   console.log('🔍 正在扫描文件...');
-  
+
   const pattern = `${CONFIG.srcDir}/**/*.{${CONFIG.extensions.join(',')}}`;
   const files = await glob(pattern, { ignore: CONFIG.ignore });
-  
+
   console.log(`   找到 ${files.length} 个文件`);
-  
+
   files.forEach(file => {
     checkFile(file);
   });
-  
+
   generateReport();
 }
 

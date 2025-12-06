@@ -56,6 +56,7 @@ export default function DashboardPage() {
   // Prevent SSR issues with Recharts
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

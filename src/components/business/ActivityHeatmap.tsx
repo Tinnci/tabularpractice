@@ -20,6 +20,7 @@ export function ActivityHeatmap() {
     // Prevent SSR - react-activity-calendar uses browser APIs
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
