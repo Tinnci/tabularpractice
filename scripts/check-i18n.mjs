@@ -1,20 +1,9 @@
-#!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-require-imports */
-/**
- * i18n 硬编码检测脚本
- * 
- * 功能：
- * 1. 扫描 src 目录下所有 .tsx/.ts 文件
- * 2. 检测 JSX 中硬编码的中文字符串
- * 3. 检测 JS 变量中的中文字符串（排除注释）
- * 4. 生成报告并提供修复建议
- * 
- * 用法: node scripts/check-i18n.js
- */
+import fs from 'fs';
+import path from 'path';
+import { glob } from 'glob';
+import { fileURLToPath } from 'url';
 
-const fs = require('fs');
-const path = require('path');
-const { glob } = require('glob');
+const __filename = fileURLToPath(import.meta.url);
 
 // 配置
 const CONFIG = {

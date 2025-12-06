@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowRight, PlayCircle, AlertCircle, BookOpen, Trophy, Target } from "lucide-react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useTheme } from "next-themes";
-import { useState, useEffect } from "react";
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { DICT } from "@/lib/i18n";
 
@@ -47,20 +47,20 @@ const Legend = dynamic(
   () => import('recharts').then(mod => mod.Legend),
   { ssr: false }
 );
+import { ClientOnly } from "@/components/ui/ClientOnly";
+
+// ... existing imports
 
 export default function DashboardPage() {
   const { total, subjects } = useDashboardStats();
   const { resolvedTheme } = useTheme();
   const lastQuestionId = useProgressStore(state => state.lastQuestionId);
 
-  // Prevent SSR issues with Recharts
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
+  // Removed manual mounted state
+  // const [mounted, setMounted] = useState(false);
+  // useEffect ...
 
-  // 图表颜色配置 - 根据主题自动调整
+  // 图表颜色配置 ... (unchanged)
   const chartColors = {
     mastered: resolvedTheme === 'dark' ? '#4ade80' : '#22c55e',  // 绿色：深色模式更亮
     confused: resolvedTheme === 'dark' ? '#fbbf24' : '#f59e0b',  // 橙黄：提高对比度
@@ -69,26 +69,31 @@ export default function DashboardPage() {
     cursor: resolvedTheme === 'dark' ? 'rgba(55, 65, 81, 0.5)' : 'rgba(244, 244, 245, 0.8)',
   };
 
-  // 1. 生成图表数据
-  // 过滤掉题目数为 0 的科目
+  // ... filtering code ...
   const activeSubjects = subjects.filter(s => s.total > 0);
-
   const totalMastered = total.mastered;
   const totalFailed = total.failed;
   const totalConfused = total.confused;
   const totalAnswered = totalMastered + totalFailed + totalConfused;
 
-  // 如果是新用户（还未开始刷题），显示引导页
   if (totalAnswered === 0 && activeSubjects.length > 0) {
     return <DashboardOnboarding subjects={activeSubjects} />;
   }
 
   return (
     <div className="container mx-auto p-6 space-y-8 max-w-7xl">
-      {/* 1. Hero Section */}
+      {/* ... Hero Section ... */}
       <div className="flex flex-col lg:flex-row gap-6">
         <Card className="flex-1 bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/10 relative overflow-hidden shadow-xl shadow-primary/5 group hover:shadow-primary/10 transition-all duration-500">
-          {/* 装饰背景元素 */}
+          {/* ... card content ... */}
+          {/* Note: I am replacing the file content part by part or using a smart replace? 
+               Instructions say "single contiguous block".
+               I need to replace lines 56-60 (state) AND line 179 (usage).
+               Since "ReplacFileContent" supports only ONE block, I should use MultiReplace? 
+               Or I can just replace the variable definition and then I'll have a compile error until I fix usage?
+               No, I must be atomic or use multi-replace.
+               I will use MultiReplace.
+           */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
@@ -177,7 +182,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="h-[250px] sm:h-[350px]">
             <div className="h-full w-full">
-              {mounted ? (
+              <ClientOnly fallback={<div className="h-full w-full bg-muted/20 rounded animate-pulse" />}>
                 <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <BarChart
                     data={activeSubjects}
@@ -211,9 +216,7 @@ export default function DashboardPage() {
                     <Bar dataKey="failed" name={DICT.progress.failedShort} stackId="a" fill={chartColors.failed} radius={[0, 0, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              ) : (
-                <div className="h-full w-full bg-muted/20 rounded animate-pulse" />
-              )}
+              </ClientOnly>
             </div>
           </CardContent>
         </Card>
