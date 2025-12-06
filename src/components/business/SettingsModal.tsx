@@ -137,11 +137,11 @@ export function SettingsModal() {
 
         try {
             await syncData();
-            toast.success("同步成功");
+            toast.success(DICT.settings.toast.syncSuccess);
         } catch (error) {
             console.error(error);
-            toast.error("同步失败", {
-                description: "请检查网络或 Token 权限"
+            toast.error(DICT.settings.toast.syncFailed, {
+                description: DICT.settings.toast.syncFailedDesc
             });
         }
     };
@@ -151,7 +151,7 @@ export function SettingsModal() {
         const name = newRepoName.trim();
 
         if (!name || !url) {
-            toast.error("请填写名称和 URL");
+            toast.error(DICT.settings.toast.nameUrlRequired);
             return;
         }
 
@@ -167,13 +167,13 @@ export function SettingsModal() {
             setNewRepoName("");
             setNewRepoUrl("");
 
-            toast.success("题库源添加成功", {
-                description: "您可以点击开关启用该题库"
+            toast.success(DICT.settings.toast.sourceAdded, {
+                description: DICT.settings.toast.sourceAddedDesc
             });
         } catch (error) {
             console.error(error);
-            toast.error("题库验证失败", {
-                description: "请检查 URL 是否正确，并确保 index.json 可访问"
+            toast.error(DICT.settings.toast.sourceVerifyFailed, {
+                description: DICT.settings.toast.sourceVerifyFailedDesc
             });
         } finally {
             setIsCheckingRepo(false);
@@ -217,13 +217,13 @@ export function SettingsModal() {
             const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
             saveAs(content, `tabular-backup-${date}.zip`);
 
-            toast.success("完整备份已下载", {
-                description: `包含进度、笔记、收藏、题库源及所有手写草稿`,
+            toast.success(DICT.settings.toast.backupDownloaded, {
+                description: DICT.settings.labels.backupDesc,
             });
         } catch (error) {
             console.error("Export failed:", error);
-            toast.error("导出失败", {
-                description: "生成备份文件时出现错误",
+            toast.error(DICT.settings.toast.exportFailed, {
+                description: DICT.settings.toast.exportFailedDesc,
             });
         }
     };
@@ -272,16 +272,16 @@ export function SettingsModal() {
                         setImportConfirmOpen(true);
                     } catch (e) {
                         console.error(e);
-                        toast.error("解析失败", { description: "JSON 文件格式错误" });
+                        toast.error(DICT.settings.toast.parseFailed, { description: DICT.settings.toast.parseFailedDesc });
                     }
                 };
                 reader.readAsText(file);
             } else {
-                toast.error("不支持的文件格式", { description: "请上传 .zip 或 .json 备份文件" });
+                toast.error(DICT.settings.toast.unsupportedFormat, { description: DICT.settings.toast.unsupportedFormatDesc });
             }
         } catch (error) {
             console.error("Import failed:", error);
-            toast.error("读取失败", { description: "文件可能已损坏" });
+            toast.error(DICT.settings.toast.readFailed, { description: DICT.settings.toast.readFailedDesc });
         }
     };
 
@@ -324,8 +324,8 @@ export function SettingsModal() {
                 setPendingImportData(null);
                 setOpen(false);
 
-                toast.success("导入成功", {
-                    description: "数据已完全恢复，页面即将刷新...",
+                toast.success(DICT.settings.toast.importSuccess, {
+                    description: DICT.settings.toast.importSuccessDesc,
                 });
 
                 setTimeout(() => {
@@ -333,7 +333,7 @@ export function SettingsModal() {
                 }, 1500);
             } catch (error) {
                 console.error("Restore failed:", error);
-                toast.error("恢复失败", { description: "写入数据时发生错误" });
+                toast.error(DICT.settings.toast.restoreFailed, { description: DICT.settings.toast.restoreFailedDesc });
             }
         }
     };
@@ -395,7 +395,7 @@ export function SettingsModal() {
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>支持 .zip (完整) 或 .json (旧版) 格式</p>
+                                            <p>{DICT.settings.labels.supportedFormats}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </div>
@@ -485,7 +485,7 @@ export function SettingsModal() {
                                                         {source.isBuiltin && <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">{DICT.settings.builtin}</span>}
                                                     </div>
                                                     <div className="text-xs text-muted-foreground truncate" title={source.url}>
-                                                        {source.url || "本地数据目录"}
+                                                        {source.url || DICT.settings.labels.localDataDir}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
@@ -493,7 +493,7 @@ export function SettingsModal() {
                                                         checked={source.enabled}
                                                         onCheckedChange={(checked) => {
                                                             toggleRepoSource(source.id, checked);
-                                                            toast.success(`${checked ? '启用' : '禁用'}: ${source.name}`);
+                                                            toast.success(`${checked ? DICT.settings.toast.enabled : DICT.settings.toast.disabled}: ${source.name}`);
                                                             // 延迟刷新以重新加载数据
                                                             setTimeout(() => window.location.reload(), 800);
                                                         }}

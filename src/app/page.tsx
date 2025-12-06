@@ -8,6 +8,7 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { DICT } from "@/lib/i18n";
 
 import { DashboardOnboarding } from "@/components/business/DashboardOnboarding";
 import { ActivityHeatmap } from "@/components/business/ActivityHeatmap";
@@ -96,22 +97,22 @@ export default function DashboardPage() {
 
           <CardContent className="p-6 sm:p-10 flex flex-col justify-center h-full relative z-10">
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
-              准备好迎接挑战了吗？
+              {DICT.dashboard.challengeTitle}
             </h1>
             <p className="text-muted-foreground/80 mb-8 sm:mb-10 text-lg sm:text-xl max-w-xl leading-relaxed">
-              保持节奏，每天进步一点点。你已经斩获了 <span className="font-bold text-foreground mx-1 text-2xl">{totalMastered}</span> 道真题。
+              {DICT.dashboard.challengeDesc.replace("{count}", totalMastered.toString())}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href={lastQuestionId ? `/questions?questionId=${lastQuestionId}` : "/questions"}>
                 <Button size="lg" className="h-12 px-8 text-base shadow-lg hover:shadow-primary/25 hover:scale-105 transition-all duration-300 rounded-full">
                   <PlayCircle className="w-5 h-5 mr-2" />
-                  {lastQuestionId ? "继续上次刷题" : "开始刷题"}
+                  {lastQuestionId ? DICT.dashboard.continuePractice : DICT.dashboard.startPractice}
                 </Button>
               </Link>
               <Link href="/questions?status=unanswered">
                 <Button size="lg" variant="outline" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-background/80 border-primary/20 hover:border-primary/40 rounded-full transition-all duration-300">
                   <Target className="w-5 h-5 mr-2" />
-                  今日目标
+                  {DICT.dashboard.dailyTarget}
                 </Button>
               </Link>
             </div>
@@ -123,29 +124,29 @@ export default function DashboardPage() {
           <Card className="glass-card border-l-4 border-l-green-500 bg-gradient-to-br from-green-50/10 to-transparent dark:from-green-900/10">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-green-500" /> 已斩题数
+                <Trophy className="w-4 h-4 text-green-500" /> {DICT.dashboard.masteredLabel}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold text-green-600 dark:text-green-400">{totalMastered}</div>
-              <p className="text-xs text-muted-foreground mt-1">熟练掌握</p>
+              <p className="text-xs text-muted-foreground mt-1">{DICT.dashboard.masteredDesc}</p>
             </CardContent>
           </Card>
           <Card className="glass-card border-l-4 border-l-yellow-500 bg-gradient-to-br from-yellow-50/10 to-transparent dark:from-yellow-900/10">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-yellow-500" /> 需复习
+                <BookOpen className="w-4 h-4 text-yellow-500" /> {DICT.dashboard.confusedLabel}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold text-yellow-600 dark:text-yellow-400">{totalConfused}</div>
-              <p className="text-xs text-muted-foreground mt-1">概念模糊</p>
+              <p className="text-xs text-muted-foreground mt-1">{DICT.dashboard.confusedDesc}</p>
             </CardContent>
           </Card>
           <Card className="glass-card border-l-4 border-l-red-500 col-span-2 bg-gradient-to-br from-red-50/10 to-transparent dark:from-red-900/10">
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-500" /> 错题攻克
+                <AlertCircle className="w-4 h-4 text-red-500" /> {DICT.dashboard.failedLabel}
               </CardTitle>
               <Link href="/mistakes">
                 <Button variant="ghost" size="sm" className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full">
@@ -156,7 +157,7 @@ export default function DashboardPage() {
             <CardContent className="flex items-end justify-between">
               <div>
                 <div className="text-4xl font-bold text-red-600 dark:text-red-400">{totalFailed + totalConfused}</div>
-                <p className="text-xs text-muted-foreground mt-1">待复习 (错题 + 疑惑)</p>
+                <p className="text-xs text-muted-foreground mt-1">{DICT.dashboard.failedDesc}</p>
               </div>
             </CardContent>
           </Card>
@@ -168,9 +169,9 @@ export default function DashboardPage() {
         {/* 学科进度对比 */}
         <Card className="glass-card col-span-1 lg:col-span-2">
           <CardHeader>
-            <CardTitle>学科进度分布</CardTitle>
+            <CardTitle>{DICT.dashboard.subjectProgress}</CardTitle>
             <CardDescription>
-              {activeSubjects.length === 0 ? "暂无题目数据" : "各科目掌握情况概览"}
+              {activeSubjects.length === 0 ? DICT.dashboard.noDataDesc : DICT.dashboard.subjectProgressDesc}
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[250px] sm:h-[350px]">
@@ -204,9 +205,9 @@ export default function DashboardPage() {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="mastered" name="已斩" stackId="a" fill={chartColors.mastered} radius={[0, 4, 4, 0]} />
-                    <Bar dataKey="confused" name="懵圈" stackId="a" fill={chartColors.confused} />
-                    <Bar dataKey="failed" name="崩盘" stackId="a" fill={chartColors.failed} radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="mastered" name={DICT.progress.masteredShort} stackId="a" fill={chartColors.mastered} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="confused" name={DICT.progress.confusedShort} stackId="a" fill={chartColors.confused} />
+                    <Bar dataKey="failed" name={DICT.progress.failedShort} stackId="a" fill={chartColors.failed} radius={[0, 0, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -219,7 +220,7 @@ export default function DashboardPage() {
         {/* 快速入口 */}
         <div className="space-y-6">
           <Card className="glass-card">
-            <CardHeader><CardTitle>专项突破</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{DICT.dashboard.specialAttack}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {activeSubjects.map(subject => (
                 <Link

@@ -5,6 +5,7 @@ import * as React from "react";
 import { useMemo, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DICT } from "@/lib/i18n";
 import dynamic from "next/dynamic";
 
 // Dynamically import ActivityCalendar to prevent SSR issues
@@ -95,10 +96,10 @@ export function ActivityHeatmap() {
         return (
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-foreground">奋斗热力图</h3>
+                    <h3 className="text-sm font-medium text-foreground">{DICT.heatmap.title}</h3>
                     <div className="text-xs text-muted-foreground space-x-4">
-                        <span>年度总计: <span className="font-bold text-foreground">--</span> 题</span>
-                        <span>连续打卡: <span className="font-bold text-green-600 dark:text-green-400">--</span> 天</span>
+                        <span>{DICT.heatmap.yearlyTotal}: <span className="font-bold text-foreground">--</span> 题</span>
+                        <span>{DICT.heatmap.streak}: <span className="font-bold text-green-600 dark:text-green-400">--</span> 天</span>
                     </div>
                 </div>
                 <div className="w-full h-[120px] bg-muted/20 rounded animate-pulse" />
@@ -110,11 +111,11 @@ export function ActivityHeatmap() {
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-foreground">
-                    奋斗热力图
+                    {DICT.heatmap.title}
                 </h3>
                 <div className="text-xs text-muted-foreground space-x-4">
-                    <span>年度总计: <span className="font-bold text-foreground">{totalYearly}</span> 题</span>
-                    <span>连续打卡: <span className="font-bold text-green-600 dark:text-green-400">{streak}</span> 天</span>
+                    <span>{DICT.heatmap.yearlyTotal}: <span className="font-bold text-foreground">{totalYearly}</span> 题</span>
+                    <span>{DICT.heatmap.streak}: <span className="font-bold text-green-600 dark:text-green-400">{streak}</span> 天</span>
                 </div>
             </div>
 
@@ -128,17 +129,12 @@ export function ActivityHeatmap() {
                         }}
                         labels={{
                             legend: {
-                                less: '少',
-                                more: '多',
+                                less: DICT.heatmap.lesserActivity,
+                                more: DICT.heatmap.moreActivity,
                             },
-                            months: [
-                                '1月', '2月', '3月', '4月', '5月', '6月',
-                                '7月', '8月', '9月', '10月', '11月', '12月'
-                            ],
-                            totalCount: '{{count}} 题 (过去一年)',
-                            weekdays: [
-                                '周日', '周一', '周二', '周三', '周四', '周五', '周六'
-                            ]
+                            months: [...DICT.heatmap.months],
+                            totalCount: DICT.heatmap.questionsInYear,
+                            weekdays: [...DICT.heatmap.weekdays]
                         }}
                         renderBlock={(block, activity) => (
                             <TooltipProvider>

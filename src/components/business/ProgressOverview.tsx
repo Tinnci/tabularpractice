@@ -4,6 +4,7 @@ import { useProgressStore } from "@/lib/store";
 import { Question, Status } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "next-themes";
+import { DICT } from "@/lib/i18n";
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
@@ -67,10 +68,10 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
     const total = questions.length;
 
     const data = useMemo(() => [
-        { name: '斩 (熟练)', value: stats.mastered, color: theme === 'dark' ? '#22c55e' : '#16a34a', status: 'mastered' },
-        { name: '懵 (不熟)', value: stats.confused, color: theme === 'dark' ? '#facc15' : '#eab308', status: 'confused' },
-        { name: '崩 (不会)', value: stats.failed, color: theme === 'dark' ? '#f87171' : '#dc2626', status: 'failed' },
-        { name: '未做', value: stats.unanswered, color: theme === 'dark' ? '#334155' : '#e2e8f0', status: 'unanswered' },
+        { name: '斩 (熟练)', value: stats.mastered, color: theme === 'dark' ? '#4ade80' : '#22c55e', status: 'mastered' },  // green-400 / green-500
+        { name: '懵 (不熟)', value: stats.confused, color: theme === 'dark' ? '#facc15' : '#eab308', status: 'confused' }, // yellow-400 / yellow-500
+        { name: '崩 (不会)', value: stats.failed, color: theme === 'dark' ? '#f87171' : '#ef4444', status: 'failed' },     // red-400 / red-500
+        { name: '未做', value: stats.unanswered, color: theme === 'dark' ? '#475569' : '#cbd5e1', status: 'unanswered' },  // slate-600 / slate-300
     ], [stats, theme]);
 
     const progressPercentage = total > 0
@@ -108,7 +109,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
         <Card className="w-full border-none shadow-none bg-transparent">
             <CardHeader className="p-0 mb-1.5 md:mb-2">
                 <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex justify-between items-center">
-                    <span>当前进度</span>
+                    <span>{DICT.progress.currentProgress}</span>
                     <span className="text-[10px] font-normal opacity-70">{total} 题</span>
                 </CardTitle>
             </CardHeader>
@@ -126,7 +127,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 />
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>已斩: {stats.mastered} ({Math.round((stats.mastered / total) * 100)}%)</p>
+                                <p>{DICT.progress.masteredShort}: {stats.mastered} ({Math.round((stats.mastered / total) * 100)}%)</p>
                             </TooltipContent>
                         </Tooltip>
 
@@ -140,7 +141,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 />
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>懵圈: {stats.confused} ({Math.round((stats.confused / total) * 100)}%)</p>
+                                <p>{DICT.progress.confusedShort}: {stats.confused} ({Math.round((stats.confused / total) * 100)}%)</p>
                             </TooltipContent>
                         </Tooltip>
 
@@ -154,7 +155,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 />
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>崩盘: {stats.failed} ({Math.round((stats.failed / total) * 100)}%)</p>
+                                <p>{DICT.progress.failedShort}: {stats.failed} ({Math.round((stats.failed / total) * 100)}%)</p>
                             </TooltipContent>
                         </Tooltip>
 
@@ -168,7 +169,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                                 />
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>未做: {stats.unanswered} ({Math.round((stats.unanswered / total) * 100)}%)</p>
+                                <p>{DICT.status.unanswered}: {stats.unanswered} ({Math.round((stats.unanswered / total) * 100)}%)</p>
                             </TooltipContent>
                         </Tooltip>
                     </div>
@@ -255,7 +256,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         {/* 中心文字 */}
                         <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
                             <span className="text-base font-bold text-foreground">{progressPercentage}%</span>
-                            <span className="text-[9px] text-muted-foreground -mt-0.5">已刷</span>
+                            <span className="text-[9px] text-muted-foreground -mt-0.5">{DICT.progress.progressCompleted}</span>
                         </div>
                     </div>
 
@@ -269,8 +270,8 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                             onClick={() => handleFilterClick('mastered')}
                         >
                             <div className="flex items-center gap-1.5 truncate">
-                                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)] shrink-0" />
-                                <span className="text-muted-foreground group-hover:text-foreground truncate">已斩</span>
+                                <div className="w-2 h-2 rounded-full bg-green-400 dark:bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)] shrink-0" />
+                                <span className="text-muted-foreground group-hover:text-foreground truncate">{DICT.progress.masteredShort}</span>
                             </div>
                             <span className="font-mono font-bold text-foreground ml-1 shrink-0">{stats.mastered}</span>
                         </div>
@@ -283,7 +284,7 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                         >
                             <div className="flex items-center gap-1.5 truncate">
                                 <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.6)] shrink-0" />
-                                <span className="text-muted-foreground group-hover:text-foreground truncate">懵圈</span>
+                                <span className="text-muted-foreground group-hover:text-foreground truncate">{DICT.progress.confusedShort}</span>
                             </div>
                             <span className="font-mono font-bold text-foreground ml-1 shrink-0">{stats.confused}</span>
                         </div>
@@ -295,8 +296,8 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                             onClick={() => handleFilterClick('failed')}
                         >
                             <div className="flex items-center gap-1.5 truncate">
-                                <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)] shrink-0" />
-                                <span className="text-muted-foreground group-hover:text-foreground truncate">崩盘</span>
+                                <div className="w-2 h-2 rounded-full bg-red-400 dark:bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.6)] shrink-0" />
+                                <span className="text-muted-foreground group-hover:text-foreground truncate">{DICT.progress.failedShort}</span>
                             </div>
                             <span className="font-mono font-bold text-foreground ml-1 shrink-0">{stats.failed}</span>
                         </div>
@@ -308,8 +309,8 @@ export function ProgressOverview({ questions }: { questions: Question[] }) {
                             onClick={() => handleFilterClick('unanswered')}
                         >
                             <div className="flex items-center gap-1.5 truncate">
-                                <div className="w-2 h-2 rounded-full bg-muted shrink-0" />
-                                <span className="text-muted-foreground group-hover:text-foreground truncate">剩余</span>
+                                <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0" />
+                                <span className="text-muted-foreground group-hover:text-foreground truncate">{DICT.progress.remainingShort}</span>
                             </div>
                             <span className="font-mono font-bold text-muted-foreground ml-1 shrink-0">{stats.unanswered}</span>
                         </div>

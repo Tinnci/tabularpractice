@@ -55,6 +55,47 @@ export const DICT = {
         shortcutFailed: "快捷键: 3",
     },
 
+    // Progress Overview
+    progress: {
+        currentProgress: "当前进度",
+        progressCompleted: "已刷",
+        masteredShort: "已斩",
+        confusedShort: "懵圈",
+        failedShort: "崩盘",
+        remainingShort: "剩余",
+    },
+
+    // Activity Heatmap
+    heatmap: {
+        title: "奋斗热力图",
+        yearlyTotal: "年度总计",
+        streak: "连续打卡",
+        lesserActivity: "少",
+        moreActivity: "多",
+        questionsInYear: "{{count}} 题 (过去一年)",
+        months: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+        weekdays: ["周日", "周一", "周二", "周三", "周四", "周五", "周六"],
+    },
+
+    // Dashboard Page
+    dashboard: {
+        challengeTitle: "准备好迎接挑战了吗？",
+        challengeDesc: "保持节奏，每天进步一点点。你已经斩获了 {count} 道真题。",
+        continuePractice: "继续上次刷题",
+        startPractice: "开始刷题",
+        dailyTarget: "今日目标",
+        masteredLabel: "已斩题数",
+        masteredDesc: "熟练掌握",
+        confusedLabel: "需复习",
+        confusedDesc: "概念模糊",
+        failedLabel: "错题攻克",
+        failedDesc: "待复习 (错题 + 疑惑)",
+        subjectProgress: "学科进度分布",
+        subjectProgressDesc: "各科目掌握情况概览",
+        noDataDesc: "暂无题目数据",
+        specialAttack: "专项突破",
+    },
+
     // Navigation & Workspace
     nav: {
         dashboard: "仪表盘",
@@ -181,6 +222,39 @@ export const DICT = {
         warningOverwrite: "警告：即将覆盖数据",
         warningOverwriteDesc: "此操作将使用导入文件中的数据完全覆盖您当前的刷题进度。当前进度将被永久删除且无法撤销。",
         confirmOverwrite: "确认覆盖",
+        // Toast messages
+        toast: {
+            noGithubToken: "请先设置 GitHub Token",
+            syncSuccess: "同步成功",
+            syncFailed: "同步失败",
+            syncFailedDesc: "请检查网络或 Token 权限",
+            nameUrlRequired: "请填写名称和 URL",
+            sourceAdded: "题库源添加成功",
+            sourceAddedDesc: "您可以点击开关启用该题库",
+            sourceVerifyFailed: "题库验证失败",
+            sourceVerifyFailedDesc: "请检查 URL 是否正确，并确保 index.json 可访问",
+            backupDownloaded: "完整备份已下载",
+            exportFailed: "导出失败",
+            exportFailedDesc: "生成备份文件时出现错误",
+            parseFailed: "解析失败",
+            parseFailedDesc: "JSON 文件格式错误",
+            unsupportedFormat: "不支持的文件格式",
+            unsupportedFormatDesc: "请上传 .zip 或 .json 备份文件",
+            readFailed: "读取失败",
+            readFailedDesc: "文件可能已损坏",
+            importSuccess: "导入成功",
+            importSuccessDesc: "数据已完全恢复，页面即将刷新...",
+            restoreFailed: "恢复失败",
+            restoreFailedDesc: "写入数据时发生错误",
+            enabled: "启用",
+            disabled: "禁用",
+        },
+        labels: {
+            localDataDir: "本地数据目录",
+            supportedFormats: "支持 .zip (完整) 或 .json (旧版) 格式",
+            backupDesc: "包含进度、笔记、收藏、题库源及所有手写草稿",
+            builtin: "内置题库",
+        },
     },
 
     // Exam & Question Modal
@@ -281,7 +355,7 @@ export const DICT = {
         readyDesc: "进入沉浸式复习模式，逐个攻克错题。默认隐藏答案以帮助自测。",
         startReview: "开始复习会话",
         noMistakes: "太棒了！暂无错题",
-        noMistakesDesc: "您目前没有标记为“错题”或“疑惑”的题目。",
+        noMistakesDesc: "您目前没有标记为错题或疑惑的题目。",
     },
 
     // Sync Messages
