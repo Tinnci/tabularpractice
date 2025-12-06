@@ -1,4 +1,4 @@
-import { Status, NotesMap, RepoSource } from '@/lib/types';
+import { Status, NotesMap, RepoSource, Question, Paper, PaperGroup } from '@/lib/types';
 
 export interface SyncData {
     version: number;
@@ -11,6 +11,12 @@ export interface SyncData {
     repoSources: RepoSource[];
     times?: Record<string, number>;
     timesLastModified?: Record<string, number>;
+
+    // New fields for comprehensive sync
+    history?: Record<string, number>;
+    customQuestions?: Record<string, Question>;
+    customPapers?: Record<string, Paper>;
+    customPaperGroups?: Record<string, PaperGroup>;
 }
 
 import { SyncDataSchema } from '@/lib/schema';
@@ -144,8 +150,25 @@ export const syncService = {
             });
         }
 
-        // Merge Stars (Simple merge for now as they are booleans and less critical, or use simple union)
+        // Merge History (Max Strategy)
+        const mergedHistory = { ...(local.history || {}) };
+        if (remote.history) {
+            Object.entries(remote.history).forEach(([date, count]) => {
+                const localCount = mergedHistory[date] || 0;
+                if (count > localCount) {
+                    mergedHistory[date] = count;
+                }
+            });
+        }
+
+        // Merge Stars (Simple merge)
         const mergedStars = { ...remote.stars, ...local.stars };
+
+        // Merge Custom Data
+        // Union strategy: remote overwrites local if ID matches, but we keep unique items from both
+        const mergedCustomQuestions = { ...(local.customQuestions || {}), ...(remote.customQuestions || {}) };
+        const mergedCustomPapers = { ...(local.customPapers || {}), ...(remote.customPapers || {}) };
+        const mergedCustomPaperGroups = { ...(local.customPaperGroups || {}), ...(remote.customPaperGroups || {}) };
 
         // Merge RepoSources
         let newRepoSources = local.repoSources;
@@ -165,6 +188,10 @@ export const syncService = {
             times: mergedTimes,
             timesLastModified: mergedTimesLastModified,
             stars: mergedStars,
+            history: mergedHistory,
+            customQuestions: mergedCustomQuestions,
+            customPapers: mergedCustomPapers,
+            customPaperGroups: mergedCustomPaperGroups,
             repoSources: newRepoSources
         };
     }

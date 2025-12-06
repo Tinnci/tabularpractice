@@ -39,7 +39,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
     setSyncStatus: (status) => set({ syncStatus: status }),
 
     resolveConflict: async (strategy) => {
-        const { pendingConflict, githubToken, gistId, importData } = get();
+        const { pendingConflict, githubToken, gistId, importData, getSyncSnapshot } = get();
         if (!pendingConflict || !githubToken) return;
 
         let finalData: SyncData;
@@ -47,12 +47,18 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
         if (strategy === 'remote') {
             finalData = pendingConflict.remote;
         } else if (strategy === 'local') {
-            finalData = pendingConflict.local;
-            // Update timestamp to ensure it overwrites if checked again
-            finalData.timestamp = new Date().toISOString();
+            // [Optimization]: Always get the fresh local snapshot instead of using the stale one from pendingConflict
+            const currentSnapshot = getSyncSnapshot();
+            finalData = {
+                ...pendingConflict.local, // Keep structure base
+                ...currentSnapshot,       // Overwrite with fresh data
+                timestamp: new Date().toISOString()
+            } as SyncData;
         } else {
-            // Merge
-            finalData = syncService.mergeData(pendingConflict.local, pendingConflict.remote);
+            // Merge strategy: also merge with fresh local data
+            const currentSnapshot = getSyncSnapshot();
+            const currentLocalData = { ...pendingConflict.local, ...currentSnapshot } as SyncData;
+            finalData = syncService.mergeData(currentLocalData, pendingConflict.remote);
         }
 
         // Apply to local

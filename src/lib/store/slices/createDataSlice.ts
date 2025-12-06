@@ -159,7 +159,11 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
                     times: state.times,
                     timesLastModified: state.timesLastModified,
                     stars: state.stars,
-                    repoSources: state.repoSources
+                    repoSources: state.repoSources,
+                    history: state.history,
+                    customQuestions: state.customQuestions,
+                    customPapers: state.customPapers,
+                    customPaperGroups: state.customPaperGroups
                 };
 
                 // Merge current local data with the incoming data
@@ -174,7 +178,11 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
                     times: merged.times,
                     timesLastModified: merged.timesLastModified,
                     stars: merged.stars,
-                    repoSources: merged.repoSources
+                    repoSources: merged.repoSources,
+                    history: merged.history || {},
+                    customQuestions: merged.customQuestions || {},
+                    customPapers: merged.customPapers || {},
+                    customPaperGroups: merged.customPaperGroups || {}
                 };
             });
         } else {
@@ -195,6 +203,10 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
             times: state.times,
             timesLastModified: state.timesLastModified,
             stars: state.stars,
+            history: state.history,
+            customQuestions: state.customQuestions,
+            customPapers: state.customPapers,
+            customPaperGroups: state.customPaperGroups,
             // repoSources is managed by Settings, but Data needs to include it in the snapshot for now
             // as DataSlice.getSyncSnapshot is the main entry point for data export.
             repoSources: state.repoSources

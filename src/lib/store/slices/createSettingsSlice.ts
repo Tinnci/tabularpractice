@@ -30,7 +30,7 @@ export interface SettingsSlice {
     togglePaperVisibility: (paperId: string) => void;
 }
 
-export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice> = (set) => ({
+export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice> = (set, get) => ({
     repoSources: [
         { id: 'local', name: '内置题库', url: '', enabled: true, isBuiltin: true },
         { id: 'default-remote', name: '题库1 (GitHub)', url: 'https://raw.githubusercontent.com/Tinnci/tabularpractice-data/main', enabled: true, isBuiltin: false }
@@ -48,22 +48,31 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
     repoBaseUrl: '',
     hiddenPaperIds: [],
 
-    addRepoSource: (name, url) => set((state) => ({
-        repoSources: [
-            ...state.repoSources,
-            { id: crypto.randomUUID(), name, url, enabled: true }
-        ]
-    })),
+    addRepoSource: (name, url) => {
+        set((state) => ({
+            repoSources: [
+                ...state.repoSources,
+                { id: crypto.randomUUID(), name, url, enabled: true }
+            ]
+        }));
+        get().triggerAutoSync();
+    },
 
-    removeRepoSource: (id) => set((state) => ({
-        repoSources: state.repoSources.filter(s => s.id !== id)
-    })),
+    removeRepoSource: (id) => {
+        set((state) => ({
+            repoSources: state.repoSources.filter(s => s.id !== id)
+        }));
+        get().triggerAutoSync();
+    },
 
-    toggleRepoSource: (id, enabled) => set((state) => ({
-        repoSources: state.repoSources.map(s =>
-            s.id === id ? { ...s, enabled } : s
-        )
-    })),
+    toggleRepoSource: (id, enabled) => {
+        set((state) => ({
+            repoSources: state.repoSources.map(s =>
+                s.id === id ? { ...s, enabled } : s
+            )
+        }));
+        get().triggerAutoSync();
+    },
 
     setLowDataMode: (enabled) => set({ lowDataMode: enabled }),
 
