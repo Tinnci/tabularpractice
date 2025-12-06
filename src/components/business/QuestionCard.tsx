@@ -59,6 +59,7 @@ export const QuestionCard = memo(function QuestionCard({ question, onClick, isDi
 
     return (
         <Card
+            data-question-id={question.id}
             className={cn(
                 "group cursor-pointer transition-all duration-300 border overflow-hidden p-0 gap-0",
                 statusColors[status],

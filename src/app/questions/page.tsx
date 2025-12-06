@@ -56,6 +56,55 @@ function QuestionsContent() {
 
   const { contextQuestions, currentPapers, mergedQuestions, paperGroupsData } = useContextQuestions();
 
+  // ---------------------------------------------------------------------------
+  // View Switching & Scroll Sync Logic
+  // ---------------------------------------------------------------------------
+  // We track the last visible question ID before switching views to restore position.
+  const [centeredQuestionId, setCenteredQuestionId] = useState<string | null>(null);
+
+  // Before viewMode changes, capture the centered element
+  const handleViewModeChange = (newMode: 'wall' | 'grid') => {
+    // Find the element in the center of the viewport
+    const x = window.innerWidth / 2;
+    const y = window.innerHeight / 2;
+    const element = document.elementFromPoint(x, y);
+
+    // Traverse up to find the card with data-question-id
+    const card = element?.closest('[data-question-id]');
+    const id = card?.getAttribute('data-question-id');
+
+    if (id) {
+      setCenteredQuestionId(id);
+    }
+    setViewMode(newMode);
+  };
+
+  // After viewMode changes (and DOM updates), scroll to the captured element
+  useEffect(() => {
+    if (centeredQuestionId) {
+      // Using setTimeout to allow layout thrashing/rendering to settle
+      // virtua might need time to render the item if it's virtualized (Grid mode)
+      // Standard DOM scroll (Wall mode) is instant but might need wait for mounting.
+      setTimeout(() => {
+        // Try finding the element
+        const element = document.querySelector(`[data-question-id="${centeredQuestionId}"]`);
+
+        if (element) {
+          element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+        } else {
+          // Fallback for virtualized lists (virtua):
+          // If element is not in DOM (because it's not rendered yet), we might need `scrollToIndex`
+          // exposed by ExamWall. For now, native scrollIntoView works if item is rendered.
+          // If items are truly virtualized and not mounted, this simple ID lookup fails.
+          // However, virtua usually renders the approximate range.
+          // Ideally we'd pass `initialTopMostItemIndex` to VList or use VListHandle.
+        }
+        setCenteredQuestionId(null); // Reset
+      }, 100);
+    }
+  }, [viewMode, centeredQuestionId]);
+  // ---------------------------------------------------------------------------
+
   // URL 参数同步逻辑
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -307,7 +356,7 @@ function QuestionsContent() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0 order-2 sm:order-3 ml-auto sm:ml-0">
-            <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as 'wall' | 'grid')} className="mr-2">
+            <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && handleViewModeChange(v as 'wall' | 'grid')} className="mr-2">
               <ToggleGroupItem value="wall" aria-label="Wall View" className="h-8 w-8 hover:bg-muted/50">
                 <Columns className="h-4 w-4" />
               </ToggleGroupItem>
