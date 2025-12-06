@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowRight, PlayCircle, AlertCircle, BookOpen, Trophy, Target } from "lucide-react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useTheme } from "next-themes";
-import { Suspense } from "react";
+
 import dynamic from "next/dynamic";
 import { DICT } from "@/lib/i18n";
 

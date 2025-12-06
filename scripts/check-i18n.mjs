@@ -1,9 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { glob } from 'glob';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
 
 // 配置
 const CONFIG = {
