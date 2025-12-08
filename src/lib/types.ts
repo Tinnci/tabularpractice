@@ -93,6 +93,39 @@ export interface BackupData {
   _zip?: unknown; // 引用 JSZip 实例
 }
 
+// ========== 学习分析系统类型 ==========
+
+/**
+ * 单次做题记录
+ * 用于追溯每次做题的详细信息，支持学习行为分析
+ */
+export interface StudyRecord {
+  id: string;                                     // 唯一标识 (nanoid)
+  questionId: string;                             // 题目ID
+  startedAt: number;                              // 开始时间戳 (ms)
+  endedAt: number;                                // 结束时间戳 (ms)
+  durationMs: number;                             // 实际思考时间（排除暂停、查看答案等）
+  totalDurationMs: number;                        // 总停留时间（包含暂停和查看答案）
+  status?: Status;                                // 本次标记的状态（可能未标记）
+  source: 'modal' | 'practice' | 'review';        // 来源场景
+  viewedAnswer?: boolean;                         // 是否查看了答案
+  viewedAnalysis?: boolean;                       // 是否查看了解析
+}
+
+/**
+ * 每日学习统计
+ * 用于 Heatmap、趋势图等聚合展示
+ */
+export interface DailyStudyStats {
+  date: string;                                   // YYYY-MM-DD
+  questionsAttempted: number;                     // 尝试的题目数
+  questionsCompleted: number;                     // 完成（标记状态）的题目数
+  totalDurationMs: number;                        // 总学习时长
+  mastered: number;                               // 标记为掌握
+  confused: number;                               // 标记为模糊
+  failed: number;                                 // 标记为不会
+}
+
 export interface PracticeSession {
   isActive: boolean;
   queueIds: string[];
