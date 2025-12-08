@@ -764,8 +764,8 @@ export function QuestionModal({
                                                     question={currentQuestion}
                                                 />
                                             ) : currentQuestion.answer ? (
-                                                <div className="text-2xl font-bold text-green-600 dark:text-green-400 py-4">
-                                                    {currentQuestion.answer}
+                                                <div className="w-full text-left">
+                                                    <MarkdownContent content={currentQuestion.answer} />
                                                 </div>
                                             ) : (
                                                 <span className="text-muted-foreground text-sm">{DICT.exam.noAnswer}</span>
