@@ -39,6 +39,7 @@ import { cn, getImageUrl } from "@/lib/utils";
 import { useTheme } from "next-themes";
 
 import { DICT, getQuestionTypeLabel, formatQuestionNumber } from "@/lib/i18n";
+import { toast } from "sonner";
 
 interface Props {
     isOpen: boolean;
@@ -293,6 +294,41 @@ export function QuestionModal({
 
     const isStarred = question ? !!stars[question.id] : false;
 
+    // 带反馈的状态更新处理
+    const handleStatusUpdate = useCallback((status: Status) => {
+        if (!question?.id) return;
+
+        onUpdateStatus(question.id, status);
+
+        // Toast 反馈
+        const statusConfig = {
+            mastered: {
+                label: DICT.status.mastered,
+                icon: '✓',
+                className: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300'
+            },
+            confused: {
+                label: DICT.status.confused,
+                icon: '?',
+                className: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-300'
+            },
+            failed: {
+                label: DICT.status.failed,
+                icon: '✗',
+                className: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300'
+            },
+        };
+
+        const config = statusConfig[status as keyof typeof statusConfig];
+        if (config) {
+            toast(`已标记为 ${config.label}`, {
+                duration: 1500,
+                position: 'bottom-center',
+                className: config.className,
+            });
+        }
+    }, [question?.id, onUpdateStatus]);
+
     // 初始化笔记内容
     useEffect(() => {
         if (question) {
@@ -426,13 +462,13 @@ export function QuestionModal({
                 onClose();
                 break;
             case "1":
-                if (question) onUpdateStatus(question.id, 'mastered');
+                handleStatusUpdate('mastered');
                 break;
             case "2":
-                if (question) onUpdateStatus(question.id, 'confused');
+                handleStatusUpdate('confused');
                 break;
             case "3":
-                if (question) onUpdateStatus(question.id, 'failed');
+                handleStatusUpdate('failed');
                 break;
             case " ": // Space key
                 // 防止在输入笔记时触发暂停
@@ -441,7 +477,7 @@ export function QuestionModal({
                 toggle();
                 break;
         }
-    }, [isOpen, hasPrev, hasNext, onPrev, onNext, onClose, question, onUpdateStatus, toggle]);
+    }, [isOpen, hasPrev, hasNext, onPrev, onNext, onClose, handleStatusUpdate, toggle]);
 
     useEffect(() => {
         window.addEventListener("keydown", handleKeyDown);
@@ -1068,7 +1104,7 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => question?.id && onUpdateStatus(question.id, 'mastered')}
+                                        onClick={() => handleStatusUpdate('mastered')}
                                         disabled={isLoading}
                                         className="bg-green-600 hover:bg-green-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
@@ -1084,7 +1120,7 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => question?.id && onUpdateStatus(question.id, 'confused')}
+                                        onClick={() => handleStatusUpdate('confused')}
                                         disabled={isLoading}
                                         className="bg-yellow-500 hover:bg-yellow-600 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
@@ -1100,7 +1136,7 @@ export function QuestionModal({
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        onClick={() => question?.id && onUpdateStatus(question.id, 'failed')}
+                                        onClick={() => handleStatusUpdate('failed')}
                                         disabled={isLoading}
                                         className="bg-red-600 hover:bg-red-700 text-white gap-1 sm:gap-2 flex-1 sm:w-28 shadow-sm active:scale-95 h-10 sm:h-10"
                                     >
