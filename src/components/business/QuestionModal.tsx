@@ -132,10 +132,18 @@ const SmartTagList = ({
 const smartFormatContent = (content: string) => {
     if (!content) return "";
     const trimmed = content.trim();
-    // 如果是以 \begin 开头的 LaTeX 环境（如 matrix, cases），自动包裹 $$
-    if (trimmed.startsWith('\\begin')) {
+
+    // 如果已经被 $$ 包裹，不重复处理
+    if (trimmed.startsWith('$$') || trimmed.startsWith('$')) {
+        return content;
+    }
+
+    // 检测是否包含 LaTeX 环境（如 \begin{cases}, \begin{matrix}, \begin{pmatrix} 等）
+    // 这类内容需要用 $$ 包裹才能被 remark-math 识别
+    if (trimmed.includes('\\begin{')) {
         return `$$\n${trimmed}\n$$`;
     }
+
     return content;
 };
 
