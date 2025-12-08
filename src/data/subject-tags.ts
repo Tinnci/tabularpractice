@@ -252,15 +252,9 @@ const politicsTags: TagNode[] = [
     }
 ];
 
-// 导出科目的 groupId 前缀映射
-// 根据 groupId 推断科目类型
-function getSubjectFromGroupId(groupId: string): string {
-    if (groupId.startsWith('math')) return 'math';
-    if (groupId.startsWith('english')) return 'english';
-    if (groupId.startsWith('politics')) return 'politics';
-    if (groupId.startsWith('shu-')) return 'self-proposed'; // 自命题
-    return 'math'; // 默认
-}
+// 导入遗留的拼音 ID 映射
+import { PINYIN_TO_ID_MAP } from './legacy-tags';
+import { getSubjectKey } from '@/lib/subjectConfig';
 
 // 导出映射关系
 export const SUBJECT_TAGS_MAP: Record<string, TagNode[]> = {
@@ -269,8 +263,85 @@ export const SUBJECT_TAGS_MAP: Record<string, TagNode[]> = {
     politics: politicsTags
 };
 
-// 获取科目的知识点树
-export function getTagsForSubject(groupId: string): TagNode[] {
-    const subject = getSubjectFromGroupId(groupId);
-    return SUBJECT_TAGS_MAP[subject] || [];
+/**
+ * 获取科目的知识点树
+ * @param groupIdOrSubjectKey - 可以是 PaperGroup.id 或直接的 subjectKey
+ */
+export function getTagsForSubject(groupIdOrSubjectKey: string): TagNode[] {
+    const subjectKey = getSubjectKey(groupIdOrSubjectKey);
+    return SUBJECT_TAGS_MAP[subjectKey] || [];
 }
+
+/**
+ * 将标签树扁平化为 Map<id, label>
+ * 用于快速查找标签的显示名称
+ */
+export function flattenTagTree(nodes: TagNode[]): Map<string, string> {
+    const map = new Map<string, string>();
+
+    const traverse = (nodeList: TagNode[]) => {
+        nodeList.forEach(node => {
+            map.set(node.id, node.label);
+            if (node.children) {
+                traverse(node.children);
+            }
+        });
+    };
+
+    traverse(nodes);
+    return map;
+}
+
+// 预计算的全局标签 ID -> Label 映射（懒加载）
+let _globalTagMap: Map<string, string> | null = null;
+
+/**
+ * 获取标签的显示名称
+ * 支持标准 ID 和拼音 ID
+ * 
+ * @param tagId - 标签 ID（可能是标准 ID 或拼音 ID）
+ * @returns 标签的中文名称，如果找不到则返回原 ID
+ */
+export function getTagLabel(tagId: string): string {
+    // 懒加载全局标签映射
+    if (!_globalTagMap) {
+        _globalTagMap = new Map<string, string>();
+
+        // 1. 遍历所有科目的标签树
+        Object.values(SUBJECT_TAGS_MAP).forEach(tags => {
+            const flattened = flattenTagTree(tags);
+            flattened.forEach((label, id) => {
+                _globalTagMap!.set(id, label);
+            });
+        });
+
+        // 2. 添加拼音 ID 映射
+        Object.entries(PINYIN_TO_ID_MAP).forEach(([pinyinId, standardId]) => {
+            const label = _globalTagMap!.get(standardId);
+            if (label) {
+                _globalTagMap!.set(pinyinId, label);
+            }
+        });
+    }
+
+    return _globalTagMap.get(tagId) || tagId;
+}
+
+/**
+ * 获取全局标签 ID -> Label 映射
+ * 用于批量查询场景
+ */
+export function getGlobalTagMap(): Map<string, string> {
+    // 触发懒加载
+    getTagLabel('');
+    return _globalTagMap!;
+}
+
+/**
+ * 标准化标签 ID
+ * 如果是拼音 ID，转换为标准 ID
+ */
+export function normalizeTagId(tagId: string): string {
+    return PINYIN_TO_ID_MAP[tagId] || tagId;
+}
+

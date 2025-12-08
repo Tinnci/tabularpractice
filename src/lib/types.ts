@@ -18,6 +18,7 @@ export interface PaperGroup {
   id: string;           // e.g., "math1", "shu-812", "shu-915"
   name: string;         // e.g., "数学一", "上海大学-812控制理论"
   type: SubjectType;
+  subjectKey?: string;  // 新增：直接指明科目，如 'math', 'english'，避免推断
   university?: string;  // 仅自命题需要，e.g., "上海大学"
   courseCode?: string;  // 仅自命题需要，e.g., "812"
 }

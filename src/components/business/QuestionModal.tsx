@@ -37,7 +37,6 @@ import { useProgressStore } from "@/lib/store";
 import { Switch } from "@/components/ui/switch";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useTheme } from "next-themes";
-import { SUBJECT_TAGS_MAP, TagNode } from "@/data/subject-tags";
 
 import { DICT } from "@/lib/i18n";
 
@@ -55,33 +54,8 @@ interface Props {
 
 type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft';
 
-// --- Helper: 扁平化标签树 ---
-import { PINYIN_TO_ID_MAP } from "@/data/legacy-tags";
-
-// --- Helper: 扁平化标签树 ---
-const useTagLabelMap = () => {
-    return useMemo(() => {
-        const map = new Map<string, string>();
-        const traverse = (nodes: TagNode[]) => {
-            nodes.forEach(node => {
-                map.set(node.id, node.label);
-                if (node.children) traverse(node.children);
-            });
-        };
-        // 1. 遍历所有科目的标签树 (Standard ID -> Label)
-        Object.values(SUBJECT_TAGS_MAP).forEach(traverse);
-
-        // 2. 补充拼音 ID -> Label 的映射
-        Object.entries(PINYIN_TO_ID_MAP).forEach(([pinyinId, standardId]) => {
-            const label = map.get(standardId);
-            if (label) {
-                map.set(pinyinId, label);
-            }
-        });
-
-        return map;
-    }, []);
-};
+// --- Helper: 使用统一的标签 API ---
+import { getTagLabel } from "@/data/subject-tags";
 
 // --- Component: 智能标签列表 ---
 const SmartTagList = ({
@@ -95,15 +69,13 @@ const SmartTagList = ({
     limit?: number,
     className?: string
 }) => {
-    const labelMap = useTagLabelMap();
-
     // 预处理所有标签的最终显示文本
     const displayTags = useMemo(() => {
         return tags.map((tagId, index) => {
             // 优先级: 1. 后端传回的名称 -> 2. 本地映射的中文 -> 3. 原始ID
-            return tagNames?.[index] || labelMap.get(tagId) || tagId;
+            return tagNames?.[index] || getTagLabel(tagId);
         });
-    }, [tags, tagNames, labelMap]);
+    }, [tags, tagNames]);
 
     if (displayTags.length === 0) return null;
 
