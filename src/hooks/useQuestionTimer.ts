@@ -66,12 +66,16 @@ export function useQuestionTimer({ questionId, visibleViews, isOpen }: UseQuesti
     }, [addTime]);
 
     // 4. 生命周期管理：题目切换前保存、组件卸载前保存
+    // [修复] 防止因 questionId 闪烁导致的计时器重置
     useEffect(() => {
-        if (activeIdRef.current !== questionId) {
+        // 只有当新传入的 questionId 有值，且确实与当前记录的 ID 不同时，才视为切换题目
+        if (questionId && activeIdRef.current !== questionId) {
             saveTime(); // 保存上一题
             reset(true); // 重置并为新题自动开始
-            activeIdRef.current = questionId || undefined;
+            activeIdRef.current = questionId;
         }
+        // 如果 questionId 变为 undefined (例如加载中)，我们保持 activeIdRef 不变，
+        // 这样当它变回原来的 ID 时，不会触发上面的 if，计时器也就不会被重置。
     }, [questionId, saveTime, reset]);
 
     // 关闭 Modal 时保存
