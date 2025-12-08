@@ -22,6 +22,7 @@ export interface DataSlice {
     updateStatus: (id: string, status: Status) => void;
     updateNote: (id: string, content: string) => void;
     addTime: (id: string, delta: number) => void;
+    setTime: (id: string, totalMs: number) => void;  // 直接设置累计时间
     toggleStar: (id: string) => void;
     getStats: () => { mastered: number; confused: number; failed: number; total: number };
 
@@ -85,6 +86,13 @@ export const createDataSlice: StateCreator<StoreState, [], [], DataSlice> = (set
             };
         });
 
+    },
+
+    setTime: (id, totalMs) => {
+        set((state) => ({
+            times: { ...state.times, [id]: Math.max(0, totalMs) },
+            timesLastModified: { ...state.timesLastModified, [id]: Date.now() }
+        }));
     },
 
     toggleStar: (id) => {

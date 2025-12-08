@@ -254,7 +254,7 @@ export function QuestionModal({
     const {
         isRunning, reset, formattedTime, toggle,
         hasHistory, formattedTotalTime, formattedHistoricalTime,
-        questionStatus
+        questionStatus, historicalTime
     } = useQuestionTimer({
         questionId: question?.id,
         visibleViews,
@@ -262,7 +262,7 @@ export function QuestionModal({
     });
 
     // 笔记系统状态
-    const { notes, updateNote, stars, toggleStar, syncStatus, syncData } = useProgressStore();
+    const { notes, updateNote, stars, toggleStar, syncStatus, syncData, setTime } = useProgressStore();
     const [noteContent, setNoteContent] = useState("");
     const [isEditingNote, setIsEditingNote] = useState(false);
 
@@ -559,6 +559,9 @@ export function QuestionModal({
                                         hasHistory={hasHistory}
                                         formattedTotalTime={formattedTotalTime}
                                         formattedHistoricalTime={formattedHistoricalTime}
+                                        historicalTimeMs={historicalTime}
+                                        questionId={question?.id}
+                                        onSetTime={(totalMs) => question?.id && setTime(question.id, totalMs)}
                                     />
                                 )}
                                 {/* 收藏按钮 */}

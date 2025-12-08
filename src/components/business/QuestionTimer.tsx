@@ -1,7 +1,12 @@
-import { Play, Pause, RotateCcw, History } from "lucide-react";
+"use client";
+
+import { useState, useCallback } from "react";
+import { Play, Pause, RotateCcw, History, Edit2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DICT } from "@/lib/i18n";
 
 interface Props {
@@ -14,6 +19,9 @@ interface Props {
     hasHistory?: boolean;
     formattedTotalTime?: string;
     formattedHistoricalTime?: string;
+    historicalTimeMs?: number;  // 新增：用于编辑
+    questionId?: string;        // 新增：用于保存
+    onSetTime?: (totalMs: number) => void;  // 新增：设置时间回调
 }
 
 export function QuestionTimer({
@@ -25,9 +33,48 @@ export function QuestionTimer({
     hasHistory = false,
     formattedTotalTime,
     formattedHistoricalTime,
+    historicalTimeMs = 0,
+    onSetTime,
 }: Props) {
+    // 编辑状态
+    const [isEditing, setIsEditing] = useState(false);
+    const [editMinutes, setEditMinutes] = useState("");
+    const [editSeconds, setEditSeconds] = useState("");
+
     // 优先显示：有历史记录时显示累计时间，否则显示本次时间
     const displayTime = hasHistory && formattedTotalTime ? formattedTotalTime : formattedTime;
+
+    // 打开编辑器时初始化值
+    const handleOpenEdit = useCallback(() => {
+        const totalSeconds = Math.floor(historicalTimeMs / 1000);
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        setEditMinutes(mins.toString());
+        setEditSeconds(secs.toString().padStart(2, '0'));
+        setIsEditing(true);
+    }, [historicalTimeMs]);
+
+    // 保存编辑
+    const handleSaveEdit = useCallback(() => {
+        const mins = parseInt(editMinutes) || 0;
+        const secs = parseInt(editSeconds) || 0;
+        const totalMs = (mins * 60 + secs) * 1000;
+
+        if (onSetTime) {
+            onSetTime(totalMs);
+        }
+        setIsEditing(false);
+    }, [editMinutes, editSeconds, onSetTime]);
+
+    // 快捷调整
+    const handleQuickAdjust = useCallback((deltaMinutes: number) => {
+        const currentMs = historicalTimeMs;
+        const newMs = Math.max(0, currentMs + deltaMinutes * 60 * 1000);
+        if (onSetTime) {
+            onSetTime(newMs);
+        }
+        setIsEditing(false);
+    }, [historicalTimeMs, onSetTime]);
 
     return (
         <div className={cn(
@@ -60,28 +107,138 @@ export function QuestionTimer({
                 </Tooltip>
             </TooltipProvider>
 
-            {/* 时间显示 */}
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <span className={cn(
-                            "font-mono text-sm font-medium tabular-nums min-w-[40px] text-center select-none cursor-default",
-                            hasHistory && "flex items-center gap-1"
-                        )}>
-                            {hasHistory && <History className="h-3 w-3 opacity-60" />}
-                            {displayTime}
-                        </span>
-                    </TooltipTrigger>
-                    {hasHistory && formattedHistoricalTime && (
-                        <TooltipContent side="bottom" className="bg-popover text-popover-foreground border shadow-md">
-                            <div className="text-xs space-y-1">
-                                <p>历史累计: {formattedHistoricalTime}</p>
-                                <p>本次用时: {formattedTime}</p>
+            {/* 时间显示 - 可编辑 */}
+            <Popover open={isEditing} onOpenChange={setIsEditing}>
+                <TooltipProvider>
+                    <Tooltip>
+                        <PopoverTrigger asChild>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={handleOpenEdit}
+                                    className={cn(
+                                        "font-mono text-sm font-medium tabular-nums min-w-[40px] text-center select-none cursor-pointer",
+                                        "hover:bg-background/50 rounded px-1 py-0.5 transition-colors",
+                                        "focus:outline-none focus:ring-2 focus:ring-blue-500/50",
+                                        hasHistory && "flex items-center gap-1"
+                                    )}
+                                >
+                                    {hasHistory && <History className="h-3 w-3 opacity-60" />}
+                                    {displayTime}
+                                </button>
+                            </TooltipTrigger>
+                        </PopoverTrigger>
+
+                        {/* Tooltip 内容 */}
+                        {hasHistory && formattedHistoricalTime && !isEditing && (
+                            <TooltipContent side="bottom" className="bg-popover text-popover-foreground border shadow-md">
+                                <div className="text-xs space-y-1">
+                                    <p>历史累计: {formattedHistoricalTime}</p>
+                                    <p>本次用时: {formattedTime}</p>
+                                    <p className="text-muted-foreground pt-1 border-t">点击可编辑</p>
+                                </div>
+                            </TooltipContent>
+                        )}
+                    </Tooltip>
+                </TooltipProvider>
+
+                {/* 编辑 Popover */}
+                <PopoverContent
+                    side="bottom"
+                    align="center"
+                    className="w-auto p-3 bg-popover border shadow-lg"
+                >
+                    <div className="space-y-3">
+                        <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Edit2 className="h-3 w-3" />
+                            编辑累计时间
+                        </div>
+
+                        {/* 时间输入 */}
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    max="999"
+                                    value={editMinutes}
+                                    onChange={(e) => setEditMinutes(e.target.value)}
+                                    className="w-14 h-8 text-center font-mono text-sm"
+                                    placeholder="00"
+                                />
+                                <span className="text-xs text-muted-foreground">分</span>
                             </div>
-                        </TooltipContent>
-                    )}
-                </Tooltip>
-            </TooltipProvider>
+                            <span className="text-lg font-bold text-muted-foreground">:</span>
+                            <div className="flex items-center gap-1">
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    value={editSeconds}
+                                    onChange={(e) => setEditSeconds(e.target.value)}
+                                    className="w-14 h-8 text-center font-mono text-sm"
+                                    placeholder="00"
+                                />
+                                <span className="text-xs text-muted-foreground">秒</span>
+                            </div>
+                        </div>
+
+                        {/* 快捷按钮 */}
+                        <div className="flex items-center gap-1 pt-2 border-t">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs flex-1"
+                                onClick={() => handleQuickAdjust(-5)}
+                            >
+                                -5分
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs flex-1"
+                                onClick={() => handleQuickAdjust(-1)}
+                            >
+                                -1分
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs flex-1"
+                                onClick={() => handleQuickAdjust(1)}
+                            >
+                                +1分
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs flex-1"
+                                onClick={() => handleQuickAdjust(5)}
+                            >
+                                +5分
+                            </Button>
+                        </div>
+
+                        {/* 操作按钮 */}
+                        <div className="flex items-center gap-2 pt-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 flex-1 text-xs"
+                                onClick={() => setIsEditing(false)}
+                            >
+                                取消
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="h-8 flex-1 text-xs bg-blue-600 hover:bg-blue-700"
+                                onClick={handleSaveEdit}
+                            >
+                                保存
+                            </Button>
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
 
             {/* 状态指示灯 */}
             <div className="relative flex h-2 w-2 mx-1">
