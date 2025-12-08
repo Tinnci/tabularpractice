@@ -108,12 +108,12 @@ const SmartTagList = ({
                                 +{hiddenTags.length}
                             </Badge>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" align="end" className="max-w-[250px] p-3">
+                        <TooltipContent side="bottom" align="end" className="max-w-[250px] p-3 bg-popover text-popover-foreground border shadow-md">
                             <div className="space-y-2">
                                 <h4 className="font-medium text-sm text-muted-foreground">{DICT.practice.includedTags}</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {hiddenTags.map((tag, idx) => (
-                                        <Badge key={idx} variant="outline" className="text-xs font-normal">
+                                        <Badge key={idx} variant="outline" className="text-xs font-normal bg-muted/50">
                                             {tag}
                                         </Badge>
                                     ))}

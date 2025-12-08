@@ -1,7 +1,7 @@
 import { useProgressStore } from "@/lib/store";
 import { usePaperGroups, useQuestions } from "@/hooks/useQuestions";
 import { useMemo } from "react";
-import { SUBJECT_CONFIG, getSubjectKey, getSubjectConfig } from "@/lib/subjectConfig";
+import { getSubjectKey, getSubjectConfig } from "@/lib/subjectConfig";
 import { useLearningStats, formatDuration } from "@/hooks/useLearningStats";
 import { PaperGroup } from "@/lib/types";
 
