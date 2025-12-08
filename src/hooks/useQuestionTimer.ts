@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useStopwatch } from '@/hooks/useStopwatch';
 import { useProgressStore } from '@/lib/store';
 import { StudyRecord } from '@/lib/types';
@@ -10,17 +10,44 @@ interface UseQuestionTimerProps {
     source?: 'modal' | 'practice' | 'review';  // 来源场景
 }
 
+interface QuestionTimerResult {
+    // 基础计时器状态
+    elapsed: number;
+    isRunning: boolean;
+    formattedTime: string;
+    toggle: () => void;
+    reset: (autoStart?: boolean) => void;
+    start: () => void;
+    pause: () => void;
+
+    // 增强状态
+    historicalTime: number;           // 历史累计时间 (ms)
+    totalTime: number;                // 历史 + 本次
+    formattedTotalTime: string;       // 格式化的总时间
+    formattedHistoricalTime: string;  // 格式化的历史时间
+    hasHistory: boolean;              // 是否有历史记录
+    questionStatus: string | null;    // 题目当前状态
+}
+
 export function useQuestionTimer({
     questionId,
     visibleViews,
     isOpen,
     source = 'modal'
-}: UseQuestionTimerProps) {
-    const { addTime, addStudyRecord } = useProgressStore();
+}: UseQuestionTimerProps): QuestionTimerResult {
+    const { addTime, addStudyRecord, progress, times } = useProgressStore();
+
+    // 获取题目的历史状态和累计时间
+    const questionStatus = questionId ? progress[questionId] || null : null;
+    const historicalTime = questionId ? times[questionId] || 0 : 0;
+    const hasHistory = historicalTime > 0 || !!questionStatus;
+
+    // 已刷过的题目不自动开始计时
+    const shouldAutoStart = !hasHistory;
 
     // 1. 继承基础计时能力
     const stopwatch = useStopwatch({
-        autoStart: true,
+        autoStart: shouldAutoStart,
         smartPause: true // 保持原有的切屏自动暂停
     });
 
@@ -30,10 +57,19 @@ export function useQuestionTimer({
     const elapsedRef = useRef(elapsed);
 
     // === 新增：Session 元数据追踪 ===
-    const sessionStartRef = useRef<number>(Date.now());
+    const sessionStartRef = useRef<number>(0);
     const viewedAnswerRef = useRef(false);
     const viewedAnalysisRef = useRef(false);
     const totalElapsedRef = useRef(0);  // 总时间（包含暂停）
+    const initializedRef = useRef(false);
+
+    // 初始化 sessionStartRef (仅在首次挂载时)
+    useEffect(() => {
+        if (!initializedRef.current) {
+            sessionStartRef.current = Date.now();
+            initializedRef.current = true;
+        }
+    }, []);
 
     useEffect(() => {
         elapsedRef.current = elapsed;
@@ -121,13 +157,17 @@ export function useQuestionTimer({
         // 只有当新传入的 questionId 有值，且确实与当前记录的 ID 不同时，才视为切换题目
         if (questionId && activeIdRef.current !== questionId) {
             saveTime(); // 保存上一题
-            reset(true); // 重置并为新题自动开始
+
+            // 检查新题目是否有历史记录
+            const newHasHistory = (times[questionId] || 0) > 0 || !!progress[questionId];
+            reset(!newHasHistory); // 有历史的不自动开始
+
             resetSessionMeta(); // 重置 session 元数据
             activeIdRef.current = questionId;
         }
         // 如果 questionId 变为 undefined (例如加载中)，我们保持 activeIdRef 不变，
         // 这样当它变回原来的 ID 时，不会触发上面的 if，计时器也就不会被重置。
-    }, [questionId, saveTime, reset, resetSessionMeta]);
+    }, [questionId, saveTime, reset, resetSessionMeta, times, progress]);
 
     // 关闭 Modal 时保存
     useEffect(() => {
@@ -144,5 +184,37 @@ export function useQuestionTimer({
         };
     }, [saveTime]);
 
-    return stopwatch; // 返回给 UI 层使用
+    // 格式化时间辅助函数
+    const formatTime = useCallback((ms: number): string => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const s = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }, []);
+
+    // 计算总时间 = 历史累计 + 本次
+    const totalTime = historicalTime + elapsed;
+
+    // 格式化的时间
+    const formattedTotalTime = useMemo(() => formatTime(totalTime), [formatTime, totalTime]);
+    const formattedHistoricalTime = useMemo(() => formatTime(historicalTime), [formatTime, historicalTime]);
+
+    return {
+        // 基础计时器状态
+        elapsed,
+        isRunning,
+        formattedTime: stopwatch.formattedTime,
+        toggle: stopwatch.toggle,
+        reset,
+        start,
+        pause,
+
+        // 增强状态
+        historicalTime,
+        totalTime,
+        formattedTotalTime,
+        formattedHistoricalTime,
+        hasHistory,
+        questionStatus,
+    };
 }

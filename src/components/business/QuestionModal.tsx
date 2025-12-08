@@ -249,8 +249,12 @@ export function QuestionModal({
 
     const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
 
-    // 计时器逻辑
-    const { isRunning, reset, formattedTime, toggle } = useQuestionTimer({
+    // 计时器逻辑 (增强版：支持累计时间)
+    const {
+        isRunning, reset, formattedTime, toggle,
+        hasHistory, formattedTotalTime, formattedHistoricalTime,
+        questionStatus
+    } = useQuestionTimer({
         questionId: question?.id,
         visibleViews,
         isOpen
@@ -516,6 +520,9 @@ export function QuestionModal({
                                         toggle={toggle}
                                         reset={() => reset(false)}
                                         className="ml-2 sm:ml-4"
+                                        hasHistory={hasHistory}
+                                        formattedTotalTime={formattedTotalTime}
+                                        formattedHistoricalTime={formattedHistoricalTime}
                                     />
                                 )}
                                 {/* 收藏按钮 */}
@@ -542,7 +549,22 @@ export function QuestionModal({
                                     />
                                 )}
                             </span>
-                            <span className="hidden sm:inline text-[10px] sm:text-xs text-muted-foreground">{getQuestionTypeLabel(currentQuestion.type)}</span>
+                            <div className="hidden sm:flex items-center gap-2">
+                                <span className="text-[10px] sm:text-xs text-muted-foreground">{getQuestionTypeLabel(currentQuestion.type)}</span>
+                                {/* 已刷过的题目显示历史状态徽章 */}
+                                {questionStatus && questionStatus !== 'unanswered' && (
+                                    <span className={cn(
+                                        "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                        questionStatus === 'mastered' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                                        questionStatus === 'confused' && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                                        questionStatus === 'failed' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                    )}>
+                                        {questionStatus === 'mastered' && DICT.status.mastered}
+                                        {questionStatus === 'confused' && DICT.status.confused}
+                                        {questionStatus === 'failed' && DICT.status.failed}
+                                    </span>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg ml-auto sm:ml-0 overflow-x-auto no-scrollbar">
