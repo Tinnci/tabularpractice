@@ -38,7 +38,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useTheme } from "next-themes";
 
-import { DICT } from "@/lib/i18n";
+import { DICT, getQuestionTypeLabel, formatQuestionNumber } from "@/lib/i18n";
 
 interface Props {
     isOpen: boolean;
@@ -500,16 +500,15 @@ export function QuestionModal({
                     ? "sm:max-w-[100vw] sm:h-[100vh] rounded-none"
                     : "sm:max-w-5xl sm:h-[95vh] sm:rounded-xl"
             )}>
-                <DialogTitle className="sr-only">{DICT.exam.questionIndex.replace('{number}', String(currentQuestion.number))}</DialogTitle>
+                <DialogTitle className="sr-only">{formatQuestionNumber(currentQuestion.number)}</DialogTitle>
 
                 {/* 1. 头部信息与工具栏 */}
                 <div className="px-3 sm:px-6 py-2 sm:py-3 border-b bg-background flex items-center justify-between z-20 shadow-sm shrink-0 gap-2 h-14 sm:h-auto max-w-[100vw] overflow-hidden">
                     <div className="flex items-center gap-2 sm:gap-4 overflow-hidden flex-1 min-w-0">
                         <div className="flex flex-col shrink-0">
                             <span className="text-sm font-bold text-foreground flex items-center gap-1 sm:gap-2">
-                                <span className="sm:hidden text-muted-foreground">#</span>
-                                <span>{currentQuestion.number}</span>
-                                <span className="hidden sm:inline">{DICT.exam.questionIndex.replace('{number}', String(currentQuestion.number))}</span>
+                                <span className="sm:hidden">{formatQuestionNumber(currentQuestion.number, true)}</span>
+                                <span className="hidden sm:inline">{formatQuestionNumber(currentQuestion.number)}</span>
                                 {question && (
                                     <QuestionTimer
                                         formattedTime={formattedTime}
@@ -543,7 +542,7 @@ export function QuestionModal({
                                     />
                                 )}
                             </span>
-                            <span className="hidden sm:inline text-[10px] sm:text-xs text-muted-foreground">{currentQuestion.type}</span>
+                            <span className="hidden sm:inline text-[10px] sm:text-xs text-muted-foreground">{getQuestionTypeLabel(currentQuestion.type)}</span>
                         </div>
 
                         <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg ml-auto sm:ml-0 overflow-x-auto no-scrollbar">

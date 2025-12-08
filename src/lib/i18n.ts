@@ -380,3 +380,30 @@ export const DICT = {
 } as const;
 
 export type Dict = typeof DICT;
+
+/**
+ * 获取题型的本地化标签
+ * @param type - 原始题型值 ('choice' | 'fill' | 'answer')
+ * @returns 本地化的题型名称
+ */
+export function getQuestionTypeLabel(type: string): string {
+    switch (type) {
+        case 'choice': return DICT.wall.choice;
+        case 'fill': return DICT.wall.fill;
+        case 'answer': return DICT.wall.answer;
+        default: return type;
+    }
+}
+
+/**
+ * 格式化题号显示
+ * @param number - 题号
+ * @param compact - 是否使用紧凑模式（仅数字）
+ * @returns 格式化的题号字符串
+ */
+export function formatQuestionNumber(number: number | string, compact = false): string {
+    if (compact) {
+        return `#${number}`;
+    }
+    return DICT.exam.questionIndex.replace('{number}', String(number));
+}
