@@ -128,6 +128,17 @@ const SmartTagList = ({
     );
 };
 
+// 智能格式化内容：自动检测并包装 LaTeX
+const smartFormatContent = (content: string) => {
+    if (!content) return "";
+    const trimmed = content.trim();
+    // 如果是以 \begin 开头的 LaTeX 环境（如 matrix, cases），自动包裹 $$
+    if (trimmed.startsWith('\\begin')) {
+        return `$$\n${trimmed}\n$$`;
+    }
+    return content;
+};
+
 // 通用 Markdown 渲染组件
 const MarkdownContent = ({ content }: { content: string }) => (
     <div className="prose prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted prose-pre:text-foreground">
@@ -135,7 +146,7 @@ const MarkdownContent = ({ content }: { content: string }) => (
             remarkPlugins={[remarkMath]}
             rehypePlugins={[rehypeKatex]}
         >
-            {content}
+            {smartFormatContent(content)}
         </ReactMarkdown>
     </div>
 );
