@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PenLine } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -18,13 +18,8 @@ export function NotePanel({ questionId, initialContent, onUpdateNote, isVisible 
     const [noteContent, setNoteContent] = useState(initialContent || "");
     const [isEditingNote, setIsEditingNote] = useState(false);
 
-    // Sync local state when prop changes (switching questions)
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setNoteContent(initialContent || "");
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setIsEditingNote(false); // Reset editing state on question switch
-    }, [initialContent, questionId]);
+    // Note: State is initialized from props. When questionId changes, the parent should
+    // provide a key prop to force React to remount this component with fresh state.
 
     const handleBlur = () => {
         if (noteContent !== initialContent) {

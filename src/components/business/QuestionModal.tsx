@@ -723,12 +723,14 @@ export function QuestionModal({
 
                                     {/* 草稿区域 */}
                                     <DraftPanel
+                                        key={`draft-${currentQuestion.id}`}
                                         questionId={currentQuestion.id}
                                         isVisible={visibleViews.has('draft')}
                                     />
 
                                     {/* 笔记区域 */}
                                     <NotePanel
+                                        key={`note-${currentQuestion.id}`}
                                         questionId={currentQuestion.id}
                                         initialContent={notes[currentQuestion.id]}
                                         onUpdateNote={updateNote}
