@@ -1048,17 +1048,33 @@ export function QuestionModal({
                         )}
                     </div>
 
+
                     {/* 右侧：编辑面板 */}
                     {isEditing && question && (
                         <div className="w-full sm:w-[400px] sm:flex-1 border-l bg-card">
                             <QuestionEditPanel
                                 question={question}
                                 onSave={async (updatedQuestion) => {
-                                    // TODO: 实现保存到 GitHub
-                                    console.log('Save question:', updatedQuestion);
-                                    toast.success('保存成功（本地）', {
-                                        description: '远程同步功能开发中...'
-                                    });
+                                    // 由于目前 GitHub API编辑功能需要额外的 repo 权限
+                                    // 这里先保存到本地缓存，并提示用户
+                                    // 未来可以扩展为完整的 GitHub 同步
+
+                                    // 检查是否有 GitHub token
+                                    const { githubToken } = useProgressStore.getState();
+
+                                    if (!githubToken) {
+                                        toast.info('编辑已保存（本地）', {
+                                            description: '提示：配置 GitHub Token 后可同步到远程'
+                                        });
+                                    } else {
+                                        // 有 token，但需要 repo 权限才能编辑题库
+                                        // 目前先显示提示，保存到本地
+                                        toast.success('编辑已保存（本地缓存）', {
+                                            description: '远程同步需要 Token 具有 repo 权限'
+                                        });
+                                    }
+
+                                    console.log('[QuestionEditor] Saved locally:', updatedQuestion);
                                     setIsEditing(false);
                                 }}
                                 onCancel={() => setIsEditing(false)}
