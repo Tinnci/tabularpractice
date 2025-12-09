@@ -24,7 +24,7 @@ import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sk
 import { GpuSketchCanvas } from "@/components/ui/sketch-canvas/gpu";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
-    Copy,
+    Copy, Edit2,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
     Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2,
     Maximize2, Minimize2
@@ -35,7 +35,7 @@ import { cn, getImageUrl } from "@/lib/utils";
 import { useTheme } from "next-themes";
 
 // 使用共享的渲染组件
-import { MarkdownContent, RemoteImage } from "@/components/question";
+import { MarkdownContent, RemoteImage, QuestionEditPanel } from "@/components/question";
 
 import { DICT, getQuestionTypeLabel, formatQuestionNumber } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -214,6 +214,9 @@ export function QuestionModal({
     const { notes, updateNote, stars, toggleStar, syncStatus, syncData, setTime } = useProgressStore();
     const [noteContent, setNoteContent] = useState("");
     const [isEditingNote, setIsEditingNote] = useState(false);
+
+    // 编辑器状态
+    const [isEditing, setIsEditing] = useState(false);
 
     // 草稿系统状态
     const { theme } = useTheme();
@@ -524,6 +527,20 @@ export function QuestionModal({
                                 >
                                     <Star className={cn("w-4 h-4", isStarred && "fill-yellow-500 text-yellow-500")} />
                                 </Button>
+                                {/* 编辑按钮 */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn(
+                                        "h-5 w-5 text-muted-foreground hover:text-blue-500 transition-colors",
+                                        isEditing && "text-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                                    )}
+                                    onClick={() => setIsEditing(!isEditing)}
+                                    title={isEditing ? "关闭编辑" : "编辑题目"}
+                                    disabled={isLoading}
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </Button>
                                 {syncStatus === 'syncing' && (
                                     <span title={DICT.common.syncing}>
                                         <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
@@ -642,390 +659,413 @@ export function QuestionModal({
                 </div>
 
                 {/* 2. 内容瀑布流区域 */}
-                <div className="flex-1 min-h-0 bg-muted/30 relative">
-                    {isLoading ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground z-50 bg-background/50 backdrop-blur-sm">
-                            <Loader2 className="w-8 h-8 animate-spin" />
-                            <span className="text-sm">{DICT.common.loadingQuestion}</span>
-                        </div>
-                    ) : (
-                        <ScrollArea className="h-full">
-                            {/* key={currentQuestion.id} 强制 React 在题目切换时重新渲染整个内容区域，
-                                解决"切换下一题但内容未刷新"的问题，并重置图片加载状态 */}
-                            <div key={currentQuestion.id} className={cn(
-                                "p-3 sm:p-6 flex flex-col gap-3 sm:gap-6 mx-auto pb-20 animate-in fade-in duration-300 transition-all ease-in-out",
-                                isFullscreen ? "max-w-[1600px]" : "max-w-4xl"
-                            )}>
-
-
-                                {/* 移动端标签显示 - 移动端可以多显示几个，或者全显示 */}
-                                <div className="sm:hidden mb-2">
-                                    <SmartTagList
-                                        tags={currentQuestion.tags || []}
-                                        tagNames={currentQuestion.tagNames}
-                                        limit={5} // 移动端允许换行，可以多显示一些
-                                        className="gap-1.5"
-                                    />
-                                </div>
-
-                                {/* 题目区域 */}
-                                {visibleViews.has('question') && (
-                                    <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                                        <div className="bg-muted/50 border-b px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-                                            <div className="flex items-center gap-2">
-                                                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {DICT.exam.questionDesc}
-                                            </div>
-                                            <CopyButton
-                                                text={currentQuestion.contentMd}
-                                                img={currentQuestion.contentImg}
-                                                question={currentQuestion}
-                                            />
-                                        </div>
-                                        <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
-                                            {currentQuestion.contentMd ? (
-                                                <div className="w-full p-2">
-                                                    <MarkdownContent content={currentQuestion.contentMd} />
-                                                </div>
-                                            ) : (currentQuestion.contentImg) ? (
-                                                <RemoteImage
-                                                    src={currentQuestion.contentImg || ''}
-                                                    alt="题目"
-                                                    question={currentQuestion}
-                                                />
-                                            ) : (
-                                                <div className="text-muted-foreground text-sm">{DICT.exam.contentMissing}</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* 视频区域 */}
-                                {visibleViews.has('video') && videoEmbedUrl && (
-                                    <div className="flex flex-col gap-2">
-                                        <div className="bg-black rounded-xl border shadow-sm overflow-hidden aspect-video ring-2 ring-blue-100 relative group">
-                                            <iframe
-                                                src={videoEmbedUrl}
-                                                className="w-full h-full"
-                                                scrolling="no"
-                                                frameBorder="0"
-                                                allowFullScreen
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                title="视频讲解"
-                                                // @ts-expect-error - playsInline is not in iframe type definition but is needed for iOS
-                                                playsInline
-                                            />
-
-                                            {/* 时间戳提示 - 仅在有时间戳时显示 */}
-                                            {(() => {
-                                                const timestamp = question?.videoUrl ? getBilibiliTimestamp(question.videoUrl) : null;
-                                                if (timestamp !== null) {
-                                                    return (
-                                                        <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-medium shadow-lg">
-                                                            <Clock className="w-4 h-4" />
-                                                            <span>{DICT.exam.videoStartAt.replace('{time}', formatTimestamp(timestamp))}</span>
-                                                        </div>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
-                                        </div>
-
-                                        {/* 新增：iOS/移动端友好跳转按钮 */}
-                                        {question?.videoUrl && (
-                                            <div className="flex justify-end">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="gap-2 text-xs h-8 bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100 hover:text-pink-700 dark:bg-pink-900/20 dark:border-pink-900 dark:text-pink-300"
-                                                    onClick={() => window.open(question.videoUrl, '_blank')}
-                                                >
-                                                    <ExternalLink className="w-3 h-3" />
-                                                    {/* 提示用户去 App 看，体验更好 */}
-                                                    <span className="sm:hidden">{DICT.exam.openInBilibiliMobile}</span>
-                                                    <span className="hidden sm:inline">{DICT.exam.openInBilibiliWeb}</span>
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* 答案区域 */}
-                                {visibleViews.has('answer') && (
-                                    <div className="bg-card rounded-xl border border-green-100 dark:border-green-900 shadow-sm overflow-hidden">
-                                        <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-green-700 dark:text-green-400">
-                                            <div className="flex items-center gap-2">
-                                                <Eye className="w-4 h-4" /> {DICT.exam.referenceAnswer}
-                                            </div>
-                                            <CopyButton
-                                                text={currentQuestion.answerMd || (currentQuestion.answer ? DICT.exam.answerLabel.replace('{answer}', currentQuestion.answer) : null)}
-                                                img={currentQuestion.answerImg}
-                                                question={currentQuestion}
-                                            />
-                                        </div>
-                                        <div className="p-4 sm:p-6 flex justify-center">
-                                            {currentQuestion.answerMd ? (
-                                                <div className="w-full text-left">
-                                                    <MarkdownContent content={currentQuestion.answerMd} />
-                                                </div>
-                                            ) : currentQuestion.answerImg ? (
-                                                <RemoteImage
-                                                    src={currentQuestion.answerImg}
-                                                    alt="答案"
-                                                    question={currentQuestion}
-                                                />
-                                            ) : currentQuestion.answer ? (
-                                                <div className="w-full text-left">
-                                                    <MarkdownContent content={currentQuestion.answer} />
-                                                </div>
-                                            ) : (
-                                                <span className="text-muted-foreground text-sm">{DICT.exam.noAnswer}</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* 解析区域 */}
-                                {visibleViews.has('analysis') && (
-                                    <div className="bg-card rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm overflow-hidden">
-                                        <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
-                                            <div className="flex items-center gap-2">
-                                                <FileText className="w-4 h-4" /> {DICT.exam.detailedAnalysis}
-                                            </div>
-                                            <CopyButton
-                                                text={currentQuestion.analysisMd}
-                                                img={currentQuestion.analysisImg}
-                                                question={currentQuestion}
-                                            />
-                                        </div>
-                                        <div className="p-4 sm:p-6 flex justify-center">
-                                            {currentQuestion.analysisMd ? (
-                                                <div className="w-full text-left">
-                                                    <MarkdownContent content={currentQuestion.analysisMd} />
-                                                </div>
-                                            ) : currentQuestion.analysisImg ? (
-                                                <RemoteImage
-                                                    src={currentQuestion.analysisImg}
-                                                    alt="解析"
-                                                    question={currentQuestion}
-                                                />
-                                            ) : (
-                                                <span className="text-muted-foreground text-sm">{DICT.exam.noAnalysis}</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* 草稿区域 */}
-                                {visibleViews.has('draft') && (
-                                    <div className="bg-card rounded-xl border border-purple-200 dark:border-purple-900 shadow-sm overflow-hidden flex flex-col h-[500px]">
-                                        <div className="bg-purple-50/50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
-                                            <div className="flex items-center gap-2">
-                                                <Pencil className="w-4 h-4" /> {DICT.exam.handwritingDraft}
-                                            </div>
-                                            <div className="flex items-center gap-1 sm:gap-2">
-                                                <TooltipProvider delayDuration={300}>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant={!eraserMode ? "secondary" : "ghost"}
-                                                                size="icon"
-                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                onClick={() => {
-                                                                    setEraserMode(false);
-                                                                    canvasRef.current?.eraseMode(false);
-                                                                }}
-                                                            >
-                                                                <Pencil className="w-4 h-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
-                                                            <p>{DICT.exam.pen}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant={eraserMode ? "secondary" : "ghost"}
-                                                                size="icon"
-                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                onClick={() => {
-                                                                    setEraserMode(true);
-                                                                    canvasRef.current?.eraseMode(true);
-                                                                }}
-                                                            >
-                                                                <Eraser className="w-4 h-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
-                                                            <p>{DICT.exam.eraser}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <div className="w-px h-5 bg-border mx-1" />
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant={onlyPenMode ? "secondary" : "ghost"}
-                                                                size="icon"
-                                                                onClick={() => setOnlyPenMode(!onlyPenMode)}
-                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                            >
-                                                                <PenLine className="w-4 h-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
-                                                            <p>{onlyPenMode ? DICT.exam.palmRejectionOn : DICT.exam.palmRejectionOff}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <div className="w-px h-5 bg-border mx-1" />
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                onClick={() => {
-                                                                    canvasRef.current?.undo();
-                                                                    setTimeout(saveDraft, 100);
-                                                                }}
-                                                            >
-                                                                <Undo className="w-4 h-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
-                                                            <p>{DICT.common.undo}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-9 w-9 text-red-500/70 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90 hover:scale-105"
-                                                                onClick={() => {
-                                                                    if (confirm(DICT.exam.clearDraftConfirm)) {
-                                                                        canvasRef.current?.clearCanvas();
-                                                                        setTimeout(saveDraft, 100);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
-                                                            <p>{DICT.exam.clearDraft}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <div className="w-px h-5 bg-border mx-1" />
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant={useGpu ? "secondary" : "ghost"}
-                                                                size="sm"
-                                                                className="h-9 px-2 text-xs font-bold transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                onClick={() => setUseGpu(!useGpu)}
-                                                            >
-                                                                GPU
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="bottom">
-                                                            <p>{useGpu ? DICT.exam.gpuOn : DICT.exam.gpuOff}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 relative bg-white dark:bg-zinc-900 cursor-crosshair touch-none">
-                                            {useGpu ? (
-                                                <GpuSketchCanvas
-                                                    ref={canvasRef}
-                                                    strokeWidth={strokeWidth}
-                                                    strokeColor={strokeColor}
-                                                    canvasColor="transparent"
-                                                    className="w-full h-full"
-                                                    onStroke={debouncedSaveDraft}
-                                                    allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
-                                                />
-                                            ) : (
-                                                <ReactSketchCanvas
-                                                    ref={canvasRef}
-                                                    strokeWidth={strokeWidth}
-                                                    strokeColor={strokeColor}
-                                                    canvasColor="transparent"
-                                                    className="w-full h-full"
-                                                    onStroke={debouncedSaveDraft}
-                                                    allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* 笔记区域 */}
-                                {visibleViews.has('note') && (
-                                    <div className="bg-card rounded-xl border border-orange-200 dark:border-orange-900 shadow-sm overflow-hidden">
-                                        <div className="bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-orange-700 dark:text-orange-400">
-                                            <div className="flex items-center gap-2">
-                                                <PenLine className="w-4 h-4" /> {DICT.exam.personalNote}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs select-none">
-                                                <span
-                                                    className={cn("cursor-pointer transition-colors", isEditingNote ? "text-muted-foreground" : "font-bold")}
-                                                    onClick={() => setIsEditingNote(false)}
-                                                >
-                                                    {DICT.common.preview}
-                                                </span>
-                                                <Switch
-                                                    checked={isEditingNote}
-                                                    onCheckedChange={setIsEditingNote}
-                                                    className="scale-75 data-[state=checked]:bg-orange-500"
-                                                />
-                                                <span
-                                                    className={cn("cursor-pointer transition-colors", isEditingNote ? "font-bold" : "text-muted-foreground")}
-                                                    onClick={() => setIsEditingNote(true)}
-                                                >
-                                                    {DICT.common.edit}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="p-0">
-                                            {isEditingNote ? (
-                                                <textarea
-                                                    value={noteContent}
-                                                    onChange={(e) => setNoteContent(e.target.value)}
-                                                    onBlur={handleNoteBlur}
-                                                    placeholder={DICT.exam.notePlaceholder}
-                                                    className="w-full h-64 p-4 resize-y bg-transparent outline-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50"
-                                                    autoFocus
-                                                />
-                                            ) : (
-                                                <div
-                                                    className="p-4 sm:p-6 prose prose-sm dark:prose-invert max-w-none min-h-[100px] cursor-text"
-                                                    onClick={() => setIsEditingNote(true)}
-                                                >
-                                                    {noteContent ? (
-                                                        <MarkdownContent content={noteContent} />
-                                                    ) : (
-                                                        <span className="text-muted-foreground/50 italic select-none">{DICT.exam.startNotePrompt}</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
+                <div className="flex-1 min-h-0 bg-muted/30 relative flex">
+                    {/* 左侧：内容区 (编辑模式下收窄) */}
+                    <div className={cn(
+                        "flex-1 min-h-0 transition-all duration-300",
+                        isEditing && "hidden sm:block sm:flex-[2]"
+                    )}>
+                        {isLoading ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground z-50 bg-background/50 backdrop-blur-sm">
+                                <Loader2 className="w-8 h-8 animate-spin" />
+                                <span className="text-sm">{DICT.common.loadingQuestion}</span>
                             </div>
-                        </ScrollArea>
+                        ) : (
+                            <ScrollArea className="h-full">
+                                {/* key={currentQuestion.id} 强制 React 在题目切换时重新渲染整个内容区域，
+                                解决"切换下一题但内容未刷新"的问题，并重置图片加载状态 */}
+                                <div key={currentQuestion.id} className={cn(
+                                    "p-3 sm:p-6 flex flex-col gap-3 sm:gap-6 mx-auto pb-20 animate-in fade-in duration-300 transition-all ease-in-out",
+                                    isFullscreen ? "max-w-[1600px]" : "max-w-4xl"
+                                )}>
+
+
+                                    {/* 移动端标签显示 - 移动端可以多显示几个，或者全显示 */}
+                                    <div className="sm:hidden mb-2">
+                                        <SmartTagList
+                                            tags={currentQuestion.tags || []}
+                                            tagNames={currentQuestion.tagNames}
+                                            limit={5} // 移动端允许换行，可以多显示一些
+                                            className="gap-1.5"
+                                        />
+                                    </div>
+
+                                    {/* 题目区域 */}
+                                    {visibleViews.has('question') && (
+                                        <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+                                            <div className="bg-muted/50 border-b px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                                                <div className="flex items-center gap-2">
+                                                    <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {DICT.exam.questionDesc}
+                                                </div>
+                                                <CopyButton
+                                                    text={currentQuestion.contentMd}
+                                                    img={currentQuestion.contentImg}
+                                                    question={currentQuestion}
+                                                />
+                                            </div>
+                                            <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
+                                                {currentQuestion.contentMd ? (
+                                                    <div className="w-full p-2">
+                                                        <MarkdownContent content={currentQuestion.contentMd} />
+                                                    </div>
+                                                ) : (currentQuestion.contentImg) ? (
+                                                    <RemoteImage
+                                                        src={currentQuestion.contentImg || ''}
+                                                        alt="题目"
+                                                        question={currentQuestion}
+                                                    />
+                                                ) : (
+                                                    <div className="text-muted-foreground text-sm">{DICT.exam.contentMissing}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 视频区域 */}
+                                    {visibleViews.has('video') && videoEmbedUrl && (
+                                        <div className="flex flex-col gap-2">
+                                            <div className="bg-black rounded-xl border shadow-sm overflow-hidden aspect-video ring-2 ring-blue-100 relative group">
+                                                <iframe
+                                                    src={videoEmbedUrl}
+                                                    className="w-full h-full"
+                                                    scrolling="no"
+                                                    frameBorder="0"
+                                                    allowFullScreen
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                    title="视频讲解"
+                                                    // @ts-expect-error - playsInline is not in iframe type definition but is needed for iOS
+                                                    playsInline
+                                                />
+
+                                                {/* 时间戳提示 - 仅在有时间戳时显示 */}
+                                                {(() => {
+                                                    const timestamp = question?.videoUrl ? getBilibiliTimestamp(question.videoUrl) : null;
+                                                    if (timestamp !== null) {
+                                                        return (
+                                                            <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-medium shadow-lg">
+                                                                <Clock className="w-4 h-4" />
+                                                                <span>{DICT.exam.videoStartAt.replace('{time}', formatTimestamp(timestamp))}</span>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
+                                            </div>
+
+                                            {/* 新增：iOS/移动端友好跳转按钮 */}
+                                            {question?.videoUrl && (
+                                                <div className="flex justify-end">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="gap-2 text-xs h-8 bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100 hover:text-pink-700 dark:bg-pink-900/20 dark:border-pink-900 dark:text-pink-300"
+                                                        onClick={() => window.open(question.videoUrl, '_blank')}
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" />
+                                                        {/* 提示用户去 App 看，体验更好 */}
+                                                        <span className="sm:hidden">{DICT.exam.openInBilibiliMobile}</span>
+                                                        <span className="hidden sm:inline">{DICT.exam.openInBilibiliWeb}</span>
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* 答案区域 */}
+                                    {visibleViews.has('answer') && (
+                                        <div className="bg-card rounded-xl border border-green-100 dark:border-green-900 shadow-sm overflow-hidden">
+                                            <div className="bg-green-50/50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+                                                <div className="flex items-center gap-2">
+                                                    <Eye className="w-4 h-4" /> {DICT.exam.referenceAnswer}
+                                                </div>
+                                                <CopyButton
+                                                    text={currentQuestion.answerMd || (currentQuestion.answer ? DICT.exam.answerLabel.replace('{answer}', currentQuestion.answer) : null)}
+                                                    img={currentQuestion.answerImg}
+                                                    question={currentQuestion}
+                                                />
+                                            </div>
+                                            <div className="p-4 sm:p-6 flex justify-center">
+                                                {currentQuestion.answerMd ? (
+                                                    <div className="w-full text-left">
+                                                        <MarkdownContent content={currentQuestion.answerMd} />
+                                                    </div>
+                                                ) : currentQuestion.answerImg ? (
+                                                    <RemoteImage
+                                                        src={currentQuestion.answerImg}
+                                                        alt="答案"
+                                                        question={currentQuestion}
+                                                    />
+                                                ) : currentQuestion.answer ? (
+                                                    <div className="w-full text-left">
+                                                        <MarkdownContent content={currentQuestion.answer} />
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground text-sm">{DICT.exam.noAnswer}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 解析区域 */}
+                                    {visibleViews.has('analysis') && (
+                                        <div className="bg-card rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm overflow-hidden">
+                                            <div className="bg-blue-50/50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+                                                <div className="flex items-center gap-2">
+                                                    <FileText className="w-4 h-4" /> {DICT.exam.detailedAnalysis}
+                                                </div>
+                                                <CopyButton
+                                                    text={currentQuestion.analysisMd}
+                                                    img={currentQuestion.analysisImg}
+                                                    question={currentQuestion}
+                                                />
+                                            </div>
+                                            <div className="p-4 sm:p-6 flex justify-center">
+                                                {currentQuestion.analysisMd ? (
+                                                    <div className="w-full text-left">
+                                                        <MarkdownContent content={currentQuestion.analysisMd} />
+                                                    </div>
+                                                ) : currentQuestion.analysisImg ? (
+                                                    <RemoteImage
+                                                        src={currentQuestion.analysisImg}
+                                                        alt="解析"
+                                                        question={currentQuestion}
+                                                    />
+                                                ) : (
+                                                    <span className="text-muted-foreground text-sm">{DICT.exam.noAnalysis}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 草稿区域 */}
+                                    {visibleViews.has('draft') && (
+                                        <div className="bg-card rounded-xl border border-purple-200 dark:border-purple-900 shadow-sm overflow-hidden flex flex-col h-[500px]">
+                                            <div className="bg-purple-50/50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+                                                <div className="flex items-center gap-2">
+                                                    <Pencil className="w-4 h-4" /> {DICT.exam.handwritingDraft}
+                                                </div>
+                                                <div className="flex items-center gap-1 sm:gap-2">
+                                                    <TooltipProvider delayDuration={300}>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant={!eraserMode ? "secondary" : "ghost"}
+                                                                    size="icon"
+                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                    onClick={() => {
+                                                                        setEraserMode(false);
+                                                                        canvasRef.current?.eraseMode(false);
+                                                                    }}
+                                                                >
+                                                                    <Pencil className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="bottom">
+                                                                <p>{DICT.exam.pen}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant={eraserMode ? "secondary" : "ghost"}
+                                                                    size="icon"
+                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                    onClick={() => {
+                                                                        setEraserMode(true);
+                                                                        canvasRef.current?.eraseMode(true);
+                                                                    }}
+                                                                >
+                                                                    <Eraser className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="bottom">
+                                                                <p>{DICT.exam.eraser}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+
+                                                        <div className="w-px h-5 bg-border mx-1" />
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant={onlyPenMode ? "secondary" : "ghost"}
+                                                                    size="icon"
+                                                                    onClick={() => setOnlyPenMode(!onlyPenMode)}
+                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                >
+                                                                    <PenLine className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="bottom">
+                                                                <p>{onlyPenMode ? DICT.exam.palmRejectionOn : DICT.exam.palmRejectionOff}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+
+                                                        <div className="w-px h-5 bg-border mx-1" />
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                    onClick={() => {
+                                                                        canvasRef.current?.undo();
+                                                                        setTimeout(saveDraft, 100);
+                                                                    }}
+                                                                >
+                                                                    <Undo className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="bottom">
+                                                                <p>{DICT.common.undo}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-9 w-9 text-red-500/70 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90 hover:scale-105"
+                                                                    onClick={() => {
+                                                                        if (confirm(DICT.exam.clearDraftConfirm)) {
+                                                                            canvasRef.current?.clearCanvas();
+                                                                            setTimeout(saveDraft, 100);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="bottom">
+                                                                <p>{DICT.exam.clearDraft}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+
+                                                        <div className="w-px h-5 bg-border mx-1" />
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant={useGpu ? "secondary" : "ghost"}
+                                                                    size="sm"
+                                                                    className="h-9 px-2 text-xs font-bold transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
+                                                                    onClick={() => setUseGpu(!useGpu)}
+                                                                >
+                                                                    GPU
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="bottom">
+                                                                <p>{useGpu ? DICT.exam.gpuOn : DICT.exam.gpuOff}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 relative bg-white dark:bg-zinc-900 cursor-crosshair touch-none">
+                                                {useGpu ? (
+                                                    <GpuSketchCanvas
+                                                        ref={canvasRef}
+                                                        strokeWidth={strokeWidth}
+                                                        strokeColor={strokeColor}
+                                                        canvasColor="transparent"
+                                                        className="w-full h-full"
+                                                        onStroke={debouncedSaveDraft}
+                                                        allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
+                                                    />
+                                                ) : (
+                                                    <ReactSketchCanvas
+                                                        ref={canvasRef}
+                                                        strokeWidth={strokeWidth}
+                                                        strokeColor={strokeColor}
+                                                        canvasColor="transparent"
+                                                        className="w-full h-full"
+                                                        onStroke={debouncedSaveDraft}
+                                                        allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 笔记区域 */}
+                                    {visibleViews.has('note') && (
+                                        <div className="bg-card rounded-xl border border-orange-200 dark:border-orange-900 shadow-sm overflow-hidden">
+                                            <div className="bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-orange-700 dark:text-orange-400">
+                                                <div className="flex items-center gap-2">
+                                                    <PenLine className="w-4 h-4" /> {DICT.exam.personalNote}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs select-none">
+                                                    <span
+                                                        className={cn("cursor-pointer transition-colors", isEditingNote ? "text-muted-foreground" : "font-bold")}
+                                                        onClick={() => setIsEditingNote(false)}
+                                                    >
+                                                        {DICT.common.preview}
+                                                    </span>
+                                                    <Switch
+                                                        checked={isEditingNote}
+                                                        onCheckedChange={setIsEditingNote}
+                                                        className="scale-75 data-[state=checked]:bg-orange-500"
+                                                    />
+                                                    <span
+                                                        className={cn("cursor-pointer transition-colors", isEditingNote ? "font-bold" : "text-muted-foreground")}
+                                                        onClick={() => setIsEditingNote(true)}
+                                                    >
+                                                        {DICT.common.edit}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="p-0">
+                                                {isEditingNote ? (
+                                                    <textarea
+                                                        value={noteContent}
+                                                        onChange={(e) => setNoteContent(e.target.value)}
+                                                        onBlur={handleNoteBlur}
+                                                        placeholder={DICT.exam.notePlaceholder}
+                                                        className="w-full h-64 p-4 resize-y bg-transparent outline-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50"
+                                                        autoFocus
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="p-4 sm:p-6 prose prose-sm dark:prose-invert max-w-none min-h-[100px] cursor-text"
+                                                        onClick={() => setIsEditingNote(true)}
+                                                    >
+                                                        {noteContent ? (
+                                                            <MarkdownContent content={noteContent} />
+                                                        ) : (
+                                                            <span className="text-muted-foreground/50 italic select-none">{DICT.exam.startNotePrompt}</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
+                            </ScrollArea>
+                        )}
+                    </div>
+
+                    {/* 右侧：编辑面板 */}
+                    {isEditing && question && (
+                        <div className="w-full sm:w-[400px] sm:flex-1 border-l bg-card">
+                            <QuestionEditPanel
+                                question={question}
+                                onSave={async (updatedQuestion) => {
+                                    // TODO: 实现保存到 GitHub
+                                    console.log('Save question:', updatedQuestion);
+                                    toast.success('保存成功（本地）', {
+                                        description: '远程同步功能开发中...'
+                                    });
+                                    setIsEditing(false);
+                                }}
+                                onCancel={() => setIsEditing(false)}
+                            />
+                        </div>
                     )}
                 </div>
-
                 {/* 3. 底部操作栏 - 响应式优化 */}
                 <div className="p-2 sm:p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pb-4 border-t bg-background grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 shrink-0">
 
