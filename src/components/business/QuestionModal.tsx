@@ -29,14 +29,13 @@ import {
     Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2,
     Maximize2, Minimize2
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
 import { useProgressStore } from "@/lib/store";
 import { Switch } from "@/components/ui/switch";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useTheme } from "next-themes";
+
+// 使用共享的渲染组件
+import { MarkdownContent, RemoteImage } from "@/components/question";
 
 import { DICT, getQuestionTypeLabel, formatQuestionNumber } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -127,75 +126,6 @@ const SmartTagList = ({
         </div>
     );
 };
-
-// 智能格式化内容：自动检测并包装 LaTeX
-const smartFormatContent = (content: string) => {
-    if (!content) return "";
-    const trimmed = content.trim();
-
-    // 如果已经被 $$ 包裹，不重复处理
-    if (trimmed.startsWith('$$') || trimmed.startsWith('$')) {
-        return content;
-    }
-
-    // 检测是否包含 LaTeX 环境（如 \begin{cases}, \begin{matrix}, \begin{pmatrix} 等）
-    // 这类内容需要用 $$ 包裹才能被 remark-math 识别
-    if (trimmed.includes('\\begin{')) {
-        return `$$\n${trimmed}\n$$`;
-    }
-
-    return content;
-};
-
-// 通用 Markdown 渲染组件
-const MarkdownContent = ({ content }: { content: string }) => (
-    <div className="prose prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted prose-pre:text-foreground">
-        <ReactMarkdown
-            remarkPlugins={[remarkMath]}
-            rehypePlugins={[rehypeKatex]}
-        >
-            {smartFormatContent(content)}
-        </ReactMarkdown>
-    </div>
-);
-
-// 远程图片加载组件
-const RemoteImage = ({ src, alt, className, question }: { src: string, alt: string, className?: string, question?: Question | null }) => {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
-    const { repoBaseUrl, repoSources } = useProgressStore.getState();
-
-    const finalSrc = useMemo(() => {
-        return getImageUrl(src, question, repoBaseUrl, repoSources);
-    }, [src, question, repoBaseUrl, repoSources]);
-
-    if (!finalSrc) return null;
-
-    return (
-        <div className={cn("relative min-h-[100px] flex items-center justify-center bg-muted/10 rounded-lg overflow-hidden", className)}>
-            {loading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-muted/10 z-10">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-            )}
-            {error ? (
-                <div className="flex flex-col items-center text-muted-foreground text-xs p-4">
-                    <ImageOff className="w-6 h-6 mb-2 opacity-50" />
-                    <span>{DICT.common.imageLoadError}</span>
-                </div>
-            ) : (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                    src={finalSrc}
-                    alt={alt}
-                    className={cn("max-w-full h-auto object-contain transition-opacity duration-300 dark:invert", loading ? "opacity-0" : "opacity-100")}
-                    onLoad={() => setLoading(false)}
-                    onError={() => { setLoading(false); setError(true); }}
-                />
-            )}
-        </div>
-    )
-}
 
 const CopyButton = ({ text, img, question }: { text?: string | null, img?: string | null, question: Question }) => {
     const [copied, setCopied] = useState(false);
