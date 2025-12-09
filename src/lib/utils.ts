@@ -110,10 +110,9 @@ export function derivePapersFromQuestions(questions: Question[], groups: PaperGr
     // 尝试从 paperId 解析年份 (假设格式为 math1-2023)
     // 或者从 q.year 获取 (如果存在)
     let year = 0;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const qAny = q as any;
-    if (qAny.year) {
-      year = parseInt(qAny.year);
+    const qWithYear = q as Question & { year?: string | number; category?: string };
+    if (qWithYear.year) {
+      year = parseInt(String(qWithYear.year));
     } else {
       const match = q.paperId.match(/-(\d{4})/);
       if (match) {
@@ -123,8 +122,7 @@ export function derivePapersFromQuestions(questions: Question[], groups: PaperGr
 
     // 查找对应的 group
     // 假设 groupId 可以从 paperId 前缀推断，或者 q.category
-    // math1-2023 -> math1
-    const groupId = qAny.category || q.paperId.split('-').slice(0, -1).join('-');
+    const groupId = qWithYear.category || q.paperId.split('-').slice(0, -1).join('-');
 
     const group = groups.find(g => g.id === groupId);
     const groupName = group ? group.name : groupId;

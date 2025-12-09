@@ -260,10 +260,11 @@ export function QuestionModal({
     // [修复] 新增 Ref：追踪上一次初始化视图时的题目 ID，防止 AutoSync 导致的意外重置
     const lastInitializedIdRef = useRef<string | null>(null);
 
-    // [修复] 改造 useEffect：仅在 questionId 真正改变且不为空时重置视图
+    // [修复] 改造 useEffect:仅在 questionId 真正改变且不为空时重置视图
     useEffect(() => {
-        // 只有当 isOpen 为 true，且 questionId 存在，且与上次初始化的 ID 不同时才执行
+        // 只有当 isOpen 为 true,且 questionId 存在,且与上次初始化的 ID 不同时才执行
         if (isOpen && questionId && questionId !== lastInitializedIdRef.current) {
+            // React 18+ 会自动批量更新多个 setState
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setVisibleViews(new Set(['question']));
             // eslint-disable-next-line react-hooks/set-state-in-effect

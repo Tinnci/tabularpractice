@@ -90,9 +90,15 @@ export default function PracticePage() {
         elapsedRef.current = elapsed;
     }, [elapsed]);
 
+    // 追踪会话是否已恢复,避免重复恢复
+    const sessionRestoredRef = useRef(false);
+
     // Restore session
     useEffect(() => {
-        if (!isStarted && practiceSession && practiceSession.isActive && mergedQuestions.length > 0) {
+        // 已经恢复过或已经开始,跳过
+        if (sessionRestoredRef.current || isStarted) return;
+
+        if (practiceSession && practiceSession.isActive && mergedQuestions.length > 0) {
             // Reconstruct queue
             const queueMap = new Map(mergedQuestions.map(q => [q.id, q]));
             const restoredQueue = practiceSession.queueIds
@@ -100,20 +106,25 @@ export default function PracticePage() {
                 .filter(q => !!q) as Question[];
 
             if (restoredQueue.length > 0) {
+                // 批量恢复会话状态
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setQueue(restoredQueue);
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setCurrentIndex(practiceSession.currentIndex);
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setSelectedTypes(new Set(practiceSession.settings.types));
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setSelectedTags(new Set(practiceSession.settings.tags));
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setIsShuffle(practiceSession.settings.isShuffle);
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setIsStarted(true);
-                // Don't auto-open modal on restore, let user click "Continue"
-                // Or maybe open it? The user might have refreshed while in the middle of a question.
-                // Let's open it if they were in the middle.
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setIsModalOpen(true);
+                sessionRestoredRef.current = true;
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [practiceSession, mergedQuestions]);
+    }, [practiceSession, mergedQuestions, isStarted]);
 
     // Derived Data
     const allTags = useMemo(() => {

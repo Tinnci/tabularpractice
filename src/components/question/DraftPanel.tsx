@@ -11,6 +11,7 @@ import {
 import { DICT } from "@/lib/i18n";
 import { PenLine, Pencil, Eraser, Undo, Trash2 } from "lucide-react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sketch-canvas";
+import type { ExportedPath } from "@/components/ui/sketch-canvas/types";
 import { GpuSketchCanvas } from "@/components/ui/sketch-canvas/gpu";
 import { useTheme } from "next-themes";
 
@@ -28,15 +29,18 @@ export function DraftPanel({ questionId, isVisible }: DraftPanelProps) {
     const [onlyPenMode, setOnlyPenMode] = useState(false);
     const [useGpu, setUseGpu] = useState(false);
 
-    // 监听主题变化，自动调整笔刷颜色
-    useEffect(() => {
-        if (theme === 'dark') {
-            if (strokeColor === "#000000") setStrokeColor("#FFFFFF");
-        } else {
-            if (strokeColor === "#FFFFFF") setStrokeColor("#000000");
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    // 监听主题变化,自动调整笔刷颜色
+    const updateColorForTheme = useCallback(() => {
+        setStrokeColor(prevColor => {
+            if (theme === 'dark' && prevColor === "#000000") return "#FFFFFF";
+            if (theme !== 'dark' && prevColor === "#FFFFFF") return "#000000";
+            return prevColor;
+        });
     }, [theme]);
+
+    useEffect(() => {
+        updateColorForTheme();
+    }, [updateColorForTheme]);
 
     // 加载草稿
     useEffect(() => {
@@ -53,18 +57,15 @@ export function DraftPanel({ questionId, isVisible }: DraftPanelProps) {
                 const savedDraft = await draftStore.getDraft(questionId);
 
                 if (savedDraft) {
-                    const paths = JSON.parse(savedDraft);
+                    const paths = JSON.parse(savedDraft) as ExportedPath[];
                     // 颜色自适应转换逻辑
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const transformedPaths = paths.map((path: any) => {
-                        if (path.strokeColor === "#000000" && theme === 'dark') {
-                            return { ...path, strokeColor: "#FFFFFF" };
-                        }
-                        if (path.strokeColor === "#FFFFFF" && theme !== 'dark') {
-                            return { ...path, strokeColor: "#000000" };
-                        }
-                        return path;
-                    });
+                    const transformedPaths = paths.map((path) => ({
+                        ...path,
+                        strokeColor:
+                            (path.strokeColor === "#000000" && theme === 'dark') ? "#FFFFFF" :
+                                (path.strokeColor === "#FFFFFF" && theme !== 'dark') ? "#000000" :
+                                    path.strokeColor
+                    }));
                     canvasRef.current.loadPaths(transformedPaths);
                 }
             } catch (e) {
