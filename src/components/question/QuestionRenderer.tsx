@@ -21,9 +21,9 @@ export const smartFormatContent = (content: string) => {
         return content;
     }
 
-    // 检测是否包含 LaTeX 环境（如 \begin{cases}, \begin{matrix}, \begin{pmatrix} 等）
-    // 这类内容需要用 $$ 包裹才能被 remark-math 识别
-    if (trimmed.includes('\\begin{')) {
+    // 检测是否包含 LaTeX 环境（如 \begin{cases}, \begin{matrix} 等）
+    // 且内容中不包含 $ 符号（避免破坏已有的行内公式混合文本）
+    if (trimmed.includes('\\begin{') && !trimmed.includes('$')) {
         return `$$\n${trimmed}\n$$`;
     }
 

@@ -39,13 +39,14 @@ export function QuestionEditPanel({
     const [answer, setAnswer] = useState(question.answer || "");
     const [answerMd, setAnswerMd] = useState(question.answerMd || "");
     const [analysisMd, setAnalysisMd] = useState(question.analysisMd || "");
+    const [contentMd, setContentMd] = useState(question.contentMd || "");
     const [type, setType] = useState<QuestionType>(question.type as QuestionType || "choice");
     const [tags, setTags] = useState<string[]>(question.tags || []);
     const [newTag, setNewTag] = useState("");
 
     // UI 状态
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'answer' | 'analysis'>('answer');
+    const [activeTab, setActiveTab] = useState<'content' | 'answer' | 'analysis'>('content');
     const [hasChanges, setHasChanges] = useState(false);
 
     // 检测变更
@@ -54,10 +55,11 @@ export function QuestionEditPanel({
             answer !== (question.answer || "") ||
             answerMd !== (question.answerMd || "") ||
             analysisMd !== (question.analysisMd || "") ||
+            contentMd !== (question.contentMd || "") ||
             type !== (question.type || "choice") ||
             JSON.stringify(tags) !== JSON.stringify(question.tags || []);
         setHasChanges(changed);
-    }, [answer, answerMd, analysisMd, type, tags, question]);
+    }, [answer, answerMd, analysisMd, contentMd, type, tags, question]);
 
     // 保存处理
     const handleSave = useCallback(async () => {
@@ -67,13 +69,14 @@ export function QuestionEditPanel({
                 answer,
                 answerMd: answerMd || undefined,
                 analysisMd: analysisMd || undefined,
+                contentMd: contentMd || undefined,
                 type,
                 tags
             });
         } finally {
             setIsSaving(false);
         }
-    }, [answer, answerMd, analysisMd, type, tags, onSave]);
+    }, [answer, answerMd, analysisMd, contentMd, type, tags, onSave]);
 
     // 标签管理
     const addTag = useCallback(() => {
@@ -201,13 +204,24 @@ export function QuestionEditPanel({
                         </div>
                     </div>
 
-                    {/* 答案/解析 Markdown 编辑 */}
+                    {/* 答案/解析/内容 Markdown 编辑 */}
                     <div className="space-y-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                            <button
+                                onClick={() => setActiveTab('content')}
+                                className={cn(
+                                    "text-sm font-medium px-3 py-1 rounded-md transition-colors whitespace-nowrap",
+                                    activeTab === 'content'
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-muted-foreground hover:bg-muted"
+                                )}
+                            >
+                                题目内容
+                            </button>
                             <button
                                 onClick={() => setActiveTab('answer')}
                                 className={cn(
-                                    "text-sm font-medium px-3 py-1 rounded-md transition-colors",
+                                    "text-sm font-medium px-3 py-1 rounded-md transition-colors whitespace-nowrap",
                                     activeTab === 'answer'
                                         ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
                                         : "text-muted-foreground hover:bg-muted"
@@ -218,7 +232,7 @@ export function QuestionEditPanel({
                             <button
                                 onClick={() => setActiveTab('analysis')}
                                 className={cn(
-                                    "text-sm font-medium px-3 py-1 rounded-md transition-colors",
+                                    "text-sm font-medium px-3 py-1 rounded-md transition-colors whitespace-nowrap",
                                     activeTab === 'analysis'
                                         ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                                         : "text-muted-foreground hover:bg-muted"
@@ -228,17 +242,34 @@ export function QuestionEditPanel({
                             </button>
                         </div>
 
+                        {activeTab === 'content' && (
+                            <div className="space-y-2 animate-in fade-in duration-300">
+                                <Textarea
+                                    value={contentMd}
+                                    onChange={(e) => setContentMd(e.target.value)}
+                                    placeholder="题目内容 (支持 Markdown 和 LaTeX)..."
+                                    className="min-h-[200px] font-mono text-sm"
+                                />
+                                {contentMd && (
+                                    <div className="p-3 border rounded-md bg-muted/10">
+                                        <p className="text-xs text-muted-foreground mb-2">题目预览:</p>
+                                        <MarkdownContent content={contentMd} />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {activeTab === 'answer' && (
-                            <div className="space-y-2">
+                            <div className="space-y-2 animate-in fade-in duration-300">
                                 <Textarea
                                     value={answerMd}
                                     onChange={(e) => setAnswerMd(e.target.value)}
-                                    placeholder="支持 Markdown 和 LaTeX..."
+                                    placeholder="详细答案 (支持 Markdown 和 LaTeX)..."
                                     className="min-h-[150px] font-mono text-sm"
                                 />
                                 {answerMd && (
                                     <div className="p-3 border rounded-md bg-muted/10">
-                                        <p className="text-xs text-muted-foreground mb-2">预览:</p>
+                                        <p className="text-xs text-muted-foreground mb-2">答案预览:</p>
                                         <MarkdownContent content={answerMd} />
                                     </div>
                                 )}
@@ -246,16 +277,16 @@ export function QuestionEditPanel({
                         )}
 
                         {activeTab === 'analysis' && (
-                            <div className="space-y-2">
+                            <div className="space-y-2 animate-in fade-in duration-300">
                                 <Textarea
                                     value={analysisMd}
                                     onChange={(e) => setAnalysisMd(e.target.value)}
-                                    placeholder="支持 Markdown 和 LaTeX..."
+                                    placeholder="解析 (支持 Markdown 和 LaTeX)..."
                                     className="min-h-[150px] font-mono text-sm"
                                 />
                                 {analysisMd && (
                                     <div className="p-3 border rounded-md bg-muted/10">
-                                        <p className="text-xs text-muted-foreground mb-2">预览:</p>
+                                        <p className="text-xs text-muted-foreground mb-2">解析预览:</p>
                                         <MarkdownContent content={analysisMd} />
                                     </div>
                                 )}
