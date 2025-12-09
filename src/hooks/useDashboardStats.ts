@@ -1,9 +1,10 @@
 import { useProgressStore } from "@/lib/store";
 import { usePaperGroups, useQuestions } from "@/hooks/useQuestions";
+import { usePapers } from "@/hooks/usePapers";
 import { useMemo } from "react";
 import { getSubjectKey, getSubjectConfig } from "@/lib/subjectConfig";
 import { useLearningStats, formatDuration } from "@/hooks/useLearningStats";
-import { PaperGroup } from "@/lib/types";
+import { PaperGroup, Paper } from "@/lib/types";
 
 // 定义统计结构
 export type SubjectStat = {
@@ -37,6 +38,7 @@ export function useDashboardStats() {
     const times = useProgressStore(state => state.times);
     const { paperGroups } = usePaperGroups();
     const { questionsIndex } = useQuestions();
+    const { papers } = usePapers();
 
     // 引入学习统计
     const learningStats = useLearningStats({ days: 7 });
@@ -46,6 +48,12 @@ export function useDashboardStats() {
         const groupMap = new Map<string, PaperGroup>();
         (paperGroups || []).forEach(group => {
             groupMap.set(group.id, group);
+        });
+
+        // 1.1 构建 Paper 映射表 (用于查询 paper.subjectKey)
+        const paperMap = new Map<string, Paper>();
+        (papers || []).forEach(p => {
+            paperMap.set(p.id, p);
         });
 
         // 2. 初始化统计容器
@@ -90,9 +98,10 @@ export function useDashboardStats() {
             // 从 paperId 解析出 groupId（格式通常是 "groupId-year"）
             const groupIdGuess = q.paperId.replace(/-\d{4}$/, '');
             const group = groupMap.get(groupIdGuess) || groupMap.get(q.paperId);
+            const paper = paperMap.get(q.paperId);
 
-            // 确定科目（优先使用 group.subjectKey）
-            const subjectKey = group?.subjectKey || getSubjectKey(q.paperId);
+            // 确定科目（优先级：Paper.subjectKey > Group.subjectKey > Infer from ID）
+            const subjectKey = paper?.subjectKey || group?.subjectKey || getSubjectKey(q.paperId);
             const examType = group?.type || 'unified';
             const config = getSubjectConfig(subjectKey);
 
@@ -175,5 +184,5 @@ export function useDashboardStats() {
             streak: learningStats.currentStreak,
             weekOverWeekChange: learningStats.weekOverWeekChange,
         };
-    }, [progress, times, questionsIndex, paperGroups, learningStats]);
+    }, [progress, times, questionsIndex, paperGroups, papers, learningStats]);
 }

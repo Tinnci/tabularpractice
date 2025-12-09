@@ -33,6 +33,7 @@ export interface Paper {
   groupId: string;      // 关联到 PaperGroup.id
   year: number;         // 2023
   name: string;         // "2023年考研数学一真题"
+  subjectKey?: string;  // 新增：允许单张试卷覆盖科目（优先于 PaperGroup）
   sourceUrl?: string;   // 来源 URL
 }
 
