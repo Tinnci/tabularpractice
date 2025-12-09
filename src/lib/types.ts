@@ -3,7 +3,11 @@ type SubjectType = 'unified' | 'self_proposed'; // 统考 | 自命题
 export type Status = 'unanswered' | 'mastered' | 'confused' | 'failed';
 
 // 笔记类型定义
+// 笔记类型定义
 export type NotesMap = Record<string, string>; // key: questionId, value: markdown content
+
+// 视图类型定义
+export type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft';
 
 export interface RepoSource {
   id: string;

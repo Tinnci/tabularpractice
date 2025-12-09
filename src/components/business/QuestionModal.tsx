@@ -14,28 +14,24 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Question, Status } from "@/lib/types";
+import { Question, Status, ViewType } from "@/lib/types";
 import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
 import { useQuestionTimer } from "@/hooks/useQuestionTimer";
 import { QuestionTimer } from "@/components/business/QuestionTimer";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ReactSketchCanvas, type ReactSketchCanvasRef } from "@/components/ui/sketch-canvas";
-import { GpuSketchCanvas } from "@/components/ui/sketch-canvas/gpu";
 import {
     Check, X, HelpCircle, BookOpen, Eye, FileText,
     Copy, Edit2,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
-    Loader2, ImageOff, ExternalLink, Clock, Pencil, Eraser, Undo, Trash2,
+    Loader2, ExternalLink, Clock, Pencil,
     Maximize2, Minimize2
 } from "lucide-react";
 import { useProgressStore } from "@/lib/store";
-import { Switch } from "@/components/ui/switch";
 import { cn, getImageUrl } from "@/lib/utils";
-import { useTheme } from "next-themes";
 
 // 使用共享的渲染组件
-import { MarkdownContent, RemoteImage, QuestionEditPanel } from "@/components/question";
+import { MarkdownContent, RemoteImage, QuestionEditPanel, DraftPanel, NotePanel } from "@/components/question";
 
 import { DICT, getQuestionTypeLabel, formatQuestionNumber } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -52,7 +48,7 @@ interface Props {
     isLoading?: boolean;
 }
 
-type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft';
+
 
 // --- Helper: 使用统一的标签 API ---
 import { getTagLabel } from "@/data/subject-tags";
@@ -212,36 +208,10 @@ export function QuestionModal({
 
     // 笔记系统状态
     const { notes, updateNote, stars, toggleStar, syncStatus, syncData, setTime } = useProgressStore();
-    const [noteContent, setNoteContent] = useState("");
-    const [isEditingNote, setIsEditingNote] = useState(false);
 
     // 编辑器状态
     const [isEditing, setIsEditing] = useState(false);
 
-    // 草稿系统状态
-    const { theme } = useTheme();
-    const canvasRef = useRef<ReactSketchCanvasRef>(null);
-    const [strokeColor, setStrokeColor] = useState("#000000");
-
-    // 监听主题变化，自动调整笔刷颜色 (仅当当前颜色为黑/白时)
-    useEffect(() => {
-        if (theme === 'dark') {
-            // 只有当前是黑色时，才自动转为白色
-            if (strokeColor === "#000000") {
-                setStrokeColor("#FFFFFF");
-            }
-        } else {
-            // 只有当前是白色时，才自动转为黑色
-            if (strokeColor === "#FFFFFF") {
-                setStrokeColor("#000000");
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [theme]);
-    const [strokeWidth] = useState(4);
-    const [eraserMode, setEraserMode] = useState(false);
-    const [onlyPenMode, setOnlyPenMode] = useState(false);
-    const [useGpu, setUseGpu] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const isStarred = question ? !!stars[question.id] : false;
@@ -279,60 +249,9 @@ export function QuestionModal({
                 className: config.className,
             });
         }
-    }, [question?.id, onUpdateStatus]);
+    }, [question, onUpdateStatus]);
 
-    // 初始化笔记内容
-    useEffect(() => {
-        if (question) {
-            setNoteContent(notes[question.id] || "");
-        }
-    }, [question, notes]);
 
-    // 加载草稿内容
-    useEffect(() => {
-        const loadDraft = async () => {
-            if (question && canvasRef.current && visibleViews.has('draft')) {
-                // 重置画布
-                canvasRef.current.clearCanvas();
-
-                try {
-                    // 从 IndexedDB 读取
-                    const { draftStore } = await import('@/lib/draftStore');
-                    const savedDraft = await draftStore.getDraft(question.id);
-
-                    if (savedDraft) {
-                        const paths = JSON.parse(savedDraft);
-
-                        // 颜色自适应转换逻辑
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const transformedPaths = paths.map((path: any) => {
-                            // 如果是黑色且当前是深色模式 -> 转为白色
-                            if (path.strokeColor === "#000000" && theme === 'dark') {
-                                return { ...path, strokeColor: "#FFFFFF" };
-                            }
-                            // 如果是白色且当前是浅色模式 -> 转为黑色
-                            if (path.strokeColor === "#FFFFFF" && theme !== 'dark') {
-                                return { ...path, strokeColor: "#000000" };
-                            }
-                            return path;
-                        });
-
-                        canvasRef.current.loadPaths(transformedPaths);
-                    }
-                } catch (e) {
-                    console.error("Failed to load draft", e);
-                }
-            }
-        };
-        loadDraft();
-    }, [question, visibleViews, theme]);
-
-    // 自动保存笔记
-    const handleNoteBlur = () => {
-        if (question && noteContent !== notes[question.id]) {
-            updateNote(question.id, noteContent);
-        }
-    };
 
     // 记录最后打开的题目 ID
     const { setLastQuestionId } = useProgressStore();
@@ -345,50 +264,15 @@ export function QuestionModal({
     useEffect(() => {
         // 只有当 isOpen 为 true，且 questionId 存在，且与上次初始化的 ID 不同时才执行
         if (isOpen && questionId && questionId !== lastInitializedIdRef.current) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setVisibleViews(new Set(['question']));
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLastQuestionId(questionId);
             lastInitializedIdRef.current = questionId; // 更新记录
         }
     }, [questionId, isOpen, setLastQuestionId]);
 
-    // 保存草稿
-    const saveDraft = useCallback(async () => {
-        if (question && canvasRef.current) {
-            try {
-                const paths = await canvasRef.current.exportPaths();
-                const { draftStore } = await import('@/lib/draftStore');
 
-                if (paths.length > 0) {
-                    await draftStore.saveDraft(question.id, JSON.stringify(paths));
-                } else {
-                    // 如果为空，删除草稿
-                    await draftStore.deleteDraft(question.id);
-                }
-            } catch (e) {
-                console.error("Failed to save draft", e);
-            }
-        }
-    }, [question]);
-
-    // 防抖保存草稿，避免每笔画都触发昂贵的 exportPaths 和 store 更新
-    const saveDraftTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const debouncedSaveDraft = useCallback(() => {
-        if (saveDraftTimeoutRef.current) {
-            clearTimeout(saveDraftTimeoutRef.current);
-        }
-        saveDraftTimeoutRef.current = setTimeout(() => {
-            saveDraft();
-        }, 500); // 500ms 防抖
-    }, [saveDraft]);
-
-    // 组件卸载时清理定时器
-    useEffect(() => {
-        return () => {
-            if (saveDraftTimeoutRef.current) {
-                clearTimeout(saveDraftTimeoutRef.current);
-            }
-        };
-    }, []);
 
     // [修复] 已删除重复的 useEffect，其功能已合并到上方的 lastInitializedIdRef 逻辑中
 
@@ -838,210 +722,18 @@ export function QuestionModal({
                                     )}
 
                                     {/* 草稿区域 */}
-                                    {visibleViews.has('draft') && (
-                                        <div className="bg-card rounded-xl border border-purple-200 dark:border-purple-900 shadow-sm overflow-hidden flex flex-col h-[500px]">
-                                            <div className="bg-purple-50/50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-purple-700 dark:text-purple-400">
-                                                <div className="flex items-center gap-2">
-                                                    <Pencil className="w-4 h-4" /> {DICT.exam.handwritingDraft}
-                                                </div>
-                                                <div className="flex items-center gap-1 sm:gap-2">
-                                                    <TooltipProvider delayDuration={300}>
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant={!eraserMode ? "secondary" : "ghost"}
-                                                                    size="icon"
-                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                    onClick={() => {
-                                                                        setEraserMode(false);
-                                                                        canvasRef.current?.eraseMode(false);
-                                                                    }}
-                                                                >
-                                                                    <Pencil className="w-4 h-4" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="bottom">
-                                                                <p>{DICT.exam.pen}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant={eraserMode ? "secondary" : "ghost"}
-                                                                    size="icon"
-                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                    onClick={() => {
-                                                                        setEraserMode(true);
-                                                                        canvasRef.current?.eraseMode(true);
-                                                                    }}
-                                                                >
-                                                                    <Eraser className="w-4 h-4" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="bottom">
-                                                                <p>{DICT.exam.eraser}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-
-                                                        <div className="w-px h-5 bg-border mx-1" />
-
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant={onlyPenMode ? "secondary" : "ghost"}
-                                                                    size="icon"
-                                                                    onClick={() => setOnlyPenMode(!onlyPenMode)}
-                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                >
-                                                                    <PenLine className="w-4 h-4" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="bottom">
-                                                                <p>{onlyPenMode ? DICT.exam.palmRejectionOn : DICT.exam.palmRejectionOff}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-
-                                                        <div className="w-px h-5 bg-border mx-1" />
-
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-9 w-9 transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                    onClick={() => {
-                                                                        canvasRef.current?.undo();
-                                                                        setTimeout(saveDraft, 100);
-                                                                    }}
-                                                                >
-                                                                    <Undo className="w-4 h-4" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="bottom">
-                                                                <p>{DICT.common.undo}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-9 w-9 text-red-500/70 hover:text-red-600 hover:bg-red-50 transition-all active:scale-90 hover:scale-105"
-                                                                    onClick={() => {
-                                                                        if (confirm(DICT.exam.clearDraftConfirm)) {
-                                                                            canvasRef.current?.clearCanvas();
-                                                                            setTimeout(saveDraft, 100);
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="bottom">
-                                                                <p>{DICT.exam.clearDraft}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-
-                                                        <div className="w-px h-5 bg-border mx-1" />
-
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant={useGpu ? "secondary" : "ghost"}
-                                                                    size="sm"
-                                                                    className="h-9 px-2 text-xs font-bold transition-all active:scale-90 hover:scale-105 hover:bg-muted/80 hover:text-foreground text-muted-foreground"
-                                                                    onClick={() => setUseGpu(!useGpu)}
-                                                                >
-                                                                    GPU
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="bottom">
-                                                                <p>{useGpu ? DICT.exam.gpuOn : DICT.exam.gpuOff}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 relative bg-white dark:bg-zinc-900 cursor-crosshair touch-none">
-                                                {useGpu ? (
-                                                    <GpuSketchCanvas
-                                                        ref={canvasRef}
-                                                        strokeWidth={strokeWidth}
-                                                        strokeColor={strokeColor}
-                                                        canvasColor="transparent"
-                                                        className="w-full h-full"
-                                                        onStroke={debouncedSaveDraft}
-                                                        allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
-                                                    />
-                                                ) : (
-                                                    <ReactSketchCanvas
-                                                        ref={canvasRef}
-                                                        strokeWidth={strokeWidth}
-                                                        strokeColor={strokeColor}
-                                                        canvasColor="transparent"
-                                                        className="w-full h-full"
-                                                        onStroke={debouncedSaveDraft}
-                                                        allowOnlyPointerType={onlyPenMode ? 'pen' : 'all'}
-                                                    />
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <DraftPanel
+                                        questionId={currentQuestion.id}
+                                        isVisible={visibleViews.has('draft')}
+                                    />
 
                                     {/* 笔记区域 */}
-                                    {visibleViews.has('note') && (
-                                        <div className="bg-card rounded-xl border border-orange-200 dark:border-orange-900 shadow-sm overflow-hidden">
-                                            <div className="bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900 px-4 py-2 flex items-center justify-between gap-2 text-sm font-medium text-orange-700 dark:text-orange-400">
-                                                <div className="flex items-center gap-2">
-                                                    <PenLine className="w-4 h-4" /> {DICT.exam.personalNote}
-                                                </div>
-                                                <div className="flex items-center gap-2 text-xs select-none">
-                                                    <span
-                                                        className={cn("cursor-pointer transition-colors", isEditingNote ? "text-muted-foreground" : "font-bold")}
-                                                        onClick={() => setIsEditingNote(false)}
-                                                    >
-                                                        {DICT.common.preview}
-                                                    </span>
-                                                    <Switch
-                                                        checked={isEditingNote}
-                                                        onCheckedChange={setIsEditingNote}
-                                                        className="scale-75 data-[state=checked]:bg-orange-500"
-                                                    />
-                                                    <span
-                                                        className={cn("cursor-pointer transition-colors", isEditingNote ? "font-bold" : "text-muted-foreground")}
-                                                        onClick={() => setIsEditingNote(true)}
-                                                    >
-                                                        {DICT.common.edit}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="p-0">
-                                                {isEditingNote ? (
-                                                    <textarea
-                                                        value={noteContent}
-                                                        onChange={(e) => setNoteContent(e.target.value)}
-                                                        onBlur={handleNoteBlur}
-                                                        placeholder={DICT.exam.notePlaceholder}
-                                                        className="w-full h-64 p-4 resize-y bg-transparent outline-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50"
-                                                        autoFocus
-                                                    />
-                                                ) : (
-                                                    <div
-                                                        className="p-4 sm:p-6 prose prose-sm dark:prose-invert max-w-none min-h-[100px] cursor-text"
-                                                        onClick={() => setIsEditingNote(true)}
-                                                    >
-                                                        {noteContent ? (
-                                                            <MarkdownContent content={noteContent} />
-                                                        ) : (
-                                                            <span className="text-muted-foreground/50 italic select-none">{DICT.exam.startNotePrompt}</span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <NotePanel
+                                        questionId={currentQuestion.id}
+                                        initialContent={notes[currentQuestion.id]}
+                                        onUpdateNote={updateNote}
+                                        isVisible={visibleViews.has('note')}
+                                    />
 
                                 </div>
                             </ScrollArea>
