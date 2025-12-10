@@ -1,50 +1,66 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react'; // Added useMemo to imports
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { EnhancedTagNode } from '@/hooks/useTagStats';
 import { use3DLayout } from './use3DLayout';
 import { PlanetNode } from './PlanetNode';
 import { Legend } from './Legend';
-import { cn } from '@/lib/utils'; // Added cn import
-
+import { cn } from '@/lib/utils';
 import { ConnectionLines } from './ConnectionLines';
 
 interface KnowledgePlanetProps {
     tags: EnhancedTagNode[];
     selectedTagIds: Set<string>;
     onTagToggle: (id: string) => void;
-    width?: number;
-    height?: number;
     className?: string;
     autoRotate?: boolean;
+    hoveredNodeId?: string | null;
 }
 
 export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
     tags,
     selectedTagIds,
     onTagToggle,
-    width = 600,
-    height = 600,
     className,
-    autoRotate = true
+    autoRotate = true,
+    hoveredNodeId
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const [dimensions, setDimensions] = useState({ width: 600, height: 600 });
     const [rotation, setRotation] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+    const [internalHoverId, setInternalHoverId] = useState<string | null>(null);
 
-    // Filter tags to display? 
-    // Maybe we filter out tags with depth > 2 if too many?
-    // For now use all passed tags.
+    // Combine external and internal hover
+    const activeHoverId = hoveredNodeId || internalHoverId;
+
+    // Resize Observer to make it truly responsive
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                const { width, height } = entry.contentRect;
+                // Debounce or just set? Set is fine for now usually.
+                if (width > 0 && height > 0) {
+                    setDimensions({ width, height });
+                }
+            }
+        });
+
+        resizeObserver.observe(containerRef.current);
+        return () => resizeObserver.disconnect();
+    }, []);
+
     const displayTags = tags;
     const count = displayTags.length;
-    // Radius should adapt to container but we use fixed layout radius for calculation
-    // and scale it by CSS or view projection.
-    const radius = Math.min(width, height) / 3;
+    // Dynamic radius based on current container size
+    const radius = Math.min(dimensions.width, dimensions.height) / 3;
 
     const positions = use3DLayout(count, radius);
 
     // Auto rotate
     useEffect(() => {
-        if (!autoRotate || isDragging) return;
+        if (!autoRotate || isDragging || activeHoverId) return;
 
         let animationFrame: number;
         const animate = () => {
@@ -56,7 +72,7 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
         };
         animationFrame = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrame);
-    }, [autoRotate, isDragging]);
+    }, [autoRotate, isDragging, activeHoverId]); // Stop rotation on hover
 
     // Mouse handlers
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -81,7 +97,7 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
     };
 
     // Calculate projected positions
-    const projectedNodes = useMemo(() => { // Now useMemo is defined
+    const projectedNodes = useMemo(() => {
         const cosX = Math.cos(rotation.x);
         const sinX = Math.sin(rotation.x);
         const cosY = Math.cos(rotation.y);
@@ -89,6 +105,7 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
 
         return displayTags.map((node, i) => {
             const pos = positions[i];
+            if (!pos) return null; // Safe guard
 
             // Rotate around Y
             const x = pos.x * cosY - pos.z * sinY;
@@ -99,10 +116,7 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
             z = z * cosX + pos.y * sinX;
 
             // Perspective scale
-            // z ranges from -radius to +radius roughly
-            // scale factor: larger when closer (z > 0)
-            const scale = (z + radius * 2) / (radius * 3) + 0.5; // simple depth scale
-            // Better opacity:
+            const scale = (z + radius * 2) / (radius * 3) + 0.5;
             const opacity = Math.max(0.2, (z + radius * 1.5) / (radius * 2.5));
 
             return {
@@ -113,17 +127,15 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
                 scale,
                 opacity
             };
-        }).sort((a, b) => a.z - b.z); // Painter's algorithm
+        })
+            .filter((n): n is NonNullable<typeof n> => n !== null)
+            .sort((a, b) => a.z - b.z);
     }, [displayTags, positions, rotation, radius]);
-
-    // Hover state
-    const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
     return (
         <div
             ref={containerRef}
-            className={cn("relative overflow-hidden cursor-grab active:cursor-grabbing", className)}
-            style={{ width: '100%', height: height, touchAction: 'none' }}
+            className={cn("relative overflow-hidden cursor-grab active:cursor-grabbing w-full h-full min-h-[400px]", className)}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -131,7 +143,7 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
         >
             <div className="absolute top-1/2 left-1/2 w-0 h-0 transform-style-3d">
                 {/* Lines behind nodes */}
-                <ConnectionLines nodes={projectedNodes} hoveredNodeId={hoveredNodeId} />
+                <ConnectionLines nodes={projectedNodes} hoveredNodeId={activeHoverId} />
 
                 {projectedNodes.map((pNode) => (
                     <PlanetNode
@@ -143,9 +155,10 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
                         scale={pNode.scale}
                         opacity={pNode.opacity}
                         isSelected={selectedTagIds.has(pNode.node.id)}
+                        isHovered={activeHoverId === pNode.node.id}
                         onClick={onTagToggle}
-                        onMouseEnter={() => setHoveredNodeId(pNode.node.id)}
-                        onMouseLeave={() => setHoveredNodeId(null)}
+                        onMouseEnter={() => setInternalHoverId(pNode.node.id)}
+                        onMouseLeave={() => setInternalHoverId(null)}
                     />
                 ))}
             </div>

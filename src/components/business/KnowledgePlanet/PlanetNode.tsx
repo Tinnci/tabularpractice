@@ -8,6 +8,7 @@ interface PlanetNodeProps {
     y: number;
     z: number;
     isSelected: boolean;
+    isHovered?: boolean;
     onClick: (id: string) => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
@@ -21,6 +22,7 @@ export const PlanetNode: React.FC<PlanetNodeProps> = ({
     y,
     z,
     isSelected,
+    isHovered, // Added
     onClick,
     onMouseEnter,
     onMouseLeave,
@@ -62,6 +64,14 @@ export const PlanetNode: React.FC<PlanetNodeProps> = ({
     if (isSelected) {
         colorClass = "text-primary font-bold";
         glowClass = "shadow-[0_0_20px_rgba(var(--primary),0.8)] border-primary";
+    }
+
+    if (isHovered) {
+        // External hover effect (stronger than regular mouse hover)
+        glowClass = cn(glowClass, "shadow-[0_0_25px_rgba(var(--primary),0.6)] ring-2 ring-primary/50 bg-background/90 z-50 scale-125");
+        // Ensure it pops out
+        scale = scale * 1.2;
+        opacity = 1;
     }
 
     // Interactive scale on hover handled by parent or CSS

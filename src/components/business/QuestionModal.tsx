@@ -270,7 +270,7 @@ export function QuestionModal({
             // React 18+ 会自动批量更新多个 setState
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setVisibleViews(new Set(['question']));
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+             
             setLastQuestionId(questionId);
             lastInitializedIdRef.current = questionId; // 更新记录
         }
