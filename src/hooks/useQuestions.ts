@@ -79,6 +79,7 @@ export function useQuestions() {
 
     const customQuestions = useProgressStore(state => state.customQuestions);
     const hiddenPaperIds = useProgressStore(state => state.hiddenPaperIds);
+    const hiddenGroupIds = useProgressStore(state => state.hiddenGroupIds);
 
     const { data, error, isLoading } = useSWR<Question[]>(
         ['questions-index', ...enabledUrls], // Key 包含所有 URL，变化时自动重刷
@@ -95,6 +96,14 @@ export function useQuestions() {
     // Filter hidden papers
     if (hiddenPaperIds && hiddenPaperIds.length > 0) {
         questionsIndex = questionsIndex.filter(q => !hiddenPaperIds.includes(q.paperId));
+    }
+
+    // Filter hidden groups (paperId format is usually "groupId-year", e.g., "zhangyu-4-set1-2026")
+    if (hiddenGroupIds && hiddenGroupIds.length > 0) {
+        questionsIndex = questionsIndex.filter(q => {
+            // Check if any hidden group is a prefix of this question's paperId
+            return !hiddenGroupIds.some(groupId => q.paperId.startsWith(groupId));
+        });
     }
 
     return {

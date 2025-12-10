@@ -28,6 +28,10 @@ export interface SettingsSlice {
 
     hiddenPaperIds: string[];
     togglePaperVisibility: (paperId: string) => void;
+
+    // PaperGroup-level filtering (e.g., toggle entire "Zhang Yu 4" set)
+    hiddenGroupIds: string[];
+    toggleGroupVisibility: (groupId: string) => void;
 }
 
 export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice> = (set, get) => ({
@@ -47,6 +51,7 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
     geminiApiKey: null,
     repoBaseUrl: '',
     hiddenPaperIds: [],
+    hiddenGroupIds: [],
 
     addRepoSource: (name, url) => {
         set((state) => ({
@@ -90,6 +95,15 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
             hiddenPaperIds: isHidden
                 ? state.hiddenPaperIds.filter(id => id !== paperId)
                 : [...state.hiddenPaperIds, paperId]
+        };
+    }),
+
+    toggleGroupVisibility: (groupId) => set((state) => {
+        const isHidden = state.hiddenGroupIds.includes(groupId);
+        return {
+            hiddenGroupIds: isHidden
+                ? state.hiddenGroupIds.filter(id => id !== groupId)
+                : [...state.hiddenGroupIds, groupId]
         };
     }),
 });

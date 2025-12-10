@@ -27,14 +27,65 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle, FileText } from "lucide-react"
+import { Settings, Download, Upload, Database, AlertTriangle, Github, RefreshCw, HelpCircle, FileText, Layers } from "lucide-react"
 import { useProgressStore } from "@/lib/store"
 import { toast } from "sonner"
 import { Status, type BackupData } from "@/lib/types"
 import { Switch } from "@/components/ui/switch"
 import { usePapers } from "@/hooks/usePapers"
+import { usePaperGroups } from "@/hooks/useQuestions"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DICT } from "@/lib/i18n"
+
+// NEW: PaperGroup-level filtering section
+function PaperGroupFilterSection() {
+    const { hiddenGroupIds, toggleGroupVisibility } = useProgressStore()
+    const { paperGroups, isLoading } = usePaperGroups()
+
+    if (isLoading) {
+        return <div className="text-sm text-muted-foreground">{DICT.common.loading}</div>
+    }
+
+    if (!paperGroups || paperGroups.length === 0) {
+        return <div className="text-sm text-muted-foreground">{DICT.wall.noPapers}</div>
+    }
+
+    return (
+        <div className="space-y-4">
+            <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
+                <Layers className="h-4 w-4" />
+                试卷组筛选
+            </h3>
+            <div className="p-4 border rounded-lg bg-card/50">
+                <div className="text-xs text-muted-foreground mb-3">
+                    关闭的试卷组将不会出现在练习列表中。
+                </div>
+                <ScrollArea className="h-[120px] pr-3">
+                    <div className="space-y-3">
+                        {paperGroups.map(group => (
+                            <div key={group.id} className="flex items-center justify-between">
+                                <div className="space-y-0.5 overflow-hidden mr-2">
+                                    <label className="text-sm font-medium leading-none truncate block" title={group.name}>
+                                        {group.name}
+                                    </label>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <span className="px-1.5 py-0.5 bg-secondary rounded text-[10px]">
+                                            {group.type === 'unified' ? DICT.wall.unified : DICT.wall.selfProposed}
+                                        </span>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={!hiddenGroupIds.includes(group.id)}
+                                    onCheckedChange={() => toggleGroupVisibility(group.id)}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </div>
+        </div>
+    )
+}
 
 function PaperFilterSection() {
     const { hiddenPaperIds, togglePaperVisibility } = useProgressStore()
@@ -109,6 +160,7 @@ function PaperFilterSection() {
         </div>
     )
 }
+
 
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
@@ -649,6 +701,9 @@ export function SettingsModal() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* 试卷组筛选 (PaperGroup-level) */}
+                            <PaperGroupFilterSection />
 
                             {/* 试卷筛选 */}
                             <PaperFilterSection />

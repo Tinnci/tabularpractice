@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Question } from '@/lib/types';
-import { TagNode, SUBJECT_TAGS_MAP } from '@/data/subject-tags';
+import { TagNode, SUBJECT_TAGS_MAP, normalizeTagId } from '@/data/subject-tags';
 
 export interface TagStats {
     total: number;
@@ -29,7 +29,10 @@ export function useTagStats(questions: Question[], subjectKey: string = 'math') 
         const map = new Map<string, TagStats>();
 
         questions.forEach(q => {
-            q.tags?.forEach(tagId => {
+            q.tags?.forEach(rawTagId => {
+                // Normalize Pinyin IDs to Standard IDs for consistent matching
+                const tagId = normalizeTagId(rawTagId);
+
                 if (!map.has(tagId)) {
                     map.set(tagId, { total: 0, mastered: 0, confused: 0, failed: 0, unanswered: 0 });
                 }
