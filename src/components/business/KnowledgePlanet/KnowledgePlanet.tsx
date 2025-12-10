@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { EnhancedTagNode } from '@/hooks/useTagStats';
-import { use3DLayout } from './use3DLayout';
+import { useForceLayout } from './useForceLayout';
 import { PlanetNode } from './PlanetNode';
 import { Legend } from './Legend';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,6 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
         const resizeObserver = new ResizeObserver(entries => {
             for (const entry of entries) {
                 const { width, height } = entry.contentRect;
-                // Debounce or just set? Set is fine for now usually.
                 if (width > 0 && height > 0) {
                     setDimensions({ width, height });
                 }
@@ -56,7 +55,9 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
     // Dynamic radius based on current container size
     const radius = Math.min(dimensions.width, dimensions.height) / 3;
 
-    const positions = use3DLayout(count, radius);
+    // Use Physics Layout
+    const nodeIds = useMemo(() => displayTags.map(t => t.id), [displayTags]);
+    const positions = useForceLayout(count, radius, nodeIds, activeHoverId);
 
     // Auto rotate
     useEffect(() => {
