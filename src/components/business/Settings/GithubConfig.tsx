@@ -1,10 +1,11 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useProgressStore } from "@/lib/store"
-import { Github, RefreshCw, HelpCircle, AlertCircle, ExternalLink, Check, X, AlertTriangle } from "lucide-react"
+import { Github, RefreshCw, HelpCircle, AlertCircle, ExternalLink, Check, X } from "lucide-react"
 import { DICT } from "@/lib/i18n"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
+import { useState } from "react"
 
 export function GithubConfig() {
     const {
@@ -15,8 +16,11 @@ export function GithubConfig() {
         syncStatus,
         syncData,
         lastSyncedTime,
-        tokenScopes
+        tokenScopes,
+        validateToken
     } = useProgressStore()
+
+    const [isValidating, setIsValidating] = useState(false)
 
     const handleSync = async () => {
         if (!githubToken) {
@@ -35,9 +39,22 @@ export function GithubConfig() {
         }
     };
 
+    const handleRevalidate = async () => {
+        if (!githubToken) return;
+        setIsValidating(true);
+        try {
+            await validateToken(githubToken);
+            toast.success("Token permissions updated");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to validate token");
+        } finally {
+            setIsValidating(false);
+        }
+    };
+
     // Check if we have scopes for gist and repo
     const isGistReady = tokenScopes?.includes('gist');
-    const isRepoReady = tokenScopes?.includes('repo') || tokenScopes?.includes('public_repo');
 
     return (
         <div className="space-y-4">
@@ -60,14 +77,28 @@ export function GithubConfig() {
                                 </TooltipContent>
                             </Tooltip>
                         </div>
-                        <a
-                            href="https://github.com/settings/tokens/new?description=TabularPractice&scopes=gist,repo"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs text-primary hover:underline flex items-center gap-1"
-                        >
-                            Generate New Token <ExternalLink className="h-3 w-3" />
-                        </a>
+                        <div className="flex items-center gap-3">
+                            {githubToken && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-5 px-2 text-[10px] text-muted-foreground hover:text-primary"
+                                    onClick={handleRevalidate}
+                                    disabled={isValidating}
+                                >
+                                    <RefreshCw className={`h-3 w-3 mr-1 ${isValidating ? 'animate-spin' : ''}`} />
+                                    Check Permissions
+                                </Button>
+                            )}
+                            <a
+                                href="https://github.com/settings/tokens/new?description=TabularPractice&scopes=gist,repo"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                            >
+                                Generate New Token <ExternalLink className="h-3 w-3" />
+                            </a>
+                        </div>
                     </div>
 
                     <Input
@@ -127,3 +158,4 @@ export function GithubConfig() {
         </div>
     )
 }
+

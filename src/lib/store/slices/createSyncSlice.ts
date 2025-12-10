@@ -52,6 +52,8 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
     validateToken: async (token: string) => {
         try {
             const res = await fetch('https://api.github.com/user', {
+                method: 'GET',
+                cache: 'no-store',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/vnd.github.v3+json',
