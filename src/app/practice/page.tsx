@@ -17,10 +17,16 @@ import { useProgressStore } from "@/lib/store";
 import tagsData from "@/data/tags.json";
 import { pinyin } from "pinyin-pro";
 import { DICT } from "@/lib/i18n";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { KnowledgePlanet } from "@/components/business/KnowledgePlanet";
+import { useTagStats } from "@/hooks/useTagStats";
+import { getSubjectKey } from "@/lib/subjectConfig";
 
 export default function PracticePage() {
     const { mergedQuestions } = useContextQuestions();
-    const { updateStatus, addTime, practiceSession, setPracticeSession, updatePracticeSessionProgress } = useProgressStore();
+    const { updateStatus, addTime, practiceSession, setPracticeSession, updatePracticeSessionProgress, currentGroupId } = useProgressStore();
+    const subjectKey = useMemo(() => getSubjectKey(currentGroupId || 'math'), [currentGroupId]);
+    const { flatEnhancedTags } = useTagStats(mergedQuestions, subjectKey);
 
     // Create a map of tag ID to label
     const tagMap = useMemo(() => {
@@ -61,6 +67,7 @@ export default function PracticePage() {
     // Configuration State
     const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['choice', 'fill', 'answer']));
     const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+    const [viewMode, setViewMode] = useState<'list' | 'planet'>('list');
     const [isShuffle, setIsShuffle] = useState(false);
 
     // Session State
@@ -369,27 +376,49 @@ export default function PracticePage() {
 
                         {/* 3. Tags */}
                         <div className="space-y-3">
-                            <Label className="text-base font-semibold flex items-center gap-2">
-                                <Tag className="w-4 h-4" /> {DICT.practice.tagsSelected.replace("{count}", String(selectedTags.size))}
-                            </Label>
-                            <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-2 border rounded-md bg-background/50">
-                                {allTags.length === 0 && (
-                                    <p className="text-sm text-muted-foreground p-2">{DICT.practice.noTagsAvailable}</p>
-                                )}
-                                {allTags.map(tagId => (
-                                    <Badge
-                                        key={tagId}
-                                        variant={selectedTags.has(tagId) ? "default" : "outline"}
-                                        className={cn(
-                                            "cursor-pointer transition-all hover:scale-105 active:scale-95 select-none px-3 py-1",
-                                            selectedTags.has(tagId) ? "shadow-md shadow-primary/20" : "hover:bg-muted"
-                                        )}
-                                        onClick={() => toggleTag(tagId)}
-                                    >
-                                        {tagMap.get(tagId) || tagId}
-                                    </Badge>
-                                ))}
+                            <div className="flex items-center justify-between">
+                                <Label className="text-base font-semibold flex items-center gap-2">
+                                    <Tag className="w-4 h-4" /> {DICT.practice.tagsSelected.replace("{count}", String(selectedTags.size))}
+                                </Label>
+                                <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'planet')} className="w-auto">
+                                    <TabsList className="h-8">
+                                        <TabsTrigger value="list" className="text-xs px-2 h-6">列表</TabsTrigger>
+                                        <TabsTrigger value="planet" className="text-xs px-2 h-6">星球</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
                             </div>
+
+                            {viewMode === 'list' ? (
+                                <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-2 border rounded-md bg-background/50">
+                                    {allTags.length === 0 && (
+                                        <p className="text-sm text-muted-foreground p-2">{DICT.practice.noTagsAvailable}</p>
+                                    )}
+                                    {allTags.map(tagId => (
+                                        <Badge
+                                            key={tagId}
+                                            variant={selectedTags.has(tagId) ? "default" : "outline"}
+                                            className={cn(
+                                                "cursor-pointer transition-all hover:scale-105 active:scale-95 select-none px-3 py-1",
+                                                selectedTags.has(tagId) ? "shadow-md shadow-primary/20" : "hover:bg-muted"
+                                            )}
+                                            onClick={() => toggleTag(tagId)}
+                                        >
+                                            {tagMap.get(tagId) || tagId}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="border rounded-md bg-background/50 overflow-hidden relative" style={{ height: '400px' }}>
+                                    <KnowledgePlanet
+                                        tags={flatEnhancedTags}
+                                        selectedTagIds={selectedTags}
+                                        onTagToggle={toggleTag}
+                                        height={400}
+                                        width={800} // Approximate width, it will fit 100%
+                                        autoRotate={true}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                     </CardContent>
