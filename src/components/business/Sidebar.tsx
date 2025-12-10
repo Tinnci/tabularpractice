@@ -25,14 +25,28 @@ import { Question } from "@/lib/types";
 
 import { useContextQuestions } from "@/hooks/useContextQuestions";
 import { DICT } from "@/lib/i18n";
+import { useTags } from "@/hooks/useTags";
+import { getSubjectKey } from "@/lib/subjectConfig";
 
 export function SidebarContent({ className, onSelect, questions }: { className?: string, onSelect?: () => void, questions?: Question[] }) {
     const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
     const [isStatsOpen, setIsStatsOpen] = useState(true); // 控制底部统计展开
 
+    const { getRootsForSubject, isLoading: isTagsLoading } = useTags();
+
     const currentTags = useMemo(() => {
+        // 1. Try to get tags from dynamic source
+        // Need to determine subject key from group ID
+        const subjectKey = getSubjectKey(currentGroupId);
+        const dynamicTags = getRootsForSubject(subjectKey);
+
+        if (dynamicTags && dynamicTags.length > 0) {
+            return dynamicTags;
+        }
+
+        // 2. Fallback to static tags
         return getTagsForSubject(currentGroupId);
-    }, [currentGroupId]);
+    }, [currentGroupId, getRootsForSubject]);
 
     const sidebarTitle = useMemo(() => {
         if (filterSubject === 'math') return DICT.nav.mathOutline;

@@ -6,7 +6,7 @@ interface SubjectConfigItem {
 }
 
 export const SUBJECT_CONFIG: Record<string, SubjectConfigItem> = {
-    math: { id: 'math', label: "数学", color: "blue", aliases: ["math1", "math2", "math3"] },
+    math: { id: 'math', label: "数学", color: "blue", aliases: ["math1", "math2", "math3", "zhangyu"] },
     english: { id: 'english', label: "英语", color: "green", aliases: ["english1", "english2"] },
     politics: { id: 'politics', label: "政治", color: "red", aliases: [] },
     cs: { id: 'cs', label: "计算机统考", color: "purple", aliases: ["408"] },
@@ -44,6 +44,12 @@ export function getSubjectKey(idOrSubjectKey: string, directSubjectKey?: string)
     for (const key in SUBJECT_CONFIG) {
         if (idOrSubjectKey.startsWith(key)) {
             return key;
+        }
+        // Also check aliases as prefixes (e.g. "zhangyu-4" -> "math")
+        for (const alias of SUBJECT_CONFIG[key].aliases) {
+            if (idOrSubjectKey.startsWith(alias)) {
+                return key;
+            }
         }
     }
 
