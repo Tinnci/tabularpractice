@@ -1,11 +1,10 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useProgressStore } from "@/lib/store"
-import { Github, RefreshCw, HelpCircle, AlertCircle } from "lucide-react"
+import { Github, RefreshCw, HelpCircle, AlertCircle, ExternalLink, Check, X, AlertTriangle } from "lucide-react"
 import { DICT } from "@/lib/i18n"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
 
 export function GithubConfig() {
     const {
@@ -37,11 +36,6 @@ export function GithubConfig() {
     };
 
     // Check if we have scopes for gist and repo
-    // GitHub: 'repo' scope grants full access to private and public repositories. It includes 'gist' access? No.
-    // Documentation says 'gist' scope is for gists. 
-    // Let's assume user needs explicit scopes.
-
-    // Actually, let's just check strictly.
     const isGistReady = tokenScopes?.includes('gist');
     const isRepoReady = tokenScopes?.includes('repo') || tokenScopes?.includes('public_repo');
 
@@ -52,7 +46,7 @@ export function GithubConfig() {
                 {DICT.settings.sync}
             </h3>
 
-            <div className="space-y-3 p-4 border rounded-lg bg-card/50">
+            <div className="space-y-4 p-4 border rounded-lg bg-card/50">
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
@@ -66,16 +60,14 @@ export function GithubConfig() {
                                 </TooltipContent>
                             </Tooltip>
                         </div>
-                        {githubToken && (
-                            <div className="flex gap-2">
-                                <Badge variant={isGistReady ? "default" : "destructive"} className="text-[10px] h-5 px-1.5">
-                                    {isGistReady ? "Gist Sync ✅" : "Gist Sync ❌"}
-                                </Badge>
-                                <Badge variant={isRepoReady ? "default" : "secondary"} className="text-[10px] h-5 px-1.5">
-                                    {isRepoReady ? "Repo Write ✅" : "Repo Write ⚠️"}
-                                </Badge>
-                            </div>
-                        )}
+                        <a
+                            href="https://github.com/settings/tokens/new?description=TabularPractice&scopes=gist,repo"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                        >
+                            Generate New Token <ExternalLink className="h-3 w-3" />
+                        </a>
                     </div>
 
                     <Input
@@ -85,11 +77,34 @@ export function GithubConfig() {
                         placeholder="ghp_..."
                         className="h-8 text-sm font-mono"
                     />
-                    {!isGistReady && githubToken && (
-                        <p className="text-[10px] text-red-500 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            Token 缺少 gist 权限，同步功能不可用。
-                        </p>
+
+                    {githubToken && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-muted/30 p-2 rounded-md border border-border/50 mt-2">
+                            <div className="flex items-center gap-2 text-xs">
+                                {isGistReady ?
+                                    <Check className="h-3.5 w-3.5 text-green-500" /> :
+                                    <X className="h-3.5 w-3.5 text-red-500" />
+                                }
+                                <span className={isGistReady ? "text-foreground" : "text-muted-foreground"}>
+                                    Gist Sync (Sync Data)
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                                {isRepoReady ?
+                                    <Check className="h-3.5 w-3.5 text-green-500" /> :
+                                    <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+                                }
+                                <span className={isRepoReady ? "text-foreground" : "text-muted-foreground"}>
+                                    Repo Write (Edit Questions)
+                                </span>
+                            </div>
+                            {!isGistReady && (
+                                <div className="col-span-full text-[10px] text-red-500 flex items-center gap-1 mt-1 border-t pt-1 border-border/50">
+                                    <AlertCircle className="h-3 w-3" />
+                                    Missing &apos;gist&apos; scope. Sync disabled.
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 

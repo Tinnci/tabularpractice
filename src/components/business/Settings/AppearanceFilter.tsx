@@ -7,6 +7,7 @@ import { usePapers } from "@/hooks/usePapers"
 import { usePaperGroups } from "@/hooks/useQuestions"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 
 function PaperGroupFilterSection() {
     const { hiddenGroupIds, toggleGroupVisibility } = useProgressStore()
@@ -25,18 +26,25 @@ function PaperGroupFilterSection() {
                 <div className="text-xs text-muted-foreground mb-3">
                     关闭的试卷组将不会出现在练习列表中。
                 </div>
-                <ScrollArea className="h-[120px] pr-3">
-                    <div className="space-y-3">
+                <ScrollArea className="h-[200px] pr-3">
+                    <div className="grid grid-cols-1 gap-2">
                         {paperGroups.map(group => (
-                            <div key={group.id} className="flex items-center justify-between">
-                                <div className="space-y-0.5 overflow-hidden mr-2">
-                                    <label className="text-sm font-medium leading-none truncate block" title={group.name}>
-                                        {group.name}
-                                    </label>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <span className="px-1.5 py-0.5 bg-secondary rounded text-[10px]">
-                                            {group.type === 'unified' ? DICT.wall.unified : DICT.wall.selfProposed}
+                            <div key={group.id} className="flex items-center justify-between p-3 rounded-md border border-border bg-card/60 hover:bg-accent/50 transition-colors">
+                                <div className="space-y-1 overflow-hidden mr-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium truncate block" title={group.name}>
+                                            {group.name}
                                         </span>
+                                        <Badge
+                                            variant="secondary"
+                                            className={`text-[10px] h-5 px-1.5 font-normal ${group.type === 'unified' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'}`}
+                                        >
+                                            {group.type === 'unified' ? DICT.wall.unified : DICT.wall.selfProposed}
+                                        </Badge>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {/* Placeholder for description if available in future */}
+                                        {group.type === 'unified' ? "统考科目" : "自命题/模拟卷"}
                                     </div>
                                 </div>
                                 <Switch
