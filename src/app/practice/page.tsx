@@ -17,6 +17,7 @@ import { KnowledgePlanet } from "@/components/business/KnowledgePlanet";
 import { useTagStats } from "@/hooks/useTagStats";
 import { getSubjectKey } from "@/lib/subjectConfig";
 import { TagTreeSelector } from "@/components/business/Practice/TagTreeSelector";
+import { PracticeCardStack } from "@/components/business/Practice/PracticeCardStack";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ClientOnly } from "@/components/ui/ClientOnly";
 
@@ -234,58 +235,20 @@ export default function PracticePage() {
 
     const currentQuestion = queue[currentIndex];
 
-    // Session Active View
+    // Session Active View - Immersive Card Stack
     if (isStarted) {
         return (
-            <div className="container mx-auto p-6 max-w-4xl h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
-                <Card className="w-full max-w-md text-center p-8 shadow-xl border-primary/20 relative">
-                    <div className="absolute top-4 right-4 flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1">
-                        <Timer className={cn("w-4 h-4", isRunning ? "text-primary animate-pulse" : "text-muted-foreground")} />
-                        <span className="font-mono font-bold text-lg min-w-[60px]">{formattedTime}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={toggleTimer}>
-                            {isRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                        </Button>
-                    </div>
-
-                    <div className="mb-6 flex justify-center">
-                        <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
-                            <Dumbbell className="h-10 w-10 text-primary" />
-                        </div>
-                    </div>
-                    <h2 className="text-2xl font-bold mb-2">{DICT.practice.sessionActive}</h2>
-                    <p className="text-muted-foreground mb-8">
-                        {DICT.practice.questionIndex
-                            .replace("{current}", String(currentIndex + 1))
-                            .replace("{total}", String(queue.length))}
-                    </p>
-
-                    <div className="flex flex-col gap-4">
-                        <Button size="lg" onClick={() => {
-                            setIsModalOpen(true);
-                            startTimer();
-                        }} className="w-full gap-2">
-                            <Play className="w-4 h-4" /> {DICT.practice.continuePractice}
-                        </Button>
-                        <Button variant="outline" onClick={handleEndSession} className="w-full gap-2">
-                            <RotateCcw className="w-4 h-4" /> {DICT.practice.endSession}
-                        </Button>
-                    </div>
-                </Card>
-
-                <QuestionModal
-                    isOpen={isModalOpen}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        pauseTimer();
-                    }}
-                    question={currentQuestion}
-                    onNext={handleNext}
-                    onPrev={handlePrev}
-                    hasNext={currentIndex < queue.length - 1}
-                    hasPrev={currentIndex > 0}
-                    onUpdateStatus={updateStatus}
-                />
-            </div>
+            <PracticeCardStack
+                queue={queue}
+                currentIndex={currentIndex}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                onUpdateStatus={updateStatus}
+                onEndSession={handleEndSession}
+                formattedTime={formattedTime}
+                isTimerRunning={isRunning}
+                toggleTimer={toggleTimer}
+            />
         );
     }
 
