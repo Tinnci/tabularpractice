@@ -18,6 +18,7 @@ import { useTagStats } from "@/hooks/useTagStats";
 import { getSubjectKey } from "@/lib/subjectConfig";
 import { TagTreeSelector } from "@/components/business/Practice/TagTreeSelector";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ClientOnly } from "@/components/ui/ClientOnly";
 
 // Define session state type for better type safety
 interface PracticeSessionState {
@@ -294,14 +295,20 @@ export default function PracticePage() {
 
             {/* 3D Planet Area */}
             <div className="flex-1 relative h-full bg-radial-gradient from-background to-muted/20">
-                <KnowledgePlanet
-                    tags={flatEnhancedTags}
-                    selectedTagIds={selectedTags}
-                    onTagToggle={toggleTag}
-                    className="w-full h-full"
-                    autoRotate={true}
-                    hoveredNodeId={hoveredNodeId}
-                />
+                <ClientOnly fallback={
+                    <div className="w-full h-full flex items-center justify-center">
+                        <div className="animate-pulse text-muted-foreground">Loading Knowledge Planet...</div>
+                    </div>
+                }>
+                    <KnowledgePlanet
+                        tags={flatEnhancedTags}
+                        selectedTagIds={selectedTags}
+                        onTagToggle={toggleTag}
+                        className="w-full h-full"
+                        autoRotate={true}
+                        hoveredNodeId={hoveredNodeId}
+                    />
+                </ClientOnly>
 
                 {/* Overlay Title */}
                 <div className="absolute top-6 left-6 z-10 pointer-events-none">
