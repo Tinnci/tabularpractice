@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import { glob } from 'glob';
-
+/**
+ * i18n 硬编码检测脚本 (Bun 优化版)
+ * 使用 Bun 原生 API 进行高性能文件扫描
+ */
 
 // 配置
 const CONFIG = {
@@ -9,11 +9,11 @@ const CONFIG = {
   extensions: ['tsx', 'ts'],
   // 忽略的文件/目录
   ignore: [
-    '**/node_modules/**',
-    '**/*.d.ts',
-    '**/i18n.ts',           // i18n 字典本身
-    '**/legacy-tags.ts',    // 遗留数据
-    '**/subject-tags.ts',   // 标签数据
+    'node_modules',
+    '.d.ts',
+    'i18n.ts',           // i18n 字典本身
+    'legacy-tags.ts',    // 遗留数据
+    'subject-tags.ts',   // 标签数据
   ],
   // 已知的安全模式（不需要国际化的）
   safePatterns: [
@@ -39,75 +39,85 @@ const results = {
 /**
  * 检查单个文件
  */
-function checkFile(filePath) {
-  const content = fs.readFileSync(filePath, 'utf-8');
+async function checkFile(filePath) {
+  const file = Bun.file(filePath);
+  const content = await file.text();
   const lines = content.split('\n');
-  const relativePath = path.relative(process.cwd(), filePath);
+  const relativePath = filePath.replace(process.cwd() + '/', '').replace(process.cwd() + '\\', '');
 
-  lines.forEach((line, index) => {
+  const fileResults = {
+    jsxHardcoded: [],
+    stringHardcoded: [],
+    templateHardcoded: [],
+  };
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
     const lineNumber = index + 1;
 
     // 跳过注释行
     const trimmedLine = line.trim();
     if (trimmedLine.startsWith('//') || trimmedLine.startsWith('*') || trimmedLine.startsWith('/*')) {
-      return;
+      continue;
     }
 
     // 检查是否使用了 DICT
     if (line.includes('DICT.')) {
-      return; // 已国际化
+      continue; // 已国际化
     }
 
     // 检测 JSX 中的硬编码文本: >中文<
     const jsxMatches = line.match(/>[^<{]*[\u4e00-\u9fa5]+[^<{]*</g);
     if (jsxMatches) {
-      jsxMatches.forEach(match => {
+      for (const match of jsxMatches) {
         // 排除仅包含空白的
         const textContent = match.slice(1, -1).trim();
         if (textContent && CHINESE_REGEX.test(textContent)) {
-          results.jsxHardcoded.push({
+          fileResults.jsxHardcoded.push({
             file: relativePath,
             line: lineNumber,
             content: line.trim(),
             text: textContent,
           });
         }
-      });
+      }
     }
 
     // 检测 JS 字符串中的硬编码: "中文" 或 '中文'
     const stringMatches = line.match(/["'][^"']*[\u4e00-\u9fa5]+[^"']*["']/g);
     if (stringMatches) {
-      stringMatches.forEach(match => {
+      for (const match of stringMatches) {
         // 排除已知安全模式
         const isSafe = CONFIG.safePatterns.some(pattern => pattern.test(line));
         if (!isSafe) {
-          results.stringHardcoded.push({
+          fileResults.stringHardcoded.push({
             file: relativePath,
             line: lineNumber,
             content: line.trim(),
             text: match,
           });
         }
-      });
+      }
     }
 
     // 检测模板字符串: `中文` 或 `${var}中文`
     const templateMatches = line.match(/`[^`]*[\u4e00-\u9fa5]+[^`]*`/g);
     if (templateMatches) {
-      templateMatches.forEach(match => {
+      for (const match of templateMatches) {
         const isSafe = CONFIG.safePatterns.some(pattern => pattern.test(line));
         if (!isSafe) {
-          results.templateHardcoded.push({
+          fileResults.templateHardcoded.push({
             file: relativePath,
             line: lineNumber,
             content: line.trim(),
             text: match,
           });
         }
-      });
+      }
     }
-  });
+  }
+
+  return fileResults;
 }
 
 /**
@@ -190,18 +200,37 @@ function generateReport() {
  * 主函数
  */
 async function main() {
+  const startTime = performance.now();
   console.log('🔍 正在扫描文件...');
 
-  const pattern = `${CONFIG.srcDir}/**/*.{${CONFIG.extensions.join(',')}}`;
-  const files = await glob(pattern, { ignore: CONFIG.ignore });
+  // 使用 Bun.Glob 扫描文件
+  const glob = new Bun.Glob(`${CONFIG.srcDir}/**/*.{${CONFIG.extensions.join(',')}}`);
+  const files = [];
+
+  for await (const file of glob.scan({ cwd: process.cwd() })) {
+    // 检查是否需要忽略
+    const shouldIgnore = CONFIG.ignore.some(pattern => file.includes(pattern));
+    if (!shouldIgnore) {
+      files.push(file);
+    }
+  }
 
   console.log(`   找到 ${files.length} 个文件`);
 
-  files.forEach(file => {
-    checkFile(file);
-  });
+  // 并行处理所有文件
+  const fileResults = await Promise.all(files.map(file => checkFile(file)));
+
+  // 合并结果
+  for (const result of fileResults) {
+    results.jsxHardcoded.push(...result.jsxHardcoded);
+    results.stringHardcoded.push(...result.stringHardcoded);
+    results.templateHardcoded.push(...result.templateHardcoded);
+  }
 
   generateReport();
+
+  const endTime = performance.now();
+  console.log(`⏱️  扫描耗时: ${(endTime - startTime).toFixed(2)}ms\n`);
 }
 
 main().catch(console.error);
