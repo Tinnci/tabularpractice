@@ -15,6 +15,12 @@ export interface RepoSource {
   url: string;
   enabled: boolean;
   isBuiltin?: boolean;
+
+  // Permission Management
+  permission?: 'read' | 'write' | 'admin';
+  isFork?: boolean;
+  originalUrl?: string; // If it is a fork, this points to the upstream
+  lastCheckedAt?: number;
 }
 
 // 1. 试卷组定义 (核心概念：把一类试卷打包)

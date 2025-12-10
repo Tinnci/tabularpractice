@@ -89,15 +89,6 @@ export function GithubConfig() {
                                     Gist Sync (Sync Data)
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 text-xs">
-                                {isRepoReady ?
-                                    <Check className="h-3.5 w-3.5 text-green-500" /> :
-                                    <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
-                                }
-                                <span className={isRepoReady ? "text-foreground" : "text-muted-foreground"}>
-                                    Repo Write (Edit Questions)
-                                </span>
-                            </div>
                             {!isGistReady && (
                                 <div className="col-span-full text-[10px] text-red-500 flex items-center gap-1 mt-1 border-t pt-1 border-border/50">
                                     <AlertCircle className="h-3 w-3" />

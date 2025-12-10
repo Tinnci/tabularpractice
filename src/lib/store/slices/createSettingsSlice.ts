@@ -32,6 +32,9 @@ export interface SettingsSlice {
     // PaperGroup-level filtering (e.g., toggle entire "Zhang Yu 4" set)
     hiddenGroupIds: string[];
     toggleGroupVisibility: (groupId: string) => void;
+    // Permission Management
+    checkSourcePermission: (sourceId: string) => Promise<void>;
+    updateRepoSource: (id: string, updates: Partial<RepoSource>) => void;
 }
 
 export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice> = (set, get) => ({
@@ -106,4 +109,32 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
                 : [...state.hiddenGroupIds, groupId]
         };
     }),
+
+    updateRepoSource: (id, updates) => {
+        set((state) => ({
+            repoSources: state.repoSources.map(s => s.id === id ? { ...s, ...updates } : s)
+        }));
+    },
+
+    checkSourcePermission: async (sourceId) => {
+        const source = get().repoSources.find(s => s.id === sourceId);
+        if (!source || !source.url.includes('github') || source.url.includes('raw.github')) return;
+
+        const { githubEditor } = await import('@/services/githubEditor');
+        const repoInfo = githubEditor.parseRepoUrl(source.url);
+
+        if (repoInfo) {
+            try {
+                const info = await githubEditor.getRepoPermission(repoInfo.owner, repoInfo.repo);
+                get().updateRepoSource(sourceId, {
+                    permission: info.permission,
+                    isFork: info.isFork,
+                    originalUrl: info.parent?.html_url,
+                    lastCheckedAt: Date.now()
+                });
+            } catch (e) {
+                console.error(`Failed to check permission for ${source.name}`, e);
+            }
+        }
+    }
 });

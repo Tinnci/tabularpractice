@@ -68,7 +68,6 @@ class GitHubEditorService {
         }
 
         try {
-            // 检查 token scopes
             const response = await fetch('https://api.github.com/user', {
                 headers: this.getHeaders(),
             });
@@ -77,14 +76,13 @@ class GitHubEditorService {
                 return { hasPermission: false, error: "Token 无效或已过期" };
             }
 
-            // GitHub 在响应头中返回 token 的 scopes
             const scopes = response.headers.get('x-oauth-scopes') || '';
             const hasRepoScope = scopes.includes('repo') || scopes.includes('public_repo');
 
             if (!hasRepoScope) {
                 return {
                     hasPermission: false,
-                    error: "当前 Token 缺少 'repo' 权限。请在 GitHub 设置中创建新的 Token 并勾选 'repo' scope。"
+                    error: "当前 Token 缺少 'repo' 权限。"
                 };
             }
 
@@ -92,6 +90,57 @@ class GitHubEditorService {
         } catch (error) {
             return { hasPermission: false, error: String(error) };
         }
+    }
+
+    /**
+     * Get specific permission level for a repository
+     */
+    async getRepoPermission(owner: string, repo: string): Promise<{
+        permission: 'read' | 'write' | 'admin'
+        isFork: boolean,
+        parent?: { full_name: string, html_url: string }
+    }> {
+        const url = `https://api.github.com/repos/${owner}/${repo}`;
+        const response = await fetch(url, { headers: this.getHeaders() });
+
+        if (!response.ok) {
+            if (response.status === 404) return { permission: 'read', isFork: false }; // Private or not found, treat as read-only/inaccessible
+            throw new Error(`Failed to fetch repo info: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        let permission: 'read' | 'write' | 'admin' = 'read';
+        if (data.permissions?.admin) permission = 'admin';
+        else if (data.permissions?.push) permission = 'write';
+
+        return {
+            permission,
+            isFork: data.fork,
+            parent: data.parent
+        };
+    }
+
+    /**
+     * Fork a repository to the authenticated user's account
+     */
+    async forkRepo(owner: string, repo: string): Promise<{
+        full_name: string;
+        html_url: string;
+        owner: { login: string };
+    }> {
+        const url = `https://api.github.com/repos/${owner}/${repo}/forks`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: this.getHeaders()
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.message || "Fork failed");
+        }
+
+        return await response.json();
     }
 
     /**
