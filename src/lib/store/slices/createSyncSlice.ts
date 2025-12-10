@@ -21,6 +21,9 @@ export interface SyncSlice {
 
     syncData: (isAutoSync?: boolean) => Promise<void>;
     triggerAutoSync: () => void;
+
+    tokenScopes: string[];
+    validateToken: (token: string) => Promise<void>;
 }
 
 let syncTimer: NodeJS.Timeout | null = null;
@@ -32,11 +35,40 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
     syncStatus: 'idle',
     pendingConflict: null,
     isDirty: false,
+    tokenScopes: [],
 
-    setGithubToken: (token) => set({ githubToken: token }),
+    setGithubToken: (token) => {
+        set({ githubToken: token });
+        if (token) {
+            get().validateToken(token);
+        } else {
+            set({ tokenScopes: [] });
+        }
+    },
     setGistId: (id) => set({ gistId: id }),
     setLastSyncedTime: (time) => set({ lastSyncedTime: time }),
     setSyncStatus: (status) => set({ syncStatus: status }),
+
+    validateToken: async (token: string) => {
+        try {
+            const res = await fetch('https://api.github.com/user', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                }
+            });
+
+            if (res.ok) {
+                const scopes = res.headers.get('x-oauth-scopes') || '';
+                set({ tokenScopes: scopes.split(',').map(s => s.trim()) });
+            } else {
+                set({ tokenScopes: [] });
+            }
+        } catch (e) {
+            console.error('Failed to validate token', e);
+            set({ tokenScopes: [] });
+        }
+    },
 
     resolveConflict: async (strategy) => {
         const { pendingConflict, githubToken, gistId, importData, getSyncSnapshot } = get();

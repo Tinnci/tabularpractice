@@ -32,7 +32,7 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
     const [isStatsOpen, setIsStatsOpen] = useState(true); // 控制底部统计展开
 
-    const { getRootsForSubject, isLoading: isTagsLoading } = useTags();
+    const { getRootsForSubject } = useTags();
 
     const currentTags = useMemo(() => {
         // 1. Try to get tags from dynamic source

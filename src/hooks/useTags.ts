@@ -19,7 +19,7 @@ const tagsFetcher = async (urls: string[]) => {
             if (res.ok) {
                 return await res.json() as FlatTag[];
             }
-        } catch (e) {
+        } catch {
             console.warn(`Failed to fetch tags from ${target}`);
         }
     }
