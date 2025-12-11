@@ -112,6 +112,13 @@ export interface EurekaData {
     transformation: string; // 变换提示，e.g., "令 X = x-1"
   }>;
 
+  // 战略步骤 (用于拆解解题过程)
+  strategies?: Array<{
+    title: string;    // 步骤名，e.g. "降维打击"
+    trigger: string;  // 触发条件，e.g. "看到二重积分区域关于y=x对称"
+    action: string;   // 执行动作，e.g. "利用轮换对称性化简"
+  }>;
+
   // 关键洞察 (最终揭示)
   insight?: string;
 }
