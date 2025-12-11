@@ -8,8 +8,8 @@ import { useProgressStore } from "@/lib/store";
 import { Loader2, Upload, FileText, CheckCircle } from "lucide-react";
 import { Question, Paper, PaperGroup } from "@/lib/types";
 import { toast } from "sonner";
-import { GoogleGenAI } from "@google/genai";
 import { DICT } from "@/lib/i18n";
+import { useGeminiParser } from "@/hooks/useGeminiParser";
 
 interface Props {
     isOpen: boolean;
@@ -20,14 +20,17 @@ export function AiImportModal({ isOpen, onClose }: Props) {
     const { geminiApiKey, setGeminiApiKey, addCustomData } = useProgressStore();
     const [apiKeyInput, setApiKeyInput] = useState(geminiApiKey || "");
     const [file, setFile] = useState<File | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
     const [step, setStep] = useState<'api-key' | 'upload' | 'preview'>('api-key');
     const [parsedData, setParsedData] = useState<{ questions: Question[], paper: Paper, group: PaperGroup } | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [rawResponse, setRawResponse] = useState("");
     const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
-    const [availableModels, setAvailableModels] = useState<string[]>([]);
-    const [isFetchingModels, setIsFetchingModels] = useState(false);
+
+    const {
+        isProcessing,
+        isFetchingModels,
+        availableModels,
+        fetchAvailableModels,
+        processFile: processFileApi
+    } = useGeminiParser(geminiApiKey);
 
     // 如果已有 API Key，直接跳到上传步骤
     if (step === 'api-key' && geminiApiKey) {
@@ -44,7 +47,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
     };
 
     const handleDemoMode = () => {
-        setIsProcessing(true);
+        // Mocking demo state...
         setTimeout(() => {
             const mockData = {
                 group: {
@@ -85,9 +88,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
             };
             setParsedData(mockData);
             setStep('preview');
-            // Mock file for preview UI if needed, though we check parsedData
             setFile(new File(["demo"], "demo.pdf"));
-            setIsProcessing(false);
         }, 800);
     };
 
@@ -97,140 +98,12 @@ export function AiImportModal({ isOpen, onClose }: Props) {
         }
     };
 
-    const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result as string;
-                const base64Data = base64String.split(',')[1];
-                resolve(base64Data);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const fetchAvailableModels = async () => {
-        if (!geminiApiKey || isFetchingModels) return;
-
-        setIsFetchingModels(true);
-        try {
-            const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-            const models = await ai.models.list();
-
-            // Collect all models from the async iterable
-            const allModels = [];
-            for await (const model of models) {
-                allModels.push(model);
-            }
-
-            // Filter for Gemini models that support generateContent
-            const geminiModels = allModels
-                .filter((m: unknown) => {
-                    if (typeof m !== 'object' || m === null || !('name' in m)) return false;
-                    const model = m as { name: string; supportedGenerationMethods?: string[] };
-                    const methods = model.supportedGenerationMethods || [];
-                    return model.name.includes('gemini') && methods.includes('generateContent');
-                })
-                .map((m: unknown) => (m as { name: string }).name.replace('models/', ''));
-
-            setAvailableModels(geminiModels);
-
-            // Set default model if not in list
-            if (geminiModels.length > 0 && !geminiModels.includes(selectedModel)) {
-                setSelectedModel(geminiModels[0]);
-            }
-        } catch (error) {
-            console.error('Failed to fetch models:', error);
-            toast.error(DICT.ai.fetchFail);
-            setAvailableModels(['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']);
-        } finally {
-            setIsFetchingModels(false);
-        }
-    };
-
     const processFile = async () => {
-        if (!file || !geminiApiKey) return;
-
-        setIsProcessing(true);
-        try {
-            const base64Data = await fileToBase64(file);
-
-            const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-
-            const prompt = `
-            ${DICT.ai.promptRole}
-            
-            ${DICT.ai.promptGoal}
-            {
-                "group": {
-                    "id": "auto-gen-group-${Date.now()}",
-                    "name": "${DICT.ai.mockPaperGroup}",
-                    "type": "self_proposed",
-                    "university": "${DICT.ai.mockUniversity}",
-                    "courseCode": "000"
-                },
-                "paper": {
-                    "id": "auto-gen-paper-${Date.now()}",
-                    "groupId": "auto-gen-group-${Date.now()}",
-                    "year": ${new Date().getFullYear()},
-                    "name": "${file.name.replace('.pdf', '')}"
-                },
-                "questions": [
-                    {
-                        "id": "auto-gen-q-${Date.now()}-1",
-                        "paperId": "auto-gen-paper-${Date.now()}",
-                        "number": 1,
-                        "type": "answer",
-                        "tags": [],
-                        "contentMd": "${DICT.ai.mockContent}",
-                        "answerMd": "${DICT.ai.mockAnswer}",
-                        "analysisMd": "${DICT.ai.mockAnalysis}"
-                    }
-                ]
-            }
-
-            ${DICT.ai.promptRequirements}
-            1. ${DICT.ai.req1}
-            2. ${DICT.ai.req2}
-            3. ${DICT.ai.req3}
-            4. ${DICT.ai.req4}
-            5. ${DICT.ai.req5}
-            6. ${DICT.ai.req6}
-            `;
-
-            const response = await ai.models.generateContent({
-                model: selectedModel,
-                contents: [
-                    {
-                        parts: [
-                            { text: prompt },
-                            { inlineData: { mimeType: file.type, data: base64Data } }
-                        ]
-                    }
-                ],
-                config: {
-                    responseMimeType: 'application/json'
-                }
-            });
-
-            const text = response.text;
-            if (!text) throw new Error("No content generated");
-
-            // 虽然 JSON 模式通常不包含 markdown 标记，但为了兼容性保留简单的清理
-            const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            setRawResponse(cleanJson);
-
-            const parsed = JSON.parse(cleanJson);
-            setParsedData(parsed);
+        if (!file) return;
+        const data = await processFileApi(file, selectedModel);
+        if (data) {
+            setParsedData(data);
             setStep('preview');
-
-        } catch (error) {
-            console.error("Processing failed", error);
-            toast.error(DICT.ai.parseFail);
-            setRawResponse(JSON.stringify(error, null, 2));
-        } finally {
-            setIsProcessing(false);
         }
     };
 
