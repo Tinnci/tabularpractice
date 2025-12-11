@@ -3,7 +3,7 @@ import type { GpuStroke, ExportedPath, GpuSketchCanvasProps, Point } from './typ
 import { hexToRgba } from './utils';
 
 interface UseInteractionParams {
-    canvasRef: RefObject<HTMLCanvasElement>;
+    canvasRef: RefObject<HTMLCanvasElement | null>;
     isDrawingRef: MutableRefObject<boolean>;
     currentStrokeRef: MutableRefObject<GpuStroke | null>;
     strokesRef: MutableRefObject<GpuStroke[]>;
@@ -65,11 +65,12 @@ export function useInteraction({
 
         updateBuffer(false);
         draw();
-    }, [allowOnlyPointerType, strokeColor, strokeWidth, updateBuffer, draw]);
+    }, [allowOnlyPointerType, strokeColor, strokeWidth, updateBuffer, draw, canvasRef, currentStrokeRef, isDrawingRef, isEraserRef, rawPointsRef, totalPointsRef]);
 
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
         if (!isDrawingRef.current || !currentStrokeRef.current) return;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const events = (e as any).getCoalescedEvents ? (e as any).getCoalescedEvents() : [e];
         const rect = canvasRef.current!.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
@@ -153,7 +154,7 @@ export function useInteraction({
                 rafRef.current = null;
             });
         }
-    }, [updateBuffer, draw]);
+    }, [updateBuffer, draw, canvasRef, currentStrokeRef, isDrawingRef, rafRef, rawPointsRef]);
 
     const handlePointerUp = useCallback((e: React.PointerEvent) => {
         if (!isDrawingRef.current || !currentStrokeRef.current) return;
@@ -212,7 +213,7 @@ export function useInteraction({
             };
             onStroke(exportedPath, stroke.isEraser);
         }
-    }, [onStroke, updateBuffer, draw]);
+    }, [onStroke, updateBuffer, draw, currentStrokeRef, isDrawingRef, rawPointsRef, strokesRef, totalPointsRef]);
 
     return {
         handlePointerDown,

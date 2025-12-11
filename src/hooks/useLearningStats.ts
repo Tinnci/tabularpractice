@@ -114,7 +114,7 @@ export function useLearningStats(options: LearningStatsOptions = {}): LearningSt
     const times = useProgressStore(state => state.times);
     const getTodayStats = useProgressStore(state => state.getTodayStats);
     const getDailyStats = useProgressStore(state => state.getDailyStats);
-    const studyRecords = useProgressStore(state => state.studyRecords);
+
 
     return useMemo(() => {
         // === 总体统计 ===
@@ -195,7 +195,7 @@ export function useLearningStats(options: LearningStatsOptions = {}): LearningSt
             currentStreak,
             weekOverWeekChange,
         };
-    }, [times, studyRecords, days, getTodayStats, getDailyStats]);
+    }, [times, days, getTodayStats, getDailyStats]);
 }
 
 /**

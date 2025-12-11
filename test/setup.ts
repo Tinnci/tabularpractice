@@ -13,7 +13,7 @@ const mockIDB = {
         onerror: () => { },
     }),
 };
-// @ts-ignore
+// @ts-expect-error -- GlobalRegistrator types partial match
 global.indexedDB = mockIDB;
-// @ts-ignore
+// @ts-expect-error -- window types partial match
 window.indexedDB = mockIDB;

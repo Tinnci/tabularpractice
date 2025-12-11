@@ -18,14 +18,11 @@ import {
     ExternalLink,
     Key,
     AlertCircle,
-    ArrowRight,
-    Copy,
-    Check
+    ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { useProgressStore } from "@/lib/store";
 import { githubEditor } from "@/services/githubEditor";
-import { cn } from "@/lib/utils";
 import { DICT } from "@/lib/i18n";
 
 interface Props {
@@ -45,7 +42,6 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
         hasPermission: boolean;
         error?: string;
     } | null>(null);
-    const [copied, setCopied] = useState(false);
 
     const checkExistingToken = async () => {
         if (!githubToken) {
@@ -94,13 +90,6 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
     const handleComplete = () => {
         onSuccess?.();
         onClose();
-    };
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        toast.success(DICT.common.copiedToClipboard);
     };
 
     // 初次打开时自动检查

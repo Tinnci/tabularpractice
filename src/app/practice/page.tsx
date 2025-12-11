@@ -2,13 +2,11 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useContextQuestions } from "@/hooks/useContextQuestions";
-import { QuestionModal } from "@/components/business/QuestionModal";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useStopwatch } from "@/hooks/useStopwatch";
-import { Timer, Pause, Play, Dumbbell, Shuffle, RotateCcw, PanelLeftClose, PanelLeft, LayoutDashboard } from "lucide-react";
+import { Play, Shuffle, PanelLeftClose, PanelLeft, LayoutDashboard } from "lucide-react";
 import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
@@ -65,8 +63,7 @@ export default function PracticePage() {
         isRunning,
         toggle: toggleTimer,
         reset: resetTimer,
-        start: startTimer,
-        pause: pauseTimer
+        start: startTimer
     } = useStopwatch({
         autoStart: false,
         smartPause: true
@@ -106,7 +103,7 @@ export default function PracticePage() {
     }, [practiceSession, mergedQuestions, sessionState.isStarted]);
 
     // Destructure for easier access
-    const { isStarted, queue, currentIndex, isModalOpen, selectedTypes, selectedTags, isShuffle } = sessionState;
+    const { isStarted, queue, currentIndex, selectedTypes, selectedTags, isShuffle } = sessionState;
 
 
 
@@ -142,10 +139,6 @@ export default function PracticePage() {
 
     const setIsShuffle = useCallback((value: boolean) => {
         setSessionState(prev => ({ ...prev, isShuffle: value }));
-    }, []);
-
-    const setIsModalOpen = useCallback((value: boolean) => {
-        setSessionState(prev => ({ ...prev, isModalOpen: value }));
     }, []);
 
     const handleStart = useCallback(() => {
@@ -233,7 +226,7 @@ export default function PracticePage() {
         }
     }, [currentIndex, queue, resetTimer, startTimer, addTime, updatePracticeSessionProgress]);
 
-    const currentQuestion = queue[currentIndex];
+
 
     // Session Active View - Immersive Card Stack
     if (isStarted) {

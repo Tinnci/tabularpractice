@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { syncService, SyncData } from '../syncService';
-import { Status } from '@/lib/types';
+
 
 describe('syncService', () => {
     describe('mergeData', () => {

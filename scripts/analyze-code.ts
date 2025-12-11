@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'fs/promises';
-import { join, extname, relative } from 'path';
+import { join, relative } from 'path';
 import * as ts from 'typescript';
 
 const SRC_DIR = join(process.cwd(), 'src');
@@ -37,15 +37,7 @@ interface CodeIssue {
     location?: string;
 }
 
-interface AnalysisReport {
-    files: FileStats[];
-    totalFiles: number;
-    totalLines: number;
-    totalLinesOfCode: number;
-    avgComplexity: number;
-    issues: CodeIssue[];
-    hotspots: FileStats[];
-}
+
 
 // 定义可增加复杂度的节点类型
 const COMPLEXITY_NODE_KINDS = new Set([
@@ -122,7 +114,7 @@ function calculateMaxNestingDepth(sourceFile: ts.SourceFile): number {
 }
 
 // 分析函数
-function analyzeFunctions(sourceFile: ts.SourceFile, content: string): FunctionStats[] {
+function analyzeFunctions(sourceFile: ts.SourceFile): FunctionStats[] {
     const functions: FunctionStats[] = [];
 
     function visit(node: ts.Node) {
@@ -335,7 +327,7 @@ async function analyzeFile(filePath: string): Promise<FileStats> {
     const linesOfCode = countLinesOfCode(content);
     const complexity = calculateCyclomaticComplexity(sourceFile);
     const maxNestingDepth = calculateMaxNestingDepth(sourceFile);
-    const functions = analyzeFunctions(sourceFile, content);
+    const functions = analyzeFunctions(sourceFile);
     const { imports, exports } = extractImportsExports(sourceFile);
 
     const stats: FileStats = {

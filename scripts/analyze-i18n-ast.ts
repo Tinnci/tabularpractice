@@ -1,6 +1,6 @@
 
 import { readdir, readFile } from 'fs/promises';
-import { join, extname, relative, resolve } from 'path';
+import { relative, resolve } from 'path';
 import * as ts from 'typescript';
 
 // Configuration
@@ -237,7 +237,7 @@ function analyzeFile(filePath: string, sourceFile: ts.SourceFile): I18nIssue[] {
         return true;
     }
 
-    function addIssue(node: ts.Node, type: 'chinese' | 'english-ui', context: any, content: string) {
+    function addIssue(node: ts.Node, type: 'chinese' | 'english-ui', context: 'jsx-text' | 'jsx-attr' | 'string-literal' | 'template', content: string) {
         const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
         issues.push({
             file: relativePath,

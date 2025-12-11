@@ -33,8 +33,8 @@ export function KnowledgeGraph({
         subjectKey,
     });
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [nodes, , onNodesChange] = useNodesState(initialNodes);
+    const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
     const handleNodeClick = useCallback(
         (_event: React.MouseEvent, node: Node) => {

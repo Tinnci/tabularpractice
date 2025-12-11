@@ -10,7 +10,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, AlertCircle } from "lucide-react";
+import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -65,12 +65,14 @@ export function EurekaPanel({ question, onClose, className }: Props) {
         };
     }, []);
 
-    useEffect(() => {
-        // Reset interactive states when question changes
+    // --- State Reset on Question Change (Derived State Pattern) ---
+    const [prevQuestionId, setPrevQuestionId] = useState(question?.id);
+    if (question?.id !== prevQuestionId) {
+        setPrevQuestionId(question?.id);
         setSelectedBlocker(null);
         setSelectedModel(null);
         setShowInsight(false);
-    }, [question?.id]);
+    }
 
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60);

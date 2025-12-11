@@ -2,13 +2,12 @@
  * useStopwatch Hook - Infinite Loop Detection Tests
  */
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useStopwatch } from '../useStopwatch';
 // bun test 内置了 jest 兼容的 describe, it, expect
-import { describe, it, expect, beforeEach, afterEach, jest } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
 
 describe('useStopwatch - Infinite Loop Prevention', () => {
-    const MAX_RENDERS = 50;
 
     beforeEach(() => {
         // Bun's fake timers support
@@ -42,15 +41,10 @@ describe('useStopwatch - Infinite Loop Prevention', () => {
     });
 
     it('should not throttled updates cause infinite renders', () => {
-        let renderCount = 0;
-
         // Bun的环境下 performance.now 是可用的
-        const { result } = renderHook(() => {
-            renderCount++;
+        renderHook(() => {
             return useStopwatch({ autoStart: true, updateInterval: 50 }); // 快速更新以便测试
         });
-
-        const initialRenderCount = renderCount;
 
         // 真正的异步等待
         // 注意: 在 DOM 模拟环境中，我们需要让 event loop 转动
@@ -61,7 +55,6 @@ describe('useStopwatch - Infinite Loop Prevention', () => {
         const { result } = renderHook(() => useStopwatch({ autoStart: true, updateInterval: 100 }));
 
         expect(result.current.isRunning).toBe(true);
-        const startElapsed = result.current.elapsed;
 
         // 等待一点时间
         await new Promise(r => setTimeout(r, 200));

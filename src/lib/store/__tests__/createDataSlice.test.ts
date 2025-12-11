@@ -18,7 +18,7 @@ describe('createDataSlice', () => {
 
     describe('updateStatus', () => {
         it('should update question status', () => {
-            const { updateStatus, progress } = useProgressStore.getState();
+            const { updateStatus } = useProgressStore.getState();
 
             updateStatus('q1', 'mastered');
 

@@ -51,7 +51,7 @@ export function useQuestionTimer({
         smartPause: true // 保持原有的切屏自动暂停
     });
 
-    const { elapsed, isRunning, start, pause, reset } = stopwatch;
+    const { elapsed, isRunning, start, pause, reset, preciseElapsedRef } = stopwatch;
     const activeIdRef = useRef(questionId);
 
     // === 新增：Session 元数据追踪 ===
@@ -99,7 +99,7 @@ export function useQuestionTimer({
     const saveTime = useCallback(() => {
         const currentId = activeIdRef.current;
         // 使用高精度的 elapsed 值进行保存
-        const thinkingTime = stopwatch.preciseElapsedRef.current;
+        const thinkingTime = preciseElapsedRef.current;
 
         // 阈值设为 1秒，避免误触产生垃圾数据
         if (currentId && thinkingTime > 1000) {
@@ -122,7 +122,7 @@ export function useQuestionTimer({
             };
             addStudyRecord(record);
         }
-    }, [addTime, addStudyRecord, source, stopwatch.preciseElapsedRef]);
+    }, [addTime, addStudyRecord, source, preciseElapsedRef]);
 
     // 重置 session 元数据的辅助函数
     const resetSessionMeta = useCallback(() => {

@@ -171,7 +171,7 @@ export function useForceLayout(
 
         frameId = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(frameId);
-    }, [count, radius, activeHoverId]);
+    }, [count, radius, activeHoverId, REPULSION_RADIUS, HOVER_RADIUS, REPULSION_STRENGTH, GRAVITY_STRENGTH, DAMPING, ALPHA_DECAY, ALPHA_MIN, HOVER_FORCE]);
 
     return positions;
 }

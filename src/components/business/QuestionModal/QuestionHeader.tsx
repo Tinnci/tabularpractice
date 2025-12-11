@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Badge } from "@/components/ui/badge";
 import { QuestionTimer } from "@/components/business/QuestionTimer";
 import { SmartTagList } from "./SmartTagList";
 import {
