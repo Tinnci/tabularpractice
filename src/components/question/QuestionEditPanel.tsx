@@ -14,11 +14,14 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Save, Loader2, Plus, Tag } from "lucide-react";
-import { Question } from "@/lib/types";
+import { X, Save, Loader2, Plus, Tag, Sparkles } from "lucide-react";
+import { Question, EurekaData } from "@/lib/types";
 import { DICT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { MarkdownContent } from "@/components/question";
+import { useProgressStore } from "@/lib/store";
+import { useGeminiEureka } from "@/hooks/useGeminiEureka";
+import { toast } from "sonner";
 
 interface QuestionEditPanelProps {
     question: Question;
@@ -43,11 +46,17 @@ export function QuestionEditPanel({
     const [type, setType] = useState<QuestionType>(question.type as QuestionType || "choice");
     const [tags, setTags] = useState<string[]>(question.tags || []);
     const [newTag, setNewTag] = useState("");
+    const [eureka, setEureka] = useState<EurekaData | undefined>(question.eureka);
+    const [eurekaJson, setEurekaJson] = useState(question.eureka ? JSON.stringify(question.eureka, null, 2) : "");
 
     // UI 状态
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'content' | 'answer' | 'analysis'>('content');
+    const [activeTab, setActiveTab] = useState<'content' | 'answer' | 'analysis' | 'eureka'>('content');
     const [hasChanges, setHasChanges] = useState(false);
+
+    // Gemini Integration
+    const { geminiApiKey } = useProgressStore();
+    const { isGenerating, generateEureka } = useGeminiEureka(geminiApiKey);
 
     // 检测变更
     useEffect(() => {
@@ -57,26 +66,40 @@ export function QuestionEditPanel({
             analysisMd !== (question.analysisMd || "") ||
             contentMd !== (question.contentMd || "") ||
             type !== (question.type || "choice") ||
-            JSON.stringify(tags) !== JSON.stringify(question.tags || []);
+            JSON.stringify(tags) !== JSON.stringify(question.tags || []) ||
+            eurekaJson !== (question.eureka ? JSON.stringify(question.eureka, null, 2) : "");
         setHasChanges(changed);
-    }, [answer, answerMd, analysisMd, contentMd, type, tags, question]);
+    }, [answer, answerMd, analysisMd, contentMd, type, tags, eurekaJson, question]);
 
     // 保存处理
     const handleSave = useCallback(async () => {
         setIsSaving(true);
         try {
+            // Parse eureka JSON if it exists
+            let parsedEureka: EurekaData | undefined = undefined;
+            if (eurekaJson.trim()) {
+                try {
+                    parsedEureka = JSON.parse(eurekaJson);
+                } catch (e) {
+                    toast.error("Invalid Eureka JSON format");
+                    setIsSaving(false);
+                    return;
+                }
+            }
+
             await onSave({
                 answer,
                 answerMd: answerMd || undefined,
                 analysisMd: analysisMd || undefined,
                 contentMd: contentMd || undefined,
                 type,
-                tags
+                tags,
+                eureka: parsedEureka
             });
         } finally {
             setIsSaving(false);
         }
-    }, [answer, answerMd, analysisMd, contentMd, type, tags, onSave]);
+    }, [answer, answerMd, analysisMd, contentMd, type, tags, eurekaJson, onSave]);
 
     // 标签管理
     const addTag = useCallback(() => {
@@ -90,6 +113,26 @@ export function QuestionEditPanel({
     const removeTag = useCallback((tagToRemove: string) => {
         setTags(tags.filter(t => t !== tagToRemove));
     }, [tags]);
+
+    // Generate Eureka with AI
+    const handleGenerateEureka = useCallback(async () => {
+        if (!geminiApiKey) {
+            toast.error("Please configure Gemini API Key in Settings");
+            return;
+        }
+
+        const result = await generateEureka(
+            contentMd || question.contentMd || "",
+            answerMd || question.answerMd || "",
+            analysisMd || question.analysisMd || ""
+        );
+
+        if (result) {
+            setEureka(result);
+            setEurekaJson(JSON.stringify(result, null, 2));
+            toast.success("Eureka content generated!");
+        }
+    }, [geminiApiKey, generateEureka, contentMd, answerMd, analysisMd, question]);
 
     return (
         <div className={cn("flex flex-col h-full bg-card border-l", className)}>
@@ -240,6 +283,17 @@ export function QuestionEditPanel({
                             >
                                 {DICT.exam.analysis}
                             </button>
+                            <button
+                                onClick={() => setActiveTab('eureka')}
+                                className={cn(
+                                    "text-sm font-medium px-3 py-1 rounded-md transition-colors whitespace-nowrap",
+                                    activeTab === 'eureka'
+                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                        : "text-muted-foreground hover:bg-muted"
+                                )}
+                            >
+                                Eureka 💡
+                            </button>
                         </div>
 
                         {activeTab === 'content' && (
@@ -290,6 +344,37 @@ export function QuestionEditPanel({
                                         <MarkdownContent content={analysisMd} />
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {activeTab === 'eureka' && (
+                            <div className="space-y-2 animate-in fade-in duration-300">
+                                <div className="flex items-center justify-between mb-2">
+                                    <Label className="text-sm font-medium">Eureka Data (JSON)</Label>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={handleGenerateEureka}
+                                        disabled={isGenerating || !contentMd}
+                                        className="gap-1"
+                                    >
+                                        {isGenerating ? (
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                            <Sparkles className="w-3 h-3" />
+                                        )}
+                                        {isGenerating ? "Generating..." : "Generate with AI"}
+                                    </Button>
+                                </div>
+                                <Textarea
+                                    value={eurekaJson}
+                                    onChange={(e) => setEurekaJson(e.target.value)}
+                                    placeholder='{\n  "diagnostic": {...},\n  "modelLineup": {...},\n  "variableRoles": [...],\n  "strategies": [...],\n  "insight": "..."\n}'
+                                    className="min-h-[300px] font-mono text-xs"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    💡 Tip: Click "Generate with AI" to auto-generate Eureka hints, or manually edit the JSON above.
+                                </p>
                             </div>
                         )}
                     </div>
