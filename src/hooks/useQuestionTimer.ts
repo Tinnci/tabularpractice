@@ -99,7 +99,7 @@ export function useQuestionTimer({
     const saveTime = useCallback(() => {
         const currentId = activeIdRef.current;
         // 使用高精度的 elapsed 值进行保存
-        const thinkingTime = stopwatch.getPreciseElapsed();
+        const thinkingTime = stopwatch.preciseElapsedRef.current;
 
         // 阈值设为 1秒，避免误触产生垃圾数据
         if (currentId && thinkingTime > 1000) {
@@ -122,7 +122,7 @@ export function useQuestionTimer({
             };
             addStudyRecord(record);
         }
-    }, [addTime, addStudyRecord, source, stopwatch]);
+    }, [addTime, addStudyRecord, source, stopwatch.preciseElapsedRef]);
 
     // 重置 session 元数据的辅助函数
     const resetSessionMeta = useCallback(() => {

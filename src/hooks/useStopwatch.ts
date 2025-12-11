@@ -22,14 +22,6 @@ export function useStopwatch({
     const animateRef = useRef<(() => void) | null>(null);
     const lastUpdateTimeRef = useRef<number>(0); // 上次更新UI状态的时间
 
-    // 获取当前精确的elapsed值（不触发渲染）
-    const getPreciseElapsed = useCallback(() => {
-        if (startTimeRef.current > 0) {
-            return savedElapsedRef.current + (performance.now() - startTimeRef.current);
-        }
-        return savedElapsedRef.current;
-    }, []);
-
     // 动画循环 - 节流更新状态
     const animate = useCallback(() => {
         const now = performance.now();
@@ -157,6 +149,6 @@ export function useStopwatch({
         reset,
         toggle,
         formattedTime,
-        getPreciseElapsed // 暴露精确时间获取函数，用于保存数据
+        preciseElapsedRef // 暴露 ref，调用方直接读取 ref.current
     };
 }
