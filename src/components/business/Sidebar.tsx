@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils";
-import { getTagsForSubject, type TagNode } from "@/data/subject-tags";
+import { getTagsForSubject } from "@/data/subject-tags";
 import { useProgressStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,6 +27,8 @@ import { useContextQuestions } from "@/hooks/useContextQuestions";
 import { DICT } from "@/lib/i18n";
 import { useTags } from "@/hooks/useTags";
 import { getSubjectKey } from "@/lib/subjectConfig";
+import { SidebarLeafNode } from "./Sidebar/SidebarLeafNode";
+import { useSidebarStats } from "./Sidebar/useSidebarStats";
 
 export function SidebarContent({ className, onSelect, questions }: { className?: string, onSelect?: () => void, questions?: Question[] }) {
     const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
@@ -61,132 +63,13 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
     const displayQuestions = questions || contextQuestions;
 
 
-    // 获取进度状态 (用于计算完成度)
-    // 提到 useMemo 之前
-    const progress = useProgressStore(state => state.progress);
-
-    // 4. 计算每个 Tag 的统计数据 (递归)
-    const tagStats = useMemo(() => {
-        const stats: Record<string, { total: number, finished: number }> = {};
-
-        // 辅助函数：获取一个节点下所有相关的 questions
-        // 如果是叶子节点，匹配 id；如果是父节点，匹配所有子孙节点的 id
-        const getRelatedQuestions = (node: TagNode): Question[] => {
-            // 1. 收集该节点及其子树包含的所有 tag ID
-            const relevantTagIds = new Set<string>();
-            const collectIds = (n: TagNode) => {
-                relevantTagIds.add(n.id);
-                if (n.children) {
-                    n.children.forEach(collectIds);
-                }
-            };
-            collectIds(node);
-
-            // 2. 过滤出一个问题是否包含上述任一 ID
-            return displayQuestions.filter(q =>
-                q.tags.some(tag => relevantTagIds.has(tag))
-            );
-        };
-
-        const computeStats = (nodes: TagNode[]) => {
-            nodes.forEach(node => {
-                const relatedQs = getRelatedQuestions(node);
-                const total = relatedQs.length;
-                const finished = relatedQs.filter(q => {
-                    const status = progress[q.id];
-                    return status === 'mastered' || status === 'confused' || status === 'failed';
-                }).length;
-
-                stats[node.id] = { total, finished };
-
-                if (node.children) {
-                    computeStats(node.children);
-                }
-            });
-        };
-
-        computeStats(currentTags);
-        return stats;
-    }, [displayQuestions, currentTags, progress]);
+    // 4. Calculate stats for each Tag (Recursive)
+    const tagStats = useSidebarStats(displayQuestions, currentTags);
 
 
 
 
-    // 渲染叶子节点 (最终的知识点) - 增强 UI
-    const renderLeafNode = (node: TagNode) => {
-        const isSelected = selectedTagId === node.id;
-        const stat = tagStats[node.id] || { total: 0, finished: 0 };
-        // 计算完成度颜色
-        const isComplete = stat.total > 0 && stat.finished === stat.total;
-        const width = stat.total > 0 ? (stat.finished / stat.total) * 100 : 0;
 
-        return (
-            <Tooltip key={node.id} delayDuration={500}>
-                <TooltipTrigger asChild>
-                    <div className="relative group/leaf px-1 py-0.5">
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "w-full justify-between text-sm h-8 pl-6 pr-2 font-normal relative transition-all duration-200 overflow-hidden",
-                                isSelected
-                                    ? "bg-primary/10 text-primary font-medium hover:bg-primary/15"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
-                                stat.total === 0 && "opacity-60"
-                            )}
-                            onClick={() => {
-                                // 点击交互
-                                if (isSelected) setSelectedTagId(null);
-                                else setSelectedTagId(node.id);
-                                onSelect?.();
-                            }}
-                        >
-                            {/* 进度背景条 - 仅在 hover 或选中时且有进度时微弱显示 */}
-                            {stat.finished > 0 && (
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 bg-primary/5 transition-all duration-500 z-0"
-                                    style={{ width: `${width}%` }}
-                                />
-                            )}
-
-                            <div className="flex items-center gap-2 z-10 min-w-0 flex-1">
-                                {/* 点状图标 */}
-                                <div className={cn(
-                                    "h-1.5 w-1.5 rounded-full transition-all duration-300 shrink-0",
-                                    isSelected
-                                        ? "bg-primary scale-125 shadow-[0_0_8px_hsl(var(--primary))]"
-                                        : isComplete ? "bg-green-500/50" : "bg-muted-foreground/30 group-hover/leaf:bg-primary/60"
-                                )} />
-                                <span className={cn("truncate leading-none", isSelected && "font-semibold")}>
-                                    {node.label}
-                                </span>
-                            </div>
-
-                            {/* 右侧统计 Badge */}
-                            {stat.total > 0 && (
-                                <span className={cn(
-                                    "text-[10px] tabular-nums px-1.5 py-0.5 rounded-full z-10 transition-colors",
-                                    isSelected ? "bg-primary/20 text-primary" : "bg-muted/50 text-muted-foreground group-hover/leaf:bg-muted"
-                                )}>
-                                    {stat.finished}/{stat.total}
-                                </span>
-                            )}
-                        </Button>
-
-                        {/* 选中指示条 (左边缘) */}
-                        {isSelected && (
-                            <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-primary rounded-r-full shadow-[0_0_8px_hsl(var(--primary))]" />
-                        )}
-                    </div>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                    <div className="text-xs">
-                        <p className="font-semibold">{node.label}</p>
-                        <p className="text-muted-foreground">已完成 {stat.finished} / 共 {stat.total} 题</p>
-                    </div>
-                </TooltipContent>
-            </Tooltip>
-        );
-    };
 
     return (
         <div className={cn("flex flex-col h-full bg-background/80", className)}>
@@ -298,14 +181,36 @@ export function SidebarContent({ className, onSelect, questions }: { className?:
                                                                     </div>
                                                                 </AccordionTrigger>
                                                                 <AccordionContent className="pl-3 pb-1">
-                                                                    {child.children.map(subChild => renderLeafNode(subChild))}
+                                                                    {child.children.map(subChild => (
+                                                                        <SidebarLeafNode
+                                                                            key={subChild.id}
+                                                                            node={subChild}
+                                                                            selectedTagId={selectedTagId}
+                                                                            stat={tagStats[subChild.id] || { total: 0, finished: 0 }}
+                                                                            onSelect={(id) => {
+                                                                                setSelectedTagId(id);
+                                                                                onSelect?.();
+                                                                            }}
+                                                                        />
+                                                                    ))}
                                                                 </AccordionContent>
                                                             </AccordionItem>
                                                         </Accordion>
                                                     )
                                                 }
                                                 // 二级就是叶子
-                                                return renderLeafNode(child);
+                                                return (
+                                                    <SidebarLeafNode
+                                                        key={child.id}
+                                                        node={child}
+                                                        selectedTagId={selectedTagId}
+                                                        stat={tagStats[child.id] || { total: 0, finished: 0 }}
+                                                        onSelect={(id) => {
+                                                            setSelectedTagId(id);
+                                                            onSelect?.();
+                                                        }}
+                                                    />
+                                                );
                                             })}
                                         </div>
                                     </AccordionContent>

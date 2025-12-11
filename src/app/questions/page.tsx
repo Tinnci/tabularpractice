@@ -5,9 +5,9 @@ import { ExamWall } from "@/components/business/ExamWall";
 import { Sidebar } from "@/components/business/Sidebar";
 import { QuestionModal } from "@/components/business/QuestionModal";
 
-import { Button } from "@/components/ui/button";
+
 import { usePaperDetail } from "@/hooks/useQuestions";
-import { Question, Status, PaperGroup } from "@/lib/types";
+import { Question, Status } from "@/lib/types";
 import { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useProgressStore } from "@/lib/store";
 import { DICT } from "@/lib/i18n";
@@ -19,17 +19,14 @@ import { useContextQuestions } from "@/hooks/useContextQuestions";
 
 function QuestionsContent() {
   const {
-    progress, updateStatus,
+    updateStatus,
     selectedTagId,
-    currentGroupId,
     setCurrentGroupId,
     filterStatus,
-    filterType,
     filterYear,
     filterStarred,
     stars,
     setFilterStatus,
-    setFilterType,
     setFilterYear,
     lowDataMode,
     repoBaseUrl,
@@ -37,7 +34,7 @@ function QuestionsContent() {
     setViewMode
   } = useProgressStore();
 
-  const { contextQuestions, currentPapers, mergedQuestions, paperGroupsData } = useContextQuestions();
+  const { contextQuestions, currentPapers, paperGroupsData } = useContextQuestions();
 
   // ---------------------------------------------------------------------------
   // View Switching & Scroll Sync Logic
