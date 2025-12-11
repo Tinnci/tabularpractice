@@ -10,7 +10,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, ArrowRight } from "lucide-react";
+import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, ArrowRight, ListOrdered } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -301,6 +301,44 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                             </div>
                                         </div>
                                     </Card>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 3.5. Strategies (战略步骤) */}
+                    {eurekaData?.strategies && eurekaData.strategies.length > 0 && (
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                                <ListOrdered className="w-4 h-4 text-primary" />
+                                {DICT.eureka.strategies || "解题战略"}
+                            </h3>
+                            <div className="relative space-y-4 pl-2">
+                                {/* Connecting Line */}
+                                <div className="absolute left-[15px] top-2 bottom-4 w-0.5 bg-border -z-10" />
+
+                                {eurekaData.strategies.map((step, idx) => (
+                                    <div key={idx} className="flex gap-3 items-start relative bg-background">
+                                        {/* Step Number */}
+                                        <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary bg-background shrink-0 text-xs font-bold text-primary">
+                                            {idx + 1}
+                                        </div>
+
+                                        {/* Step Content */}
+                                        <Card className="flex-1 p-3 space-y-2 border-l-4 border-l-primary/50 hover:border-l-primary transition-all">
+                                            <div className="font-semibold text-sm">{step.title}</div>
+                                            <div className="grid gap-2 text-xs">
+                                                <div className="flex gap-2">
+                                                    <span className="text-muted-foreground shrink-0 w-10 text-right">看到:</span>
+                                                    <span className="text-muted-foreground bg-muted/30 px-1.5 rounded">{step.trigger}</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <span className="text-primary font-medium shrink-0 w-10 text-right">想到:</span>
+                                                    <span className="font-medium text-foreground">{step.action}</span>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    </div>
                                 ))}
                             </div>
                         </div>
