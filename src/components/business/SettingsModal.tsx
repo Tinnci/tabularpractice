@@ -14,6 +14,7 @@ import { DataManagement } from "./Settings/DataManagement"
 import { GithubConfig } from "./Settings/GithubConfig"
 import { RepoSources } from "./Settings/RepoSources"
 import { AppearanceFilter } from "./Settings/AppearanceFilter"
+import { AiSettings } from "./Settings/AiSettings"
 
 export function SettingsModal() {
     const [open, setOpen] = useState(false)
@@ -42,8 +43,9 @@ export function SettingsModal() {
                         <RepoSources />
                     </div>
 
-                    {/* Right Column: Appearance & Filtering */}
+                    {/* Right Column: AI & Appearance */}
                     <div className="space-y-6">
+                        <AiSettings />
                         <AppearanceFilter />
                     </div>
                 </div>
