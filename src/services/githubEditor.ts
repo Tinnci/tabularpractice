@@ -157,9 +157,9 @@ class GitHubEditorService {
         if (!response.ok) {
             const error = await response.json();
             if (response.status === 404) {
-                throw new Error(`文件不存在: ${path}`);
+                throw new Error(DICT.errors.fileNotFound.replace('{path}', path));
             }
-            throw new Error(error.message || `获取文件失败: ${response.status}`);
+            throw new Error(error.message || DICT.errors.fetchFailed.replace('{error}', String(response.status)));
         }
 
         return response.json();
@@ -196,9 +196,9 @@ class GitHubEditorService {
         if (!response.ok) {
             const error = await response.json();
             if (response.status === 409) {
-                throw new Error("文件已被其他人修改，请刷新后重试");
+                throw new Error(DICT.errors.fileConflict);
             }
-            throw new Error(error.message || `更新文件失败: ${response.status}`);
+            throw new Error(error.message || DICT.errors.updateFailed.replace('{error}', String(response.status)));
         }
 
         return response.json();

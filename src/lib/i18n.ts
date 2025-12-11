@@ -686,6 +686,7 @@ export const DICT = {
         fileNotFound: "文件不存在: {path}",
         fetchFailed: "获取文件失败: {error}",
         updateFailed: "更新文件失败: {error}",
+        fileConflict: "文件已被其他人修改，请刷新后重试",
     },
 
     // Misc Page Elements
