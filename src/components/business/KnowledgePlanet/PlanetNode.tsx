@@ -6,28 +6,22 @@ interface PlanetNodeProps {
     node: EnhancedTagNode;
     x: number;
     y: number;
-    z: number;
     isSelected: boolean;
     isHovered?: boolean;
     onClick: (id: string) => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
-    scale?: number;
-    opacity?: number;
 }
 
 export const PlanetNode: React.FC<PlanetNodeProps> = ({
     node,
     x,
     y,
-    z,
     isSelected,
-    isHovered, // Added
+    isHovered,
     onClick,
     onMouseEnter,
     onMouseLeave,
-    scale = 1,
-    opacity = 1
 }) => {
     // Determine color/style based on priority/status
     const { priority, weaknessScore, sizeMultiplier } = node.computed;
@@ -35,65 +29,51 @@ export const PlanetNode: React.FC<PlanetNodeProps> = ({
     // Base size (e.g. 12px to 24px)
     const baseSize = 8 + (sizeMultiplier * 4);
 
-    let colorClass = "text-muted-foreground/60"; // Default grey
+    let colorClass = "bg-muted text-muted-foreground border-border";
     let glowClass = "";
-    let animationClass = "";
 
+    // Status Logic
     if (node.stats.total > 0) {
         if (priority === 'critical') {
-            colorClass = "text-red-500 font-bold";
-            glowClass = "shadow-[0_0_15px_rgba(239,68,68,0.6)]";
-            animationClass = "animate-pulse";
+            colorClass = "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
+            glowClass = "shadow-[0_0_15px_rgba(239,68,68,0.4)]";
         } else if (priority === 'high') {
-            colorClass = "text-orange-500 font-semibold";
-            glowClass = "shadow-[0_0_10px_rgba(249,115,22,0.5)]";
+            colorClass = "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800";
         } else if (priority === 'medium') {
-            colorClass = "text-yellow-500";
-            glowClass = "shadow-[0_0_5px_rgba(234,179,8,0.4)]";
+            colorClass = "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800";
         } else {
-            // Low priority (Mastered or just started)
+            // Mastered
             if (node.stats.mastered > 0 && node.stats.failed === 0) {
-                colorClass = "text-green-500";
-                glowClass = "shadow-[0_0_5px_rgba(34,197,94,0.3)]";
+                colorClass = "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800";
             } else {
-                colorClass = "text-primary/80";
+                colorClass = "bg-background text-foreground border-border";
             }
         }
     }
 
     if (isSelected) {
-        colorClass = "text-primary font-bold";
-        glowClass = "shadow-[0_0_20px_rgba(var(--primary),0.8)] border-primary";
+        colorClass = "bg-primary text-primary-foreground border-primary";
+        glowClass = "shadow-[0_0_20px_rgba(var(--primary),0.6)] ring-2 ring-primary/30";
     }
 
-    if (isHovered) {
-        // External hover effect (stronger than regular mouse hover)
-        glowClass = cn(glowClass, "shadow-[0_0_25px_rgba(var(--primary),0.6)] ring-2 ring-primary/50 bg-background/90 z-50 scale-125");
-        // Ensure it pops out
-        scale = scale * 1.2;
-        opacity = 1;
-    }
-
-    // Interactive scale on hover handled by parent or CSS
-    // z-index is handled by parent ordering or explicit zIndex style
+    // Dynamic z-index: Selected/Hovered always on top
+    const zIndex = isHovered ? 50 : (isSelected ? 40 : 10);
+    const scale = isHovered ? 1.15 : 1;
 
     return (
         <div
             className={cn(
-                "absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 select-none flex items-center justify-center rounded-full backdrop-blur-sm border border-transparent hover:z-50 hover:scale-125 hover:border-primary/50 hover:bg-background/80",
+                "absolute cursor-pointer select-none flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 ease-out",
                 colorClass,
-                glowClass,
-                animationClass
+                glowClass
             )}
             style={{
-                transform: `translate3d(${x}px, ${y}px, ${z}px) scale(${scale})`,
-                opacity: opacity,
-                zIndex: Math.floor(z + 50), // Ensure depth sorting but keep below modals (100)
-
-                fontSize: `${Math.max(10, baseSize)}px`, // Dynamic font size
-                padding: '4px 8px'
+                transform: `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${scale})`,
+                fontSize: `${Math.max(10, baseSize)}px`,
+                padding: '0.3em 0.8em',
+                zIndex,
             }}
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onClick(node.id);
             }}
@@ -101,8 +81,8 @@ export const PlanetNode: React.FC<PlanetNodeProps> = ({
             onMouseLeave={onMouseLeave}
             title={`${node.label}\nTotal: ${node.stats.total}\nWeakness: ${(weaknessScore * 100).toFixed(0)}%`}
         >
-            {node.label}
-            {/* Show refined visual indicators if needed */}
+            <span className="whitespace-nowrap font-medium">{node.label}</span>
+
             {priority === 'critical' && (
                 <span className="absolute -top-1 -right-1 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

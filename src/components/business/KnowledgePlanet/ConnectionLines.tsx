@@ -1,49 +1,63 @@
 import React, { useMemo } from 'react';
 import { EnhancedTagNode } from '@/hooks/useTagStats';
 
+interface ProjectedNode {
+    node: EnhancedTagNode;
+    x: number;
+    y: number;
+    // z, scale, opacity might be removed or optional, let's keep it simple for 2D
+}
+
 interface ConnectionLinesProps {
-    nodes: { node: EnhancedTagNode; x: number; y: number; z: number }[];
-    hoveredNodeId?: string | null;
+    nodes: ProjectedNode[];
+    hoveredNodeId: string | null;
 }
 
 export const ConnectionLines: React.FC<ConnectionLinesProps> = ({ nodes, hoveredNodeId }) => {
-    // We need to map node ID to its 3D position for drawing lines
-    const positionMap = useMemo(() => {
-        const map = new Map<string, { x: number; y: number; z: number }>();
-        nodes.forEach(n => map.set(n.node.id, { x: n.x, y: n.y, z: n.z }));
+    // Build a map for fast lookup of positions by ID
+    const nodeMap = useMemo(() => {
+        const map = new Map<string, { x: number; y: number }>();
+        nodes.forEach(n => {
+            map.set(n.node.id, { x: n.x, y: n.y });
+        });
         return map;
     }, [nodes]);
 
     const lines = useMemo(() => {
-        const result: React.JSX.Element[] = [];
+        const result: React.ReactNode[] = [];
+        const drawnConnections = new Set<string>();
 
-        nodes.forEach(current => {
-            const parentId = current.node.parentId;
-            if (parentId && positionMap.has(parentId)) {
-                const parentPos = positionMap.get(parentId)!;
+        nodes.forEach(source => {
+            // Draw connections to parent
+            if (source.node.parentId && nodeMap.has(source.node.parentId)) {
+                const targetPos = nodeMap.get(source.node.parentId)!;
+                const connectionId = [source.node.id, source.node.parentId].sort().join('-');
 
-                // Opacity based on Z-depth (simplified) and interaction
-                const isRelated = hoveredNodeId && (current.node.id === hoveredNodeId || parentId === hoveredNodeId);
 
-                // Calculate average Z for z-indexing the line? SVG doesn't support z-index same as HTML div.
-                // We usually just draw them.
+                if (!drawnConnections.has(connectionId)) {
+                    drawnConnections.add(connectionId);
 
-                const style = isRelated ? { stroke: 'rgba(var(--primary), 0.6)', strokeWidth: 2 } : { stroke: 'rgba(150, 150, 150, 0.1)', strokeWidth: 1 };
+                    const isHoveredChain =
+                        hoveredNodeId && (source.node.id === hoveredNodeId || source.node.parentId === hoveredNodeId);
 
-                result.push(
-                    <line
-                        key={`${current.node.id}-${parentId}`}
-                        x1={current.x}
-                        y1={current.y}
-                        x2={parentPos.x}
-                        y2={parentPos.y}
-                        style={style}
-                    />
-                );
+                    result.push(
+                        <line
+                            key={connectionId}
+                            x1={source.x}
+                            y1={source.y}
+                            x2={targetPos.x}
+                            y2={targetPos.y}
+                            stroke="currentColor"
+                            strokeWidth={isHoveredChain ? 2 : 1}
+                            className={`${isHoveredChain ? 'text-primary/60' : 'text-border/40'} transition-colors duration-300`}
+                        />
+                    );
+                }
             }
         });
+
         return result;
-    }, [nodes, positionMap, hoveredNodeId]);
+    }, [nodes, nodeMap, hoveredNodeId]);
 
     return (
         <svg className="absolute top-1/2 left-1/2 overflow-visible pointer-events-none" style={{ transform: 'translate(-50%, -50%)' }}>

@@ -1,25 +1,23 @@
 import { useRef, useEffect, useState } from 'react';
 
-// Simple Vector3 interface
-interface Vector3 {
+// Simple Vector2 interface
+interface Vector2 {
     x: number;
     y: number;
-    z: number;
 }
 
 // Physics Node extends position with velocity
-interface PhysicsNode extends Vector3 {
+interface PhysicsNode extends Vector2 {
     vx: number;
     vy: number;
-    vz: number;
     id: string; // To identify nodes
 }
 
 /**
- * A lightweight 3D force-directed layout hook.
+ * A lightweight 2D force-directed layout hook.
  * 
  * @param count Number of nodes
- * @param radius Radius of the container/gravity well
+ * @param radius Radius of the container/gravity well (used for scale)
  * @param nodeIds Array of node IDs to track stable identity
  * @param activeHoverId ID of the node currently hovered (for repulsion)
  */
@@ -31,16 +29,17 @@ export function useForceLayout(
 ) {
     // Store simulation state in ref to avoid re-renders during calculation
     const simulationRef = useRef<{ nodes: PhysicsNode[] }>({ nodes: [] });
-    // Force re-render only when positions are stable enough or on frame
-    const [positions, setPositions] = useState<Vector3[]>([]);
+    // Force re-render positions
+    const [positions, setPositions] = useState<Vector2[]>([]);
 
-    // Constants
-    const REPULSION_RADIUS = radius * 0.4; // Nodes push each other if closer than this
-    const REPULSION_STRENGTH = 0.5;
-    const GRAVITY_STRENGTH = 0.01;      // Pull to center
-    const DAMPING = 0.9;                // Friction
-    const HOVER_REPULSION_RADIUS = radius * 0.5; // Mouse pushes harder
-    const HOVER_REPULSION_STRENGTH = 2.0;
+    // Constants for 2D
+    const REPULSION_RADIUS = radius * 0.45; // Interaction radius
+    const REPULSION_STRENGTH = 0.8;
+    const GRAVITY_STRENGTH = 0.005;     // Gentle pull to center
+    const CENTER_REPULSION = 0.01;      // Prevent clustering too tight in exact center
+    const DAMPING = 0.85;               // Friction
+    const HOVER_RADIUS = radius * 0.4;
+    const HOVER_FORCE = 1.5;
 
     useEffect(() => {
         // Initialize nodes if count changes or first run
@@ -54,20 +53,15 @@ export function useForceLayout(
                 if (currentNodes[i]) {
                     newNodes.push(currentNodes[i]);
                 } else {
-                    // Random start position within sphere
-                    // Use Fibonacci/Golden Spiral for better initial distribution?
-                    // Or just random spherical for "explosion" effect
-                    const phi = Math.acos(-1 + (2 * i) / count);
-                    const theta = Math.sqrt(count * Math.PI) * phi;
-                    const r = radius * 0.8; // Start slightly compacted
+                    // Random start position in circle
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = Math.sqrt(Math.random()) * radius * 0.5;
 
                     newNodes.push({
-                        x: r * Math.sin(phi) * Math.cos(theta),
-                        y: r * Math.sin(phi) * Math.sin(theta),
-                        z: r * Math.cos(phi),
+                        x: r * Math.cos(angle),
+                        y: r * Math.sin(angle),
                         vx: 0,
                         vy: 0,
-                        vz: 0,
                         id: nodeIds[i] || `node-${i}`
                     });
                 }
@@ -76,7 +70,9 @@ export function useForceLayout(
         } else {
             // Update IDs in place just in case
             for (let i = 0; i < count; i++) {
-                simulationRef.current.nodes[i].id = nodeIds[i] || `node-${i}`;
+                if (simulationRef.current.nodes[i]) {
+                    simulationRef.current.nodes[i].id = nodeIds[i] || `node-${i}`;
+                }
             }
         }
     }, [count, radius, nodeIds]);
@@ -86,7 +82,7 @@ export function useForceLayout(
         let lastTime = performance.now();
 
         const tick = (time: number) => {
-            const dt = Math.min((time - lastTime) / 16, 2); // Cap at 2x speed for lag
+            const dt = Math.min((time - lastTime) / 16, 2); // Cap delta time
             lastTime = time;
 
             const nodes = simulationRef.current.nodes;
@@ -95,17 +91,24 @@ export function useForceLayout(
             // 1. Calculate Forces
             for (let i = 0; i < nodeCount; i++) {
                 const node = nodes[i];
-                let fx = 0, fy = 0, fz = 0;
+                let fx = 0, fy = 0;
 
-                // Center Gravity (Surface Tension)
-                // Pulls nodes towards (0,0,0)
-                const distToCenter = Math.sqrt(node.x * node.x + node.y * node.y + node.z * node.z);
+                // Center Gravity (Surface Tension / Containment)
+                const distToCenterSq = node.x * node.x + node.y * node.y;
+                const distToCenter = Math.sqrt(distToCenterSq);
+
                 if (distToCenter > 0) {
-                    // Stronger pull if far away (Rubber band)
+                    // Pull to center
                     const pull = -distToCenter * GRAVITY_STRENGTH;
                     fx += (node.x / distToCenter) * pull;
                     fy += (node.y / distToCenter) * pull;
-                    fz += (node.z / distToCenter) * pull;
+
+                    // Minor repulsion from exact center to avoid stacking
+                    if (distToCenter < radius * 0.1) {
+                        const push = (radius * 0.1 - distToCenter) * CENTER_REPULSION;
+                        fx += (node.x / distToCenter) * push;
+                        fy += (node.y / distToCenter) * push;
+                    }
                 }
 
                 // Node Repulsion (Collision)
@@ -114,8 +117,7 @@ export function useForceLayout(
                     const other = nodes[j];
                     const dx = node.x - other.x;
                     const dy = node.y - other.y;
-                    const dz = node.z - other.z;
-                    const distSq = dx * dx + dy * dy + dz * dz;
+                    const distSq = dx * dx + dy * dy;
 
                     // Optimization: Only repulsive if close
                     if (distSq < REPULSION_RADIUS * REPULSION_RADIUS && distSq > 0) {
@@ -123,44 +125,29 @@ export function useForceLayout(
                         const force = (REPULSION_RADIUS - dist) * REPULSION_STRENGTH;
                         fx += (dx / dist) * force;
                         fy += (dy / dist) * force;
-                        fz += (dz / dist) * force;
                     }
                 }
 
-                // Hover Interaction Repulsion
+                // Hover Interaction
                 if (activeHoverId) {
-                    // Check if *this* node is the hovered one? Or if *neighbor* is hovered?
-                    // User requested: "Mouse hover will gather without overlapping" (actually "mouse hover will gather" or "mouse hover repels"?)
-                    // "鼠标hover了会聚拢又不重复的" -> "Hover will gather (bring closer?) but not overlap".
-                    // Usually "Lens" effect means pushing neighbors AWAY to see current clearly.
-                    // Or maybe pulling current node TO mouse?
-                    // Let's interpret as: Hovered node stays/moves to front? 
-                    // Or neighbors push away.
-
-                    // Let's implement: Hovered node is attractive? OR Hovered node pushes others away?
-                    // Typically 'Fish eye': Push others away.
-                    // If `node.id` is the hovered one, maybe it pulls to center?
-                    // If another node is hovered, it gets pushed away from THAT node.
-
                     if (node.id === activeHoverId) {
-                        // Hovered node: Pull to camera/front slightly? Or just stay put?
-                        // Let's gently pull it towards user (negative Z)
-                        // fz -= 2.0; 
+                        // Hovered node stats relatively put or gently floats?
+                        // Let's give it slightly more "mass" or resistance to movement?
+                        // Or maybe it attracts neighbors slightly?
                     } else {
                         // Find the hovered node
                         const hoveredNode = nodes.find(n => n.id === activeHoverId);
                         if (hoveredNode) {
                             const dx = node.x - hoveredNode.x;
                             const dy = node.y - hoveredNode.y;
-                            const dz = node.z - hoveredNode.z;
-                            const distSq = dx * dx + dy * dy + dz * dz;
+                            const distSq = dx * dx + dy * dy;
 
-                            if (distSq < HOVER_REPULSION_RADIUS * HOVER_REPULSION_RADIUS && distSq > 0) {
+                            if (distSq < HOVER_RADIUS * HOVER_RADIUS && distSq > 0) {
                                 const dist = Math.sqrt(distSq);
-                                const force = (HOVER_REPULSION_RADIUS - dist) * HOVER_REPULSION_STRENGTH;
+                                // Push away neighbors to clear view
+                                const force = (HOVER_RADIUS - dist) * HOVER_FORCE;
                                 fx += (dx / dist) * force;
                                 fy += (dy / dist) * force;
-                                fz += (dz / dist) * force;
                             }
                         }
                     }
@@ -169,29 +156,21 @@ export function useForceLayout(
                 // Apply Velocity
                 node.vx = (node.vx + fx) * DAMPING;
                 node.vy = (node.vy + fy) * DAMPING;
-                node.vz = (node.vz + fz) * DAMPING;
 
                 // Update Position
                 node.x += node.vx * dt;
                 node.y += node.vy * dt;
-                node.z += node.vz * dt;
             }
 
             // Sync state for React
-            // Optimization: Maybe toggle this usage based on frame rate or only if changed significantly
-            setPositions(nodes.map(n => ({ x: n.x, y: n.y, z: n.z })));
+            setPositions(nodes.map(n => ({ x: n.x, y: n.y })));
 
             frameId = requestAnimationFrame(tick);
         };
 
         frameId = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(frameId);
-    }, [count, radius, activeHoverId, REPULSION_RADIUS,
-        REPULSION_STRENGTH,
-        GRAVITY_STRENGTH,
-        DAMPING,
-        HOVER_REPULSION_RADIUS,
-        HOVER_REPULSION_STRENGTH]);
+    }, [count, radius, activeHoverId, REPULSION_RADIUS, REPULSION_STRENGTH, GRAVITY_STRENGTH, DAMPING]);
 
     return positions;
 }
