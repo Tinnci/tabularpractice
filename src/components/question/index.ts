@@ -1,5 +1,5 @@
-export { MarkdownContent } from './QuestionRenderer';
-export { RemoteImage } from './QuestionRenderer';
+export { MarkdownContent } from './ui/MarkdownContent';
+export { RemoteImage } from './ui/RemoteImage';
 export { QuestionEditPanel } from './QuestionEditPanel';
 export { DraftPanel } from './DraftPanel';
 export { NotePanel } from './NotePanel';
