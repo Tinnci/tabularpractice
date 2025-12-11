@@ -40,6 +40,20 @@ export const DICT = {
         start: "开始",
         resetTime: "重置时间",
         other: "其他",
+        toggleTheme: "切换主题",
+        clickToEdit: "点击可编辑",
+        seconds: "秒",
+        hours: "小时",
+        minutes: "分钟",
+        lessThanMinute: "不到1分钟",
+        copiedToClipboard: "已复制到剪贴板",
+        connected: "已连接",
+        notConnected: "未连接",
+        connectedGithub: "已连接 GitHub",
+        notConfiguredToken: "未配置 Token",
+        noSyncChanges: "暂无待同步修改",
+        configureNow: "立即配置",
+        reconfigure: "重新配置",
     },
 
     // Status Filters
@@ -408,7 +422,119 @@ export const DICT = {
         parseFail: "解析失败，请检查 API Key 或文件内容",
         invalidKey: "请输入有效的 API Key",
         demoLoading: "正在加载演示数据...",
-    }
+        // Demo mock data
+        mockPaperGroup: "AI 导入试卷组",
+        mockUniversity: "未知大学",
+        mockContent: "题目内容...",
+        mockAnswer: "答案内容...",
+        mockAnalysis: "解析内容...",
+    },
+
+    // Manage Page
+    manage: {
+        title: "题库管理",
+        paperEditor: "试卷编辑器",
+        statsDesc: "题库状态与统计信息。",
+        totalQuestions: "题目总数",
+        needLoadStats: "需要加载详情统计",
+        githubConnection: "GitHub 连接",
+    },
+
+    // GitHub Repository Setup
+    github: {
+        noToken: "未配置 GitHub Token",
+        tokenInvalid: "Token 无效或已过期",
+        missingRepoScope: "当前 Token 缺少 'repo' 权限。",
+        enterToken: "请输入 GitHub Token",
+        tokenVerified: "Token 验证成功！",
+        tokenVerifyFailed: "Token 验证失败",
+        checkingConfig: "正在检查现有配置...",
+        openTokenPage: "打开 GitHub Token 创建页面",
+        fillTokenInfo: "填写 Token 信息",
+        tokenNote: "TabularPractice 题库编辑",
+        selectPermissions: "勾选必要的权限",
+        clickGenerate: "点击",
+        copyToken: "并复制生成的 Token",
+        editInDetail: "• 在题目详情页点击「编辑」按钮",
+        saveAndSync: "• 点击「保存并同步」将更改推送到 GitHub",
+        configSuccess: "配置成功！现在可以同步题目到远程仓库了",
+    },
+
+    // Question Editor
+    editor: {
+        type: "题型",
+        choiceType: "选择题",
+        answerType: "解答题",
+        answerShort: "答案 (简答)",
+        answerPlaceholder: "如：A、B、C、D 或 数值",
+        addTag: "添加标签...",
+        contentPlaceholder: "题目内容 (支持 Markdown 和 LaTeX)...",
+        answerDetailPlaceholder: "详细答案 (支持 Markdown 和 LaTeX)...",
+        analysisPlaceholder: "解析 (支持 Markdown 和 LaTeX)...",
+        questionPreview: "题目预览:",
+        analysisPreview: "解析预览:",
+        closeEdit: "关闭编辑",
+        editQuestion: "编辑题目",
+        savedLocal: "编辑已保存（本地）",
+        configTokenForSync: "配置 GitHub Token 后可同步到远程",
+        tokenInsufficient: "Token 权限不足",
+        cannotSyncRemote: "无法同步到远程",
+        noRemoteRepoInfo: "该题目没有关联的远程仓库信息",
+        cannotParseRepo: "无法解析仓库信息",
+        invalidRepoUrl: "无效的仓库 URL: {url}",
+        syncingToRemote: "正在同步到远程仓库...",
+        syncSuccess: "已成功同步到 GitHub ({sha})",
+        syncFailed: "同步失败: {error}",
+        saveFailed: "保存失败",
+        updateQuestion: "chore: 更新题目 {id}",
+    },
+
+    // Knowledge Planet
+    planet: {
+        critical: "急需巩固 (Critical)",
+        mastered: "已掌握 (Mastered)",
+        sizeByCount: "大小表示题量",
+        reset: "归中 (Reset)",
+        zoomIn: "放大 (Zoom In)",
+        zoomOut: "缩小 (Zoom Out)",
+        fitToView: "适应视图 (Fit to View)",
+    },
+
+    // Subject Config
+    subjects: {
+        math: "数学",
+        english: "英语",
+        politics: "政治",
+        cs: "计算机统考",
+        art: "艺术概论",
+        other: "其他",
+        unified: "统考科目",
+        selfProposed: "自命题/模拟卷",
+    },
+
+    // Sync Toast Messages
+    syncToast: {
+        conflictResolved: "冲突已解决",
+        dataSynced: "数据已同步",
+        syncFailed: "同步失败",
+        uploadError: "上传数据时出错",
+        syncSuccess: "同步成功",
+        dataSyncedToGist: "数据已安全同步到 Gist",
+        checkNetworkOrToken: "请检查网络或 Token 设置",
+        builtinRepo: "内置题库",
+        markedAs: "已标记为 {label}",
+    },
+
+    // Time formatting
+    time: {
+        yearPaper: "{year}年{name}真题",
+    },
+
+    // App metadata
+    app: {
+        title: "TabularPractice | 真题墙",
+        description: "一个真题刷题系统",
+    },
 } as const;
 
 export type Dict = typeof DICT;

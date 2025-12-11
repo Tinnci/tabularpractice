@@ -16,6 +16,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { DICT } from "@/lib/i18n"
 
 export function ModeToggle() {
     const { setTheme } = useTheme()
@@ -33,20 +34,21 @@ export function ModeToggle() {
                     </DropdownMenuTrigger>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>切换主题</p>
+                    <p>{DICT.common.toggleTheme}</p>
                 </TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme("light")}>
-                    Light
+                    {DICT.settings.themeLight}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    Dark
+                    {DICT.settings.themeDark}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme("system")}>
-                    System
+                    {DICT.settings.themeSystem}
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     )
 }
+

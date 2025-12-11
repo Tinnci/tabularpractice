@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useProgressStore } from '@/lib/store';
 import { DailyStudyStats } from '@/lib/types';
+import { DICT } from '@/lib/i18n';
 
 /**
  * 格式化时间为人类可读的字符串
@@ -23,13 +24,13 @@ export function formatDuration(ms: number, options?: {
     }
 
     const parts: string[] = [];
-    if (hours > 0) parts.push(`${hours}小时`);
-    if (minutes > 0) parts.push(`${minutes}分钟`);
-    if (showSeconds && seconds > 0) parts.push(`${seconds}秒`);
+    if (hours > 0) parts.push(`${hours}${DICT.common.hours}`);
+    if (minutes > 0) parts.push(`${minutes}${DICT.common.minutes}`);
+    if (showSeconds && seconds > 0) parts.push(`${seconds}${DICT.common.seconds}`);
 
     // 默认情况：如果完全没有有效部分，至少显示"0分钟"
     if (parts.length === 0) {
-        return showSeconds ? `${seconds}秒` : '不到1分钟';
+        return showSeconds ? `${seconds}${DICT.common.seconds}` : DICT.common.lessThanMinute;
     }
 
     return parts.join('');

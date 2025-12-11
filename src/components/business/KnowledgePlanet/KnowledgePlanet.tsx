@@ -6,6 +6,7 @@ import { Legend } from './Legend';
 import { cn } from '@/lib/utils';
 import { ConnectionLines } from './ConnectionLines';
 import { Home, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { DICT } from '@/lib/i18n';
 
 interface KnowledgePlanetProps {
     tags: EnhancedTagNode[];
@@ -191,28 +192,28 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
                 <button
                     onClick={resetView}
                     className="p-2 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-muted transition-colors"
-                    title="归中 (Reset)"
+                    title={DICT.planet.reset}
                 >
                     <Home className="w-4 h-4" />
                 </button>
                 <button
                     onClick={zoomIn}
                     className="p-2 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-muted transition-colors"
-                    title="放大 (Zoom In)"
+                    title={DICT.planet.zoomIn}
                 >
                     <ZoomIn className="w-4 h-4" />
                 </button>
                 <button
                     onClick={zoomOut}
                     className="p-2 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-muted transition-colors"
-                    title="缩小 (Zoom Out)"
+                    title={DICT.planet.zoomOut}
                 >
                     <ZoomOut className="w-4 h-4" />
                 </button>
                 <button
                     onClick={fitToView}
                     className="p-2 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-muted transition-colors"
-                    title="适应视图 (Fit to View)"
+                    title={DICT.planet.fitToView}
                 >
                     <Maximize2 className="w-4 h-4" />
                 </button>

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ModeToggle } from "@/components/mode-toggle";
+import { DICT } from "@/lib/i18n";
 
 export default function ManagePage() {
     const { papers, isLoading } = usePapers();
@@ -42,14 +43,14 @@ export default function ManagePage() {
                 <div className="p-2">
                     <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="搜索试卷..." className="pl-8" />
+                        <Input placeholder={DICT.nav.searchPlaceholder} className="pl-8" />
                     </div>
                 </div>
 
                 <ScrollArea className="flex-1">
                     <div className="p-2 space-y-1">
                         {isLoading ? (
-                            <div className="p-4 text-sm text-muted-foreground text-center">加载中...</div>
+                            <div className="p-4 text-sm text-muted-foreground text-center">{DICT.common.loading}</div>
                         ) : papers?.map(paper => (
                             <Button
                                 key={paper.id}
@@ -70,7 +71,7 @@ export default function ManagePage() {
                 <div className="p-4 border-t text-xs text-muted-foreground">
                     <div className="flex items-center gap-2 mb-2">
                         <div className={cn("w-2 h-2 rounded-full", githubToken ? "bg-green-500" : "bg-yellow-500")} />
-                        {githubToken ? "已连接 GitHub" : "未配置 Token"}
+                        {githubToken ? DICT.common.connectedGithub : DICT.common.notConfiguredToken}
                     </div>
                     <div>源：{repoSources.length + 1} 个 (1 本地 + {repoSources.length} 远程)</div>
                 </div>
@@ -82,7 +83,7 @@ export default function ManagePage() {
                     <div className="flex-1 flex items-center justify-center text-muted-foreground">
                         {/* Placeholder for Paper Detail View */}
                         <div className="text-center">
-                            <h2 className="text-xl font-semibold mb-2">试卷编辑器</h2>
+                            <h2 className="text-xl font-semibold mb-2">{DICT.manage.paperEditor}</h2>
                             <p>正在开发中... (Paper ID: {selectedPaperId})</p>
                             <p className="text-sm mt-4 max-w-md mx-auto">
                                 下一步计划：在此处显示题目列表表格，支持批量编辑、拖拽排序和快速预览。
@@ -94,7 +95,7 @@ export default function ManagePage() {
                         <div className="max-w-4xl mx-auto space-y-6">
                             <div>
                                 <h1 className="text-2xl font-bold tracking-tight">概览</h1>
-                                <p className="text-muted-foreground">题库状态与统计信息。</p>
+                                <p className="text-muted-foreground">{DICT.manage.statsDesc}</p>
                             </div>
 
                             <div className="grid gap-4 md:grid-cols-3">
@@ -109,22 +110,22 @@ export default function ManagePage() {
                                 </Card>
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">题目总数</CardTitle>
+                                        <CardTitle className="text-sm font-medium">{DICT.manage.totalQuestions}</CardTitle>
                                         <LayoutGrid className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
                                         <div className="text-2xl font-bold">--</div>
-                                        <p className="text-xs text-muted-foreground">需要加载详情统计</p>
+                                        <p className="text-xs text-muted-foreground">{DICT.manage.needLoadStats}</p>
                                     </CardContent>
                                 </Card>
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">GitHub 连接</CardTitle>
+                                        <CardTitle className="text-sm font-medium">{DICT.manage.githubConnection}</CardTitle>
                                         <Github className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
                                         <div className={cn("text-2xl font-bold", githubToken ? "text-green-600" : "text-yellow-600")}>
-                                            {githubToken ? "已连接" : "未连接"}
+                                            {githubToken ? DICT.common.connected : DICT.common.notConnected}
                                         </div>
                                         {!githubToken && (
                                             <p className="text-xs text-muted-foreground mt-1">
@@ -146,7 +147,7 @@ export default function ManagePage() {
                                     <CardContent>
                                         <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-sm">
                                             <AlertCircle className="w-8 h-8 mb-2 opacity-20" />
-                                            <span>暂无待同步修改</span>
+                                            <span>{DICT.common.noSyncChanges}</span>
                                         </div>
                                     </CardContent>
                                 </Card>
