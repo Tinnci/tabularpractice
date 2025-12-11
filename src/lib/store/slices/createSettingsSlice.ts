@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
 import { RepoSource } from '@/lib/types';
 import { StoreState } from '../types';
+import { DICT } from "@/lib/i18n";
 
 export interface SettingsSlice {
     repoSources: RepoSource[];
@@ -39,7 +40,7 @@ export interface SettingsSlice {
 
 export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice> = (set, get) => ({
     repoSources: [
-        { id: 'local', name: '内置题库', url: '', enabled: true, isBuiltin: true },
+        { id: 'local', name: DICT.common.builtinRepo, url: '', enabled: true, isBuiltin: true },
         { id: 'default-remote', name: '题库1 (GitHub)', url: 'https://raw.githubusercontent.com/Tinnci/tabularpractice-data/main', enabled: true, isBuiltin: false }
     ],
     lowDataMode: false,

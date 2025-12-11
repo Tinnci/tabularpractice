@@ -35,7 +35,7 @@ export default function ManagePage() {
                 <div className="p-4 border-b flex items-center justify-between">
                     <span className="font-bold flex items-center gap-2">
                         <Database className="w-4 h-4" />
-                        题库管理
+                        {DICT.manage.title}
                     </span>
                     <ModeToggle />
                 </div>
@@ -73,7 +73,7 @@ export default function ManagePage() {
                         <div className={cn("w-2 h-2 rounded-full", githubToken ? "bg-green-500" : "bg-yellow-500")} />
                         {githubToken ? DICT.common.connectedGithub : DICT.common.notConfiguredToken}
                     </div>
-                    <div>源：{repoSources.length + 1} 个 (1 本地 + {repoSources.length} 远程)</div>
+                    <div>{DICT.manage.sourceCount.replace('{total}', String(repoSources.length + 1)).replace('{remote}', String(repoSources.length))}</div>
                 </div>
             </div>
 
@@ -94,14 +94,14 @@ export default function ManagePage() {
                     <div className="flex-1 p-8 overflow-auto">
                         <div className="max-w-4xl mx-auto space-y-6">
                             <div>
-                                <h1 className="text-2xl font-bold tracking-tight">概览</h1>
+                                <h1 className="text-2xl font-bold tracking-tight">{DICT.manage.overview}</h1>
                                 <p className="text-muted-foreground">{DICT.manage.statsDesc}</p>
                             </div>
 
                             <div className="grid gap-4 md:grid-cols-3">
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">总试卷数</CardTitle>
+                                        <CardTitle className="text-sm font-medium">{DICT.manage.totalPapers}</CardTitle>
                                         <Book className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
@@ -129,7 +129,7 @@ export default function ManagePage() {
                                         </div>
                                         {!githubToken && (
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                请在主页设置中配置 Token
+                                                {DICT.manage.configureTokenHint}
                                             </p>
                                         )}
                                     </CardContent>
@@ -139,9 +139,9 @@ export default function ManagePage() {
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                                 <Card className="col-span-4">
                                     <CardHeader>
-                                        <CardTitle>最近编辑</CardTitle>
+                                        <CardTitle>{DICT.manage.recentEdits}</CardTitle>
                                         <CardDescription>
-                                            本地缓存中的未同步修改。
+                                            {DICT.manage.recentEditsDesc}
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent>

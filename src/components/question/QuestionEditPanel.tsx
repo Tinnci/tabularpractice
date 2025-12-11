@@ -96,10 +96,10 @@ export function QuestionEditPanel({
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-muted/30">
                 <div className="flex items-center gap-2">
-                    <span className="font-medium">编辑题目</span>
+                    <span className="font-medium">{DICT.manage.editQuestion}</span>
                     {hasChanges && (
                         <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
-                            未保存
+                            {DICT.common.unsaved}
                         </Badge>
                     )}
                 </div>
@@ -110,7 +110,7 @@ export function QuestionEditPanel({
                         onClick={onCancel}
                         disabled={isSaving}
                     >
-                        取消
+                        {DICT.common.cancel}
                     </Button>
                     <Button
                         size="sm"
@@ -123,7 +123,7 @@ export function QuestionEditPanel({
                         ) : (
                             <Save className="w-4 h-4" />
                         )}
-                        保存
+                        {DICT.common.save}
                     </Button>
                 </div>
             </div>
@@ -132,30 +132,30 @@ export function QuestionEditPanel({
                 <div className="p-4 space-y-6">
                     {/* 题型选择 */}
                     <div className="space-y-2">
-                        <Label>题型</Label>
+                        <Label>{DICT.editor.type}</Label>
                         <Select value={type} onValueChange={(v) => setType(v as QuestionType)}>
                             <SelectTrigger className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="choice">选择题</SelectItem>
-                                <SelectItem value="fill">填空题</SelectItem>
-                                <SelectItem value="answer">解答题</SelectItem>
+                                <SelectItem value="choice">{DICT.editor.choiceType}</SelectItem>
+                                <SelectItem value="fill">{DICT.wall.fill}</SelectItem>
+                                <SelectItem value="answer">{DICT.wall.answer}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     {/* 简答 (选择题答案) */}
                     <div className="space-y-2">
-                        <Label>答案 (简答)</Label>
+                        <Label>{DICT.editor.answerShort}</Label>
                         <Input
                             value={answer}
                             onChange={(e) => setAnswer(e.target.value)}
-                            placeholder="如：A、B、C、D 或 数值"
+                            placeholder={DICT.editor.answerPlaceholder}
                             className="font-mono"
                         />
                         <p className="text-xs text-muted-foreground">
-                            选择题填 ABCD，填空题可填短答案
+                            {DICT.editor.answerPlaceholder}
                         </p>
                     </div>
 
@@ -163,7 +163,7 @@ export function QuestionEditPanel({
                     <div className="space-y-2">
                         <Label className="flex items-center gap-1">
                             <Tag className="w-3 h-3" />
-                            知识点标签
+                            {DICT.practice.tags}
                         </Label>
                         <div className="flex flex-wrap gap-1 min-h-[32px] p-2 border rounded-md bg-muted/20">
                             {tags.map((tag) => (
@@ -182,14 +182,14 @@ export function QuestionEditPanel({
                                 </Badge>
                             ))}
                             {tags.length === 0 && (
-                                <span className="text-xs text-muted-foreground">暂无标签</span>
+                                <span className="text-xs text-muted-foreground">{DICT.practice.noTagsAvailable}</span>
                             )}
                         </div>
                         <div className="flex gap-2">
                             <Input
                                 value={newTag}
                                 onChange={(e) => setNewTag(e.target.value)}
-                                placeholder="添加标签..."
+                                placeholder={DICT.editor.addTag}
                                 className="flex-1"
                                 onKeyDown={(e) => e.key === 'Enter' && addTag()}
                             />
@@ -216,7 +216,7 @@ export function QuestionEditPanel({
                                         : "text-muted-foreground hover:bg-muted"
                                 )}
                             >
-                                题目内容
+                                {DICT.exam.questionDesc}
                             </button>
                             <button
                                 onClick={() => setActiveTab('answer')}
@@ -227,7 +227,7 @@ export function QuestionEditPanel({
                                         : "text-muted-foreground hover:bg-muted"
                                 )}
                             >
-                                详细答案
+                                {DICT.exam.answer}
                             </button>
                             <button
                                 onClick={() => setActiveTab('analysis')}
@@ -238,7 +238,7 @@ export function QuestionEditPanel({
                                         : "text-muted-foreground hover:bg-muted"
                                 )}
                             >
-                                解析
+                                {DICT.exam.analysis}
                             </button>
                         </div>
 
@@ -247,12 +247,12 @@ export function QuestionEditPanel({
                                 <Textarea
                                     value={contentMd}
                                     onChange={(e) => setContentMd(e.target.value)}
-                                    placeholder="题目内容 (支持 Markdown 和 LaTeX)..."
+                                    placeholder={DICT.editor.contentPlaceholder}
                                     className="min-h-[200px] font-mono text-sm"
                                 />
                                 {contentMd && (
                                     <div className="p-3 border rounded-md bg-muted/10">
-                                        <p className="text-xs text-muted-foreground mb-2">题目预览:</p>
+                                        <p className="text-xs text-muted-foreground mb-2">{DICT.editor.questionPreview}</p>
                                         <MarkdownContent content={contentMd} />
                                     </div>
                                 )}
@@ -264,12 +264,12 @@ export function QuestionEditPanel({
                                 <Textarea
                                     value={answerMd}
                                     onChange={(e) => setAnswerMd(e.target.value)}
-                                    placeholder="详细答案 (支持 Markdown 和 LaTeX)..."
+                                    placeholder={DICT.editor.answerDetailPlaceholder}
                                     className="min-h-[150px] font-mono text-sm"
                                 />
                                 {answerMd && (
                                     <div className="p-3 border rounded-md bg-muted/10">
-                                        <p className="text-xs text-muted-foreground mb-2">答案预览:</p>
+                                        <p className="text-xs text-muted-foreground mb-2">{DICT.editor.questionPreview}</p>
                                         <MarkdownContent content={answerMd} />
                                     </div>
                                 )}
@@ -281,12 +281,12 @@ export function QuestionEditPanel({
                                 <Textarea
                                     value={analysisMd}
                                     onChange={(e) => setAnalysisMd(e.target.value)}
-                                    placeholder="解析 (支持 Markdown 和 LaTeX)..."
+                                    placeholder={DICT.editor.analysisPlaceholder}
                                     className="min-h-[150px] font-mono text-sm"
                                 />
                                 {analysisMd && (
                                     <div className="p-3 border rounded-md bg-muted/10">
-                                        <p className="text-xs text-muted-foreground mb-2">解析预览:</p>
+                                        <p className="text-xs text-muted-foreground mb-2">{DICT.editor.analysisPreview}</p>
                                         <MarkdownContent content={analysisMd} />
                                     </div>
                                 )}

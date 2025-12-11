@@ -5,14 +5,16 @@ interface SubjectConfigItem {
     aliases: string[];
 }
 
+import { DICT } from "@/lib/i18n";
+
 export const SUBJECT_CONFIG: Record<string, SubjectConfigItem> = {
-    math: { id: 'math', label: "数学", color: "blue", aliases: ["math1", "math2", "math3", "zhangyu"] },
-    english: { id: 'english', label: "英语", color: "green", aliases: ["english1", "english2"] },
-    politics: { id: 'politics', label: "政治", color: "red", aliases: [] },
-    cs: { id: 'cs', label: "计算机统考", color: "purple", aliases: ["408"] },
-    major: { id: 'major', label: "专业课", color: "orange", aliases: [] },  // 新增：专业课（自命题）
-    art: { id: 'art', label: "艺术概论", color: "pink", aliases: [] },
-    other: { id: 'other', label: "其他", color: "gray", aliases: [] }
+    math: { id: 'math', label: DICT.subjects.math, color: "blue", aliases: ["math1", "math2", "math3", "zhangyu"] },
+    english: { id: 'english', label: DICT.subjects.english, color: "green", aliases: ["english1", "english2"] },
+    politics: { id: 'politics', label: DICT.subjects.politics, color: "red", aliases: [] },
+    cs: { id: 'cs', label: DICT.subjects.cs, color: "purple", aliases: ["408"] },
+    major: { id: 'major', label: DICT.subjects.major, color: "orange", aliases: [] },  // 新增：专业课（自命题）
+    art: { id: 'art', label: DICT.subjects.art, color: "pink", aliases: [] },
+    other: { id: 'other', label: DICT.subjects.other, color: "gray", aliases: [] }
 };
 
 /**

@@ -99,6 +99,7 @@ export function formatTimestamp(seconds: number): string {
 
 
 import { Question, Paper, PaperGroup, RepoSource } from "@/lib/types";
+import { DICT } from "@/lib/i18n";
 
 export function derivePapersFromQuestions(questions: Question[], groups: PaperGroup[]): Paper[] {
   const papersMap = new Map<string, Paper>();
@@ -132,7 +133,7 @@ export function derivePapersFromQuestions(questions: Question[], groups: PaperGr
         id: q.paperId,
         groupId: groupId,
         year: year,
-        name: `${year}年${groupName}真题`
+        name: DICT.time.yearPaper.replace('{year}', String(year)).replace('{name}', groupName)
       });
     }
   });

@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { useProgressStore } from "@/lib/store";
 import { githubEditor } from "@/services/githubEditor";
 import { cn } from "@/lib/utils";
+import { DICT } from "@/lib/i18n";
 
 interface Props {
     isOpen: boolean;
@@ -66,7 +67,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
 
     const handleVerifyToken = async () => {
         if (!tokenInput.trim()) {
-            toast.error('请输入 GitHub Token');
+            toast.error(DICT.github.enterToken);
             return;
         }
 
@@ -81,12 +82,12 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
         setIsVerifying(false);
 
         if (result.hasPermission) {
-            toast.success('Token 验证成功！');
+            toast.success(DICT.github.tokenVerified);
             setCurrentStep('success');
         } else {
             // 验证失败，恢复原 token
             setGithubToken(originalToken);
-            toast.error(result.error || 'Token 验证失败');
+            toast.error(result.error || DICT.github.tokenVerifyFailed);
         }
     };
 
@@ -99,7 +100,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
         navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-        toast.success('已复制到剪贴板');
+        toast.success(DICT.common.copiedToClipboard);
     };
 
     // 初次打开时自动检查
@@ -116,10 +117,10 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Key className="w-5 h-5 text-primary" />
-                        配置 GitHub 仓库编辑权限
+                        {DICT.github.configRepoPermission}
                     </DialogTitle>
                     <DialogDescription>
-                        要编辑并同步题目到远程仓库，需要配置具有 <code className="bg-muted px-1 rounded">repo</code> 权限的 GitHub Token
+                        {DICT.github.configRepoPermissionDesc} <code className="bg-muted px-1 rounded">repo</code> {DICT.github.permission}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -128,7 +129,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                     {currentStep === 'check' && (
                         <div className="flex flex-col items-center justify-center py-12 gap-4">
                             <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                            <p className="text-sm text-muted-foreground">正在检查现有配置...</p>
+                            <p className="text-sm text-muted-foreground">{DICT.github.checkingConfig}</p>
                         </div>
                     )}
 
@@ -140,7 +141,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
                                         <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                                            当前 Token 权限不足
+                                            {DICT.editor.tokenInsufficient}
                                         </p>
                                         <p className="text-xs text-yellow-700 dark:text-yellow-300">
                                             {verificationResult.error}
@@ -156,7 +157,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     <div className="flex items-start gap-2">
                                         <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">1</span>
                                         <div className="space-y-2 flex-1">
-                                            <p>打开 GitHub Token 创建页面</p>
+                                            <p>{DICT.github.openTokenPage}</p>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -172,10 +173,10 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     <div className="flex items-start gap-2">
                                         <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">2</span>
                                         <div className="space-y-2 flex-1">
-                                            <p>填写 Token 信息</p>
+                                            <p>{DICT.github.fillTokenInfo}</p>
                                             <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground ml-2">
-                                                <li><strong>Note:</strong> TabularPractice 题库编辑</li>
-                                                <li><strong>Expiration:</strong> 自选（建议 90 天或更长）</li>
+                                                <li><strong>Note:</strong> {DICT.github.tokenNote}</li>
+                                                <li><strong>Expiration:</strong> 90 days</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -183,7 +184,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     <div className="flex items-start gap-2">
                                         <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">3</span>
                                         <div className="space-y-2 flex-1">
-                                            <p>勾选必要的权限</p>
+                                            <p>{DICT.github.selectPermissions}</p>
                                             <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                                                 <p className="text-xs font-medium">必须勾选：</p>
                                                 <div className="flex items-center gap-2">
@@ -204,7 +205,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     <div className="flex items-start gap-2">
                                         <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">4</span>
                                         <div className="space-y-2 flex-1">
-                                            <p>点击 <strong>Generate token</strong> 并复制生成的 Token</p>
+                                            <p>{DICT.github.clickGenerate} <strong>Generate token</strong> {DICT.github.copyToken}</p>
                                             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded p-2">
                                                 <p className="text-xs text-red-600 dark:text-red-400">
                                                     ⚠️ Token 只会显示一次，请务必保存！
@@ -217,10 +218,10 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
 
                             <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button variant="outline" onClick={onClose}>
-                                    取消
+                                    {DICT.common.cancel}
                                 </Button>
                                 <Button onClick={() => setCurrentStep('input')} className="gap-2">
-                                    已创建好 Token
+                                    {DICT.github.tokenCreated}
                                     <ArrowRight className="w-4 h-4" />
                                 </Button>
                             </div>
@@ -241,7 +242,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                         className="font-mono text-sm"
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Token 将安全存储在浏览器本地，不会上传到任何服务器
+                                        {DICT.settings.tokenTip}
                                     </p>
                                 </div>
 
@@ -250,7 +251,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                         <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
                                         <div className="space-y-1 flex-1">
                                             <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                                                验证失败
+                                                {DICT.github.tokenVerifyFailed}
                                             </p>
                                             <p className="text-xs text-red-700 dark:text-red-300">
                                                 {verificationResult.error}
@@ -262,7 +263,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
 
                             <div className="flex justify-end gap-2 border-t pt-4">
                                 <Button variant="outline" onClick={() => setCurrentStep('guide')}>
-                                    返回
+                                    {DICT.common.back}
                                 </Button>
                                 <Button
                                     onClick={handleVerifyToken}
@@ -270,7 +271,7 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     className="gap-2"
                                 >
                                     {isVerifying && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    验证 Token
+                                    {DICT.settings.validate}
                                 </Button>
                             </div>
                         </div>
@@ -284,9 +285,9 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400" />
                                 </div>
                                 <div className="text-center space-y-2">
-                                    <h3 className="text-lg font-semibold">配置成功！</h3>
+                                    <h3 className="text-lg font-semibold">{DICT.syncToast.configSuccess}</h3>
                                     <p className="text-sm text-muted-foreground max-w-md">
-                                        你现在可以编辑题目并将更改同步到远程 GitHub 仓库了
+                                        {DICT.github.configSuccess}
                                     </p>
                                 </div>
                             </div>
@@ -296,16 +297,16 @@ export function GitHubRepoSetupGuide({ isOpen, onClose, onSuccess }: Props) {
                                     📚 下一步
                                 </h4>
                                 <ul className="space-y-1 text-xs text-blue-800 dark:text-blue-200">
-                                    <li>• 在题目详情页点击「编辑」按钮</li>
-                                    <li>• 修改题目内容</li>
-                                    <li>• 点击「保存并同步」将更改推送到 GitHub</li>
+                                    <li>{DICT.github.editInDetail}</li>
+                                    <li>• {DICT.common.edit}</li>
+                                    <li>{DICT.github.saveAndSync}</li>
                                 </ul>
                             </div>
 
                             <div className="flex justify-end gap-2 border-t pt-4">
                                 <Button onClick={handleComplete} className="gap-2">
                                     <CheckCircle2 className="w-4 h-4" />
-                                    开始使用
+                                    {DICT.common.start}
                                 </Button>
                             </div>
                         </div>

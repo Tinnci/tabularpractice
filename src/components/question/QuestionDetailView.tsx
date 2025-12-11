@@ -160,7 +160,7 @@ export function QuestionDetailView({
                             {question.contentMd ? (
                                 <div className="w-full p-2"><MarkdownContent content={question.contentMd} /></div>
                             ) : question.contentImg ? (
-                                <RemoteImage src={question.contentImg} alt="题目" question={question} />
+                                <RemoteImage src={question.contentImg} alt={DICT.exam.questionDesc} question={question} />
                             ) : (
                                 <div className="text-muted-foreground text-sm">{DICT.exam.contentMissing}</div>
                             )}
@@ -179,7 +179,7 @@ export function QuestionDetailView({
                                 frameBorder="0"
                                 allowFullScreen
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                title="视频讲解"
+                                title={DICT.exam.video}
                             />
                             {(() => {
                                 const timestamp = getBilibiliTimestamp(question.videoUrl || '');
@@ -217,7 +217,7 @@ export function QuestionDetailView({
                             {question.answerMd ? (
                                 <div className="w-full text-left"><MarkdownContent content={question.answerMd} /></div>
                             ) : question.answerImg ? (
-                                <RemoteImage src={question.answerImg} alt="答案" question={question} />
+                                <RemoteImage src={question.answerImg} alt={DICT.exam.answer} question={question} />
                             ) : question.answer ? (
                                 <div className="w-full text-left"><MarkdownContent content={question.answer} /></div>
                             ) : (
@@ -238,7 +238,7 @@ export function QuestionDetailView({
                             {question.analysisMd ? (
                                 <div className="w-full text-left"><MarkdownContent content={question.analysisMd} /></div>
                             ) : question.analysisImg ? (
-                                <RemoteImage src={question.analysisImg} alt="解析" question={question} />
+                                <RemoteImage src={question.analysisImg} alt={DICT.exam.analysis} question={question} />
                             ) : (
                                 <span className="text-muted-foreground text-sm">{DICT.exam.noAnalysis}</span>
                             )}

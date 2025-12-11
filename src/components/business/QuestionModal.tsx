@@ -270,7 +270,7 @@ export function QuestionModal({
             // React 18+ 会自动批量更新多个 setState
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setVisibleViews(new Set(['question']));
-             
+
             setLastQuestionId(questionId);
             lastInitializedIdRef.current = questionId; // 更新记录
         }
@@ -425,7 +425,7 @@ export function QuestionModal({
                                             isEditing && "text-blue-500 bg-blue-50 dark:bg-blue-900/30"
                                         )}
                                         onClick={() => setIsEditing(!isEditing)}
-                                        title={isEditing ? "关闭编辑" : "编辑题目"}
+                                        title={isEditing ? DICT.manage.closeEdit : DICT.manage.editQuestion}
                                         disabled={isLoading}
                                     >
                                         <Edit2 className="w-4 h-4" />
@@ -600,7 +600,7 @@ export function QuestionModal({
                                                     ) : (currentQuestion.contentImg) ? (
                                                         <RemoteImage
                                                             src={currentQuestion.contentImg || ''}
-                                                            alt="题目"
+                                                            alt={DICT.exam.questionDesc}
                                                             question={currentQuestion}
                                                         />
                                                     ) : (
@@ -621,7 +621,7 @@ export function QuestionModal({
                                                         frameBorder="0"
                                                         allowFullScreen
                                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                        title="视频讲解"
+                                                        title={DICT.exam.video}
                                                         // @ts-expect-error - playsInline is not in iframe type definition but is needed for iOS
                                                         playsInline
                                                     />
@@ -681,7 +681,7 @@ export function QuestionModal({
                                                     ) : currentQuestion.answerImg ? (
                                                         <RemoteImage
                                                             src={currentQuestion.answerImg}
-                                                            alt="答案"
+                                                            alt={DICT.exam.answer}
                                                             question={currentQuestion}
                                                         />
                                                     ) : currentQuestion.answer ? (
@@ -716,7 +716,7 @@ export function QuestionModal({
                                                     ) : currentQuestion.analysisImg ? (
                                                         <RemoteImage
                                                             src={currentQuestion.analysisImg}
-                                                            alt="解析"
+                                                            alt={DICT.exam.analysis}
                                                             question={currentQuestion}
                                                         />
                                                     ) : (
@@ -759,10 +759,10 @@ export function QuestionModal({
 
                                             // 1. 检查是否有 GitHub token
                                             if (!githubToken) {
-                                                toast.info('编辑已保存（本地）', {
-                                                    description: '配置 GitHub Token 后可同步到远程',
+                                                toast.info(DICT.syncToast.savedLocally, {
+                                                    description: DICT.syncToast.configureTokenDesc,
                                                     action: {
-                                                        label: '立即配置',
+                                                        label: DICT.syncToast.configureNow,
                                                         onClick: () => setShowGitHubGuide(true)
                                                     }
                                                 });
@@ -774,10 +774,10 @@ export function QuestionModal({
                                             // 2. 检查 token 权限
                                             const permissionCheck = await githubEditor.checkRepoPermission();
                                             if (!permissionCheck.hasPermission) {
-                                                toast.warning('Token 权限不足', {
+                                                toast.warning(DICT.syncToast.tokenNoPermission, {
                                                     description: permissionCheck.error,
                                                     action: {
-                                                        label: '重新配置',
+                                                        label: DICT.syncToast.reconfigure,
                                                         onClick: () => setShowGitHubGuide(true)
                                                     }
                                                 });
@@ -789,8 +789,8 @@ export function QuestionModal({
                                             // 3. 尝试同步到远程
                                             // 需要知道题目来源于哪个仓库
                                             if (!question.sourceUrl) {
-                                                toast.error('无法同步到远程', {
-                                                    description: '该题目没有关联的远程仓库信息'
+                                                toast.error(DICT.syncToast.syncFailed, {
+                                                    description: DICT.syncToast.noRepoInfo
                                                 });
                                                 console.log('[QuestionEditor] Saved locally (no sourceUrl):', updatedQuestion);
                                                 setIsEditing(false);
@@ -800,8 +800,8 @@ export function QuestionModal({
                                             // 解析仓库信息
                                             const repoInfo = githubEditor.parseRepoUrl(question.sourceUrl);
                                             if (!repoInfo) {
-                                                toast.error('无法解析仓库信息', {
-                                                    description: `无效的仓库 URL: ${question.sourceUrl}`
+                                                toast.error(DICT.syncToast.parseRepoFailed, {
+                                                    description: `${DICT.syncToast.invalidRepoUrl}: ${question.sourceUrl}`
                                                 });
                                                 console.log('[QuestionEditor] Saved locally (invalid repo):', updatedQuestion);
                                                 setIsEditing(false);
@@ -852,21 +852,21 @@ export function QuestionModal({
                                                     return result;
                                                 })(),
                                                 {
-                                                    loading: '正在同步到远程仓库...',
+                                                    loading: DICT.syncToast.syncing,
                                                     success: (result) => {
                                                         setIsEditing(false);
-                                                        return `已成功同步到 GitHub (${result.commit.sha.slice(0, 7)})`;
+                                                        return `${DICT.syncToast.syncSuccess} (${result.commit.sha.slice(0, 7)})`;
                                                     },
                                                     error: (error) => {
                                                         console.error('[QuestionEditor] Sync failed:', error);
-                                                        return `同步失败: ${error.message}`;
+                                                        return `${DICT.syncToast.syncFailed}: ${error.message}`;
                                                     }
                                                 }
                                             );
 
                                         } catch (error) {
                                             console.error('[QuestionEditor] Error:', error);
-                                            toast.error('保存失败', {
+                                            toast.error(DICT.syncToast.saveFailed, {
                                                 description: error instanceof Error ? error.message : String(error)
                                             });
                                         }
@@ -983,7 +983,7 @@ export function QuestionModal({
                 isOpen={showGitHubGuide}
                 onClose={() => setShowGitHubGuide(false)}
                 onSuccess={() => {
-                    toast.success('配置成功！现在可以同步题目到远程仓库了');
+                    toast.success(DICT.syncToast.configSuccess);
                 }}
             />
         </>

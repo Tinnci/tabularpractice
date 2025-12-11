@@ -20,11 +20,11 @@ function PaperGroupFilterSection() {
         <div className="space-y-4">
             <h3 className="text-sm font-medium flex items-center gap-2 text-foreground">
                 <Layers className="h-4 w-4" />
-                试卷组筛选
+                {DICT.settings.paperGroupFilter}
             </h3>
             <div className="p-4 border rounded-lg bg-card/50">
                 <div className="text-xs text-muted-foreground mb-3">
-                    关闭的试卷组将不会出现在练习列表中。
+                    {DICT.settings.paperGroupFilterDesc}
                 </div>
                 <ScrollArea className="h-[200px] pr-3">
                     <div className="grid grid-cols-1 gap-2">
@@ -44,7 +44,7 @@ function PaperGroupFilterSection() {
                                     </div>
                                     <div className="text-xs text-muted-foreground">
                                         {/* Placeholder for description if available in future */}
-                                        {group.type === 'unified' ? "统考科目" : "自命题/模拟卷"}
+                                        {group.type === 'unified' ? DICT.subjects.unified : DICT.subjects.selfProposed}
                                     </div>
                                 </div>
                                 <Switch

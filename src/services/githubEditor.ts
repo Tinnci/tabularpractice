@@ -9,6 +9,7 @@
  */
 
 import { useProgressStore } from "@/lib/store";
+import { DICT } from "@/lib/i18n";
 
 interface GitHubFileContent {
     path: string;
@@ -48,7 +49,7 @@ class GitHubEditorService {
     private getHeaders(): HeadersInit {
         const token = this.getToken();
         if (!token) {
-            throw new Error("请先在设置中配置 GitHub Token");
+            throw new Error(DICT.github.noToken);
         }
         return {
             'Authorization': `Bearer ${token}`,
@@ -64,7 +65,7 @@ class GitHubEditorService {
     async checkRepoPermission(): Promise<{ hasPermission: boolean; error?: string }> {
         const token = this.getToken();
         if (!token) {
-            return { hasPermission: false, error: "未配置 GitHub Token" };
+            return { hasPermission: false, error: DICT.github.noToken };
         }
 
         try {
@@ -73,7 +74,7 @@ class GitHubEditorService {
             });
 
             if (!response.ok) {
-                return { hasPermission: false, error: "Token 无效或已过期" };
+                return { hasPermission: false, error: DICT.github.tokenInvalid };
             }
 
             const scopes = response.headers.get('x-oauth-scopes') || '';
@@ -82,7 +83,7 @@ class GitHubEditorService {
             if (!hasRepoScope) {
                 return {
                     hasPermission: false,
-                    error: "当前 Token 缺少 'repo' 权限。"
+                    error: DICT.github.missingRepoScope
                 };
             }
 

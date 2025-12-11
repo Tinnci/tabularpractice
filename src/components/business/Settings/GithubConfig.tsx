@@ -24,7 +24,7 @@ export function GithubConfig() {
 
     const handleSync = async () => {
         if (!githubToken) {
-            toast.error("请先设置 GitHub Token");
+            toast.error(DICT.settings.toast.noGithubToken);
             return;
         }
 
@@ -44,10 +44,10 @@ export function GithubConfig() {
         setIsValidating(true);
         try {
             await validateToken(githubToken);
-            toast.success("Token permissions updated");
+            toast.success(DICT.github.tokenVerified);
         } catch (error) {
             console.error(error);
-            toast.error("Failed to validate token");
+            toast.error(DICT.github.tokenVerifyFailed);
         } finally {
             setIsValidating(false);
         }
@@ -87,7 +87,7 @@ export function GithubConfig() {
                                     disabled={isValidating}
                                 >
                                     <RefreshCw className={`h-3 w-3 mr-1 ${isValidating ? 'animate-spin' : ''}`} />
-                                    Check Permissions
+                                    {DICT.settings.checkPermissions}
                                 </Button>
                             )}
                             <a
@@ -96,7 +96,7 @@ export function GithubConfig() {
                                 rel="noreferrer"
                                 className="text-xs text-primary hover:underline flex items-center gap-1"
                             >
-                                Generate New Token <ExternalLink className="h-3 w-3" />
+                                {DICT.github.clickGenerate} <ExternalLink className="h-3 w-3" />
                             </a>
                         </div>
                     </div>
@@ -117,13 +117,13 @@ export function GithubConfig() {
                                     <X className="h-3.5 w-3.5 text-red-500" />
                                 }
                                 <span className={isGistReady ? "text-foreground" : "text-muted-foreground"}>
-                                    Gist Sync (Sync Data)
+                                    {DICT.settings.gistSyncLabel}
                                 </span>
                             </div>
                             {!isGistReady && (
                                 <div className="col-span-full text-[10px] text-red-500 flex items-center gap-1 mt-1 border-t pt-1 border-border/50">
                                     <AlertCircle className="h-3 w-3" />
-                                    Missing &apos;gist&apos; scope. Sync disabled.
+                                    {DICT.settings.missingGistScope}
                                 </div>
                             )}
                         </div>

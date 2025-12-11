@@ -10,9 +10,11 @@ import { SyncConflictModal } from "@/components/business/SyncConflictModal";
 
 
 
+import { DICT } from "@/lib/i18n";
+
 export const metadata: Metadata = {
-  title: "TabularPractice | 真题墙",
-  description: "一个真题刷题系统",
+  title: DICT.app.title,
+  description: DICT.app.description,
   icons: {
     icon: "/favicon.ico",
   },

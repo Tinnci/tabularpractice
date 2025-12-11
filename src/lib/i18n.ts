@@ -54,6 +54,7 @@ export const DICT = {
         noSyncChanges: "暂无待同步修改",
         configureNow: "立即配置",
         reconfigure: "重新配置",
+        builtinRepo: "内置题库",
     },
 
     // Status Filters
@@ -192,6 +193,8 @@ export const DICT = {
             colSpacing: "列间距",
             rowSpacing: "题目间距",
         },
+        paperGroupFilter: "试卷组筛选",
+        paperGroupFilterDesc: "关闭的试卷组将不会出现在练习列表中。",
         paperFilter: "试卷筛选", // Added
         paperFilterDesc: "关闭的试卷将不会出现在练习列表中。", // Added
         local: "本地", // Added
@@ -230,6 +233,7 @@ export const DICT = {
         exportFail: "导出失败",
         importSuccess: "导入成功",
         importSuccessDesc: "数据已完全恢复，页面即将刷新...",
+
         importFail: "恢复失败",
         parseFail: "解析失败",
         unsupportedFormat: "不支持的文件格式",
@@ -263,6 +267,9 @@ export const DICT = {
             enabled: "启用",
             disabled: "禁用",
         },
+        checkPermissions: "检查权限",
+        gistSyncLabel: "Gist 同步 (多端数据同步)",
+        missingGistScope: "缺少 'gist' 权限。同步功能不可用。",
         labels: {
             localDataDir: "本地数据目录",
             supportedFormats: "支持 .zip (完整) 或 .json (旧版) 格式",
@@ -428,6 +435,26 @@ export const DICT = {
         mockContent: "题目内容...",
         mockAnswer: "答案内容...",
         mockAnalysis: "解析内容...",
+        promptRole: "你是一个专业的试卷解析助手。请分析上传的 PDF 文件，提取其中的试题信息。",
+        promptGoal: "目标 JSON 结构:",
+        promptRequirements: "要求：",
+        req1: "自动识别试卷名称、年份（如果文件名或内容包含）。",
+        req2: "尽可能提取所有题目，保持题号顺序。",
+        req3: "contentMd, answerMd, analysisMd 使用 Markdown 格式。",
+        req4: "如果没有答案或解析，留空或根据题目内容推断。",
+        req5: "type 字段根据题目类型自动判断 ('choice', 'fill', 'answer')。",
+        req6: "确保所有 ID 唯一且关联正确。",
+    },
+
+    time: {
+        yearPaper: "{year}年{name}真题",
+        totalTime: "历史累计",
+        currentTime: "本次用时",
+        clickToEdit: "点击可编辑",
+        editTotalTime: "编辑累计时间",
+        minute: "分",
+        second: "秒",
+        minuteShort: "分",
     },
 
     // Manage Page
@@ -435,9 +462,17 @@ export const DICT = {
         title: "题库管理",
         paperEditor: "试卷编辑器",
         statsDesc: "题库状态与统计信息。",
+        overview: "概览",
         totalQuestions: "题目总数",
+        totalPapers: "总试卷数",
+        sourceCount: "源：{total} 个 (1 本地 + {remote} 远程)",
+        configureTokenHint: "请在主页设置中配置 Token",
+        recentEdits: "最近编辑",
+        recentEditsDesc: "本地缓存中的未同步修改。",
         needLoadStats: "需要加载详情统计",
         githubConnection: "GitHub 连接",
+        closeEdit: "关闭编辑",
+        editQuestion: "编辑题目",
     },
 
     // GitHub Repository Setup
@@ -458,6 +493,10 @@ export const DICT = {
         editInDetail: "• 在题目详情页点击「编辑」按钮",
         saveAndSync: "• 点击「保存并同步」将更改推送到 GitHub",
         configSuccess: "配置成功！现在可以同步题目到远程仓库了",
+        configRepoPermission: "配置 GitHub 仓库编辑权限",
+        configRepoPermissionDesc: "要编辑并同步题目到远程仓库，需要配置具有",
+        permission: "权限的 GitHub Token",
+        tokenCreated: "已创建好 Token",
     },
 
     // Question Editor
@@ -506,6 +545,7 @@ export const DICT = {
         english: "英语",
         politics: "政治",
         cs: "计算机统考",
+        major: "专业课",
         art: "艺术概论",
         other: "其他",
         unified: "统考科目",
@@ -523,12 +563,20 @@ export const DICT = {
         checkNetworkOrToken: "请检查网络或 Token 设置",
         builtinRepo: "内置题库",
         markedAs: "已标记为 {label}",
+        savedLocally: "编辑已保存（本地）",
+        configureTokenDesc: "配置 GitHub Token 后可同步到远程",
+        configureNow: "立即配置",
+        tokenNoPermission: "Token 权限不足",
+        reconfigure: "重新配置",
+        noRepoInfo: "该题目没有关联的远程仓库信息",
+        parseRepoFailed: "无法解析仓库信息",
+        invalidRepoUrl: "无效的仓库 URL",
+        syncing: "正在同步到远程仓库...",
+        saveFailed: "保存失败",
+        configSuccess: "配置成功！现在可以同步题目到远程仓库了",
     },
 
-    // Time formatting
-    time: {
-        yearPaper: "{year}年{name}真题",
-    },
+
 
     // App metadata
     app: {

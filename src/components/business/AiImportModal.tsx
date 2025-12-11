@@ -159,15 +159,15 @@ export function AiImportModal({ isOpen, onClose }: Props) {
             const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
             const prompt = `
-            你是一个专业的试卷解析助手。请分析上传的 PDF 文件，提取其中的试题信息。
+            ${DICT.ai.promptRole}
             
-            目标 JSON 结构:
+            ${DICT.ai.promptGoal}
             {
                 "group": {
                     "id": "auto-gen-group-${Date.now()}",
-                    "name": "AI 导入试卷组",
+                    "name": "${DICT.ai.mockPaperGroup}",
                     "type": "self_proposed",
-                    "university": "未知大学",
+                    "university": "${DICT.ai.mockUniversity}",
                     "courseCode": "000"
                 },
                 "paper": {
@@ -183,20 +183,20 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                         "number": 1,
                         "type": "answer",
                         "tags": [],
-                        "contentMd": "题目内容...",
-                        "answerMd": "答案内容...",
-                        "analysisMd": "解析内容..."
+                        "contentMd": "${DICT.ai.mockContent}",
+                        "answerMd": "${DICT.ai.mockAnswer}",
+                        "analysisMd": "${DICT.ai.mockAnalysis}"
                     }
                 ]
             }
 
-            要求：
-            1. 自动识别试卷名称、年份（如果文件名或内容包含）。
-            2. 尽可能提取所有题目，保持题号顺序。
-            3. contentMd, answerMd, analysisMd 使用 Markdown 格式。
-            4. 如果没有答案或解析，留空或根据题目内容推断。
-            5. type 字段根据题目类型自动判断 ('choice', 'fill', 'answer')。
-            6. 确保所有 ID 唯一且关联正确。
+            ${DICT.ai.promptRequirements}
+            1. ${DICT.ai.req1}
+            2. ${DICT.ai.req2}
+            3. ${DICT.ai.req3}
+            4. ${DICT.ai.req4}
+            5. ${DICT.ai.req5}
+            6. ${DICT.ai.req6}
             `;
 
             const response = await ai.models.generateContent({

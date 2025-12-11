@@ -2,6 +2,7 @@ import { StateCreator } from 'zustand';
 import { syncService, SyncData } from '@/services/syncService';
 import { StoreState } from '../types';
 import { toast } from 'sonner';
+import { DICT } from "@/lib/i18n";
 
 export interface SyncSlice {
     githubToken: string | null;
@@ -110,12 +111,12 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
             }
 
             set({ lastSyncedTime: result.updated_at, syncStatus: 'success' });
-            toast.success('冲突已解决', { description: '数据已同步' });
+            toast.success(DICT.syncToast.conflictResolved, { description: DICT.syncToast.dataSynced });
             setTimeout(() => set({ syncStatus: 'idle' }), 3000);
         } catch (error) {
             console.error(error);
             set({ syncStatus: 'error' });
-            toast.error('同步失败', { description: '上传数据时出错' });
+            toast.error(DICT.syncToast.syncFailed, { description: DICT.syncToast.uploadError });
         }
     },
 
@@ -190,7 +191,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
 
             if (!isAutoSync) {
                 importData(mergedData);
-                toast.success('同步成功', { description: '数据已安全同步到 Gist' });
+                toast.success(DICT.syncToast.syncSuccess, { description: DICT.syncToast.dataSyncedToGist });
             }
 
             setTimeout(() => set({ syncStatus: 'idle' }), 3000);
@@ -198,7 +199,7 @@ export const createSyncSlice: StateCreator<StoreState, [], [], SyncSlice> = (set
         } catch (error) {
             console.error(error);
             set({ syncStatus: 'error' });
-            toast.error('同步失败', { description: '请检查网络或 Token 设置' });
+            toast.error(DICT.syncToast.syncFailed, { description: DICT.syncToast.checkNetworkOrToken });
         }
     },
 

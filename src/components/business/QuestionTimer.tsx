@@ -132,9 +132,9 @@ export function QuestionTimer({
                         {hasHistory && formattedHistoricalTime && !isEditing && (
                             <TooltipContent side="bottom" className="bg-popover text-popover-foreground border shadow-md">
                                 <div className="text-xs space-y-1">
-                                    <p>历史累计: {formattedHistoricalTime}</p>
-                                    <p>本次用时: {formattedTime}</p>
-                                    <p className="text-muted-foreground pt-1 border-t">点击可编辑</p>
+                                    <p>{DICT.time.totalTime}: {formattedHistoricalTime}</p>
+                                    <p>{DICT.time.currentTime}: {formattedTime}</p>
+                                    <p className="text-muted-foreground pt-1 border-t">{DICT.time.clickToEdit}</p>
                                 </div>
                             </TooltipContent>
                         )}
@@ -150,7 +150,7 @@ export function QuestionTimer({
                     <div className="space-y-3">
                         <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Edit2 className="h-3 w-3" />
-                            编辑累计时间
+                            {DICT.time.editTotalTime}
                         </div>
 
                         {/* 时间输入 */}
@@ -165,7 +165,7 @@ export function QuestionTimer({
                                     className="w-14 h-8 text-center font-mono text-sm"
                                     placeholder="00"
                                 />
-                                <span className="text-xs text-muted-foreground">分</span>
+                                <span className="text-xs text-muted-foreground">{DICT.time.minute}</span>
                             </div>
                             <span className="text-lg font-bold text-muted-foreground">:</span>
                             <div className="flex items-center gap-1">
@@ -178,7 +178,7 @@ export function QuestionTimer({
                                     className="w-14 h-8 text-center font-mono text-sm"
                                     placeholder="00"
                                 />
-                                <span className="text-xs text-muted-foreground">秒</span>
+                                <span className="text-xs text-muted-foreground">{DICT.time.second}</span>
                             </div>
                         </div>
 
@@ -190,7 +190,7 @@ export function QuestionTimer({
                                 className="h-7 text-xs flex-1"
                                 onClick={() => handleQuickAdjust(-5)}
                             >
-                                -5分
+                                -5{DICT.time.minuteShort}
                             </Button>
                             <Button
                                 variant="outline"
@@ -198,7 +198,7 @@ export function QuestionTimer({
                                 className="h-7 text-xs flex-1"
                                 onClick={() => handleQuickAdjust(-1)}
                             >
-                                -1分
+                                -1{DICT.time.minuteShort}
                             </Button>
                             <Button
                                 variant="outline"
@@ -206,7 +206,7 @@ export function QuestionTimer({
                                 className="h-7 text-xs flex-1"
                                 onClick={() => handleQuickAdjust(1)}
                             >
-                                +1分
+                                +1{DICT.time.minuteShort}
                             </Button>
                             <Button
                                 variant="outline"
@@ -214,7 +214,7 @@ export function QuestionTimer({
                                 className="h-7 text-xs flex-1"
                                 onClick={() => handleQuickAdjust(5)}
                             >
-                                +5分
+                                +5{DICT.time.minuteShort}
                             </Button>
                         </div>
 
@@ -226,14 +226,14 @@ export function QuestionTimer({
                                 className="h-8 flex-1 text-xs"
                                 onClick={() => setIsEditing(false)}
                             >
-                                取消
+                                {DICT.common.cancel}
                             </Button>
                             <Button
                                 size="sm"
                                 className="h-8 flex-1 text-xs bg-blue-600 hover:bg-blue-700"
                                 onClick={handleSaveEdit}
                             >
-                                保存
+                                {DICT.common.save}
                             </Button>
                         </div>
                     </div>
