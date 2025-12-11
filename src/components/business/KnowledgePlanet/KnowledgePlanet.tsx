@@ -136,7 +136,7 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
     return (
         <div
             ref={containerRef}
-            className={cn("relative overflow-hidden cursor-grab active:cursor-grabbing w-full h-full min-h-[400px]", className)}
+            className={cn("relative overflow-hidden cursor-grab active:cursor-grabbing w-full h-full min-h-[400px] isolate", className)}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}

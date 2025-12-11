@@ -88,7 +88,8 @@ export const PlanetNode: React.FC<PlanetNodeProps> = ({
             style={{
                 transform: `translate3d(${x}px, ${y}px, ${z}px) scale(${scale})`,
                 opacity: opacity,
-                zIndex: Math.floor(z + 1000), // Ensure depth sorting
+                zIndex: Math.floor(z + 50), // Ensure depth sorting but keep below modals (100)
+
                 fontSize: `${Math.max(10, baseSize)}px`, // Dynamic font size
                 padding: '4px 8px'
             }}

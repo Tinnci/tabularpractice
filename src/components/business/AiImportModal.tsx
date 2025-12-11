@@ -9,6 +9,7 @@ import { Loader2, Upload, FileText, CheckCircle } from "lucide-react";
 import { Question, Paper, PaperGroup } from "@/lib/types";
 import { toast } from "sonner";
 import { GoogleGenAI } from "@google/genai";
+import { DICT } from "@/lib/i18n";
 
 interface Props {
     isOpen: boolean;
@@ -35,11 +36,59 @@ export function AiImportModal({ isOpen, onClose }: Props) {
 
     const handleSaveApiKey = () => {
         if (!apiKeyInput.trim()) {
-            toast.error("请输入有效的 API Key");
+            toast.error(DICT.ai.invalidKey);
             return;
         }
         setGeminiApiKey(apiKeyInput.trim());
         setStep('upload');
+    };
+
+    const handleDemoMode = () => {
+        setIsProcessing(true);
+        setTimeout(() => {
+            const mockData = {
+                group: {
+                    id: `demo-group-${Date.now()}`,
+                    name: "Demo Group",
+                    type: "self_proposed" as const,
+                    university: "Demo U",
+                    courseCode: "999"
+                },
+                paper: {
+                    id: `demo-paper-${Date.now()}`,
+                    groupId: `demo-group-${Date.now()}`,
+                    year: 2024,
+                    name: "Demo Paper"
+                },
+                questions: [
+                    {
+                        id: `demo-q-${Date.now()}-1`,
+                        paperId: `demo-paper-${Date.now()}`,
+                        number: 1,
+                        type: "choice" as const,
+                        tags: [],
+                        contentMd: "What is 1 + 1?",
+                        answerMd: "2",
+                        analysisMd: "It is basic math."
+                    },
+                    {
+                        id: `demo-q-${Date.now()}-2`,
+                        paperId: `demo-paper-${Date.now()}`,
+                        number: 2,
+                        type: "answer" as const,
+                        tags: [],
+                        contentMd: "Explain the theory of relativity.",
+                        answerMd: "E=mc^2",
+                        analysisMd: "Energy equals mass times the speed of light squared."
+                    }
+                ]
+            };
+            setParsedData(mockData);
+            setStep('preview');
+            // Mock file for preview UI if needed, though we check parsedData
+            setFile(new File(["demo"], "demo.pdf"));
+            setIsProcessing(false);
+        }, 800);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +142,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
             }
         } catch (error) {
             console.error('Failed to fetch models:', error);
-            toast.error('获取模型列表失败，使用默认模型');
+            toast.error(DICT.ai.fetchFail);
             setAvailableModels(['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']);
         } finally {
             setIsFetchingModels(false);
@@ -178,7 +227,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
 
         } catch (error) {
             console.error("Processing failed", error);
-            toast.error("解析失败，请检查 API Key 或文件内容");
+            toast.error(DICT.ai.parseFail);
             setRawResponse(JSON.stringify(error, null, 2));
         } finally {
             setIsProcessing(false);
@@ -192,7 +241,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                 papers: [parsedData.paper],
                 groups: [parsedData.group]
             });
-            toast.success(`成功导入 ${parsedData.questions.length} 道题目`);
+            toast.success(DICT.ai.importSuccess.replace('{count}', String(parsedData.questions.length)));
             onClose();
             // Reset state
             setFile(null);
@@ -205,28 +254,34 @@ export function AiImportModal({ isOpen, onClose }: Props) {
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>AI 智能导题 (Beta)</DialogTitle>
+                    <DialogTitle>{DICT.ai.title}</DialogTitle>
                     <DialogDescription>
-                        利用 Gemini Flash 模型，一键将 PDF 试卷转换为题库数据。
+                        {DICT.ai.desc}
                     </DialogDescription>
                 </DialogHeader>
 
                 {step === 'api-key' && (
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Gemini API Key</Label>
+                            <Label>{DICT.ai.apiKeyLabel}</Label>
                             <div className="flex gap-2">
                                 <Input
                                     value={apiKeyInput}
                                     onChange={(e) => setApiKeyInput(e.target.value)}
-                                    placeholder="AIzaSy..."
+                                    placeholder={DICT.ai.apiKeyPlaceholder}
                                     type="password"
                                 />
-                                <Button onClick={handleSaveApiKey}>保存</Button>
+                                <Button onClick={handleSaveApiKey}>{DICT.ai.saveApiKey}</Button>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                您的 Key 仅存储在本地浏览器中，直接请求 Google API，不经过任何第三方服务器。
-                            </p>
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs text-muted-foreground">
+                                    {DICT.ai.apiKeyTip}
+                                </p>
+                                <Button variant="ghost" size="sm" onClick={handleDemoMode} disabled={isProcessing}>
+                                    {isProcessing && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
+                                    {DICT.ai.tryDemo}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -235,11 +290,11 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                     <div className="space-y-6 py-4">
                         {/* Model Selection */}
                         <div className="space-y-2">
-                            <Label>选择模型</Label>
+                            <Label>{DICT.ai.selectModel}</Label>
                             <div className="flex gap-2">
                                 <Select value={selectedModel} onValueChange={setSelectedModel}>
                                     <SelectTrigger className="flex-1">
-                                        <SelectValue placeholder="选择 Gemini 模型" />
+                                        <SelectValue placeholder={DICT.ai.modelPlaceholder} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {availableModels.length > 0 ? (
@@ -265,15 +320,15 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                                     {isFetchingModels ? (
                                         <>
                                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            获取中...
+                                            {DICT.ai.fetchingModels}
                                         </>
                                     ) : (
-                                        "获取模型"
+                                        DICT.ai.fetchModels
                                     )}
                                 </Button>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                点击&quot;获取模型&quot;查看您的 API Key 可用的所有模型
+                                {DICT.ai.fetchModelsTip}
                             </p>
                         </div>
 
@@ -289,8 +344,8 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                                 <Upload className="w-8 h-8 text-primary" />
                             </div>
                             <div className="text-center">
-                                <p className="font-medium">点击或拖拽上传 PDF 文件</p>
-                                <p className="text-sm text-muted-foreground mt-1">支持扫描件或电子版 PDF</p>
+                                <p className="font-medium">{DICT.ai.uploadTitle}</p>
+                                <p className="text-sm text-muted-foreground mt-1">{DICT.ai.uploadDesc}</p>
                             </div>
                             {file && (
                                 <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
@@ -301,15 +356,15 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                         </div>
 
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setStep('api-key')}>修改 Key</Button>
+                            <Button variant="outline" onClick={() => setStep('api-key')}>{DICT.ai.modifyKey}</Button>
                             <Button onClick={processFile} disabled={!file || isProcessing}>
                                 {isProcessing ? (
                                     <>
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        AI 解析中...
+                                        {DICT.ai.processing}
                                     </>
                                 ) : (
-                                    "开始识别"
+                                    DICT.ai.startProcess
                                 )}
                             </Button>
                         </div>
@@ -321,17 +376,17 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                         <div className="bg-muted p-4 rounded-lg space-y-2">
                             <div className="flex items-center gap-2 font-bold">
                                 <CheckCircle className="w-5 h-5 text-green-500" />
-                                解析成功
+                                {DICT.ai.successTitle}
                             </div>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <span className="text-muted-foreground">试卷名称:</span> {parsedData.paper.name}
+                                    <span className="text-muted-foreground">{DICT.ai.paperName}:</span> {parsedData.paper.name}
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground">年份:</span> {parsedData.paper.year}
+                                    <span className="text-muted-foreground">{DICT.ai.year}:</span> {parsedData.paper.year}
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground">题目数量:</span> {parsedData.questions.length}
+                                    <span className="text-muted-foreground">{DICT.ai.questionCount}:</span> {parsedData.questions.length}
                                 </div>
                             </div>
                         </div>
@@ -339,15 +394,15 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                         <div className="max-h-[300px] overflow-y-auto border rounded-md p-2 space-y-2">
                             {parsedData.questions.map((q, i) => (
                                 <div key={i} className="p-3 border rounded bg-card text-sm">
-                                    <div className="font-medium mb-1">第 {q.number} 题 ({q.type})</div>
+                                    <div className="font-medium mb-1">{DICT.exam.questionIndex.replace('{number}', String(q.number))} ({q.type})</div>
                                     <div className="text-muted-foreground line-clamp-2">{q.contentMd}</div>
                                 </div>
                             ))}
                         </div>
 
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setStep('upload')}>重新上传</Button>
-                            <Button onClick={handleImport}>确认导入</Button>
+                            <Button variant="outline" onClick={() => setStep('upload')}>{DICT.ai.reupload}</Button>
+                            <Button onClick={handleImport}>{DICT.ai.confirmImport}</Button>
                         </div>
                     </div>
                 )}

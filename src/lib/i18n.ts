@@ -376,6 +376,38 @@ export const DICT = {
         notConnected: "未连接同步",
         syncedAt: "已同步 (上次: {time})",
         unknown: "未知",
+    },
+
+    // AI Import
+    ai: {
+        title: "AI 智能导题 (Beta)",
+        desc: "利用 Gemini Flash 模型，一键将 PDF 试卷转换为题库数据。",
+        apiKeyLabel: "Gemini API Key",
+        apiKeyPlaceholder: "AIzaSy...",
+        saveApiKey: "保存",
+        tryDemo: "试用 Demo (无需 Key)",
+        apiKeyTip: "您的 Key 仅存储在本地浏览器中，直接请求 Google API，不经过任何第三方服务器。",
+        selectModel: "选择模型",
+        modelPlaceholder: "选择 Gemini 模型",
+        fetchModels: "获取模型",
+        fetchingModels: "获取中...",
+        fetchModelsTip: "点击\"获取模型\"查看您的 API Key 可用的所有模型",
+        fetchFail: "获取模型列表失败，使用默认模型",
+        uploadTitle: "点击或拖拽上传 PDF 文件",
+        uploadDesc: "支持扫描件或电子版 PDF",
+        modifyKey: "修改 Key",
+        startProcess: "开始识别",
+        processing: "AI 解析中...",
+        successTitle: "解析成功",
+        paperName: "试卷名称",
+        year: "年份",
+        questionCount: "题目数量",
+        reupload: "重新上传",
+        confirmImport: "确认导入",
+        importSuccess: "成功导入 {count} 道题目",
+        parseFail: "解析失败，请检查 API Key 或文件内容",
+        invalidKey: "请输入有效的 API Key",
+        demoLoading: "正在加载演示数据...",
     }
 } as const;
 
