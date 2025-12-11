@@ -18,7 +18,7 @@ export default function KnowledgePage() {
 
     const handleNodeClick = (tagId: string, tagLabel: string) => {
         setSelectedTag({ id: tagId, label: tagLabel });
-        toast.info(`点击了知识点: ${tagLabel}`);
+        toast.info(`${DICT.knowledge.title}: ${tagLabel}`);
     };
 
     const handleStartPractice = () => {
@@ -40,19 +40,19 @@ export default function KnowledgePage() {
                     </Link>
                     <div className="flex items-center gap-2">
                         <Network className="w-6 h-6 text-primary" />
-                        <h1 className="text-xl font-bold">知识图谱</h1>
+                        <h1 className="text-xl font-bold">{DICT.knowledge.title}</h1>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                     <Select value={subjectKey} onValueChange={setSubjectKey}>
                         <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="选择学科" />
+                            <SelectValue placeholder={DICT.knowledge.selectSubject} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="math">高等数学</SelectItem>
-                            <SelectItem value="linear-algebra">线性代数</SelectItem>
-                            <SelectItem value="probability">概率统计</SelectItem>
+                            <SelectItem value="math">{DICT.knowledge.advancedMath}</SelectItem>
+                            <SelectItem value="linear-algebra">{DICT.knowledge.linearAlgebra}</SelectItem>
+                            <SelectItem value="probability">{DICT.knowledge.probability}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -85,15 +85,15 @@ export default function KnowledgePage() {
                         </div>
 
                         <p className="text-sm text-muted-foreground">
-                            点击"开始练习"进入该知识点的专项练习。
+                            {DICT.knowledge.clickToPractice}
                         </p>
 
                         <div className="flex flex-col gap-2">
                             <Button onClick={handleStartPractice} className="w-full">
-                                开始练习
+                                {DICT.knowledge.startPractice}
                             </Button>
                             <Button variant="outline" onClick={() => setSelectedTag(null)} className="w-full">
-                                取消选择
+                                {DICT.knowledge.cancelSelection}
                             </Button>
                         </div>
                     </Card>
@@ -102,22 +102,22 @@ export default function KnowledgePage() {
 
             {/* Legend */}
             <footer className="px-6 py-3 border-t bg-card flex items-center gap-6 text-xs text-muted-foreground shrink-0">
-                <span className="font-medium">图例:</span>
+                <span className="font-medium">{DICT.knowledge.legend}</span>
                 <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded bg-green-200 border border-green-300"></span>
-                    <span>掌握良好</span>
+                    <span>{DICT.knowledge.masteredWell}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded bg-yellow-200 border border-yellow-300"></span>
-                    <span>需要复习</span>
+                    <span>{DICT.knowledge.needReview}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded bg-red-200 border border-red-300"></span>
-                    <span>薄弱环节</span>
+                    <span>{DICT.knowledge.weakPoint}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded bg-gray-200 border border-gray-300"></span>
-                    <span>未开始</span>
+                    <span>{DICT.knowledge.notStarted}</span>
                 </div>
             </footer>
         </div>

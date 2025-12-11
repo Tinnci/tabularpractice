@@ -539,6 +539,180 @@ export const DICT = {
         fitToView: "适应视图 (Fit to View)",
     },
 
+    // Knowledge Graph/Planet
+    knowledge: {
+        title: "知识图谱",
+        selectSubject: "选择学科",
+        advancedMath: "高等数学",
+        linearAlgebra: "线性代数",
+        probability: "概率统计",
+        clickToPractice: "点击开始练习进入该知识点的专项练习。",
+        startPractice: "开始练习",
+        cancelSelection: "取消选择",
+        legend: "图例:",
+        masteredWell: "掌握良好",
+        needReview: "需要复习",
+        weakPoint: "薄弱环节",
+        notStarted: "未开始",
+        loadingPlanet: "Loading Knowledge Planet...",
+        planetDesc: "Visualize your knowledge galaxy. Select nodes to generate a customized practice session.",
+        configuration: "Configuration",
+        startWithCount: "Start ({count})",
+        typeLabel: "Type",
+    },
+
+    // Eureka Panel (Insight Prompts)
+    eureka: {
+        title: "顿悟时刻 (Eureka)",
+        toggleEureka: "顿悟",
+
+        // Strategy Categories
+        representation: "1. 表征重构 (Representation)",
+        representationDesc: "试着打破你对题目第一眼的'固有印象'。",
+        representationQ1: "如果我不按现在的顺序做，还有别的路吗？(例如：交换积分次序)",
+        representationQ2: "把这个复杂的式子拆开看(Chunking)，或者合起来看？",
+        representationQ3: "回到定义去！(Regression to Axioms) 它的原始定义是什么？",
+
+        functionalFixedness: "2. 功能变通 (Functional Fixedness)",
+        functionalFixednessDesc: "这个东西除了它该有的样子，还能是什么？",
+        functionalFixednessQ1: "这个常数能不能看作是变量？(例如：把 1 看作 x^0)",
+        functionalFixednessQ2: "这个变量能不能看作是常数？(例如：对x求导时y是常数)",
+        functionalFixednessQ3: "这个几何图形能不能动起来？",
+
+        constraintRelaxation: "3. 约束松绑 (Constraint Relaxation)",
+        constraintRelaxationDesc: "你是不是自己给自己加了条条框框？",
+        constraintRelaxationQ1: "题目真的说了它是实数吗？也许是复数？矩阵？",
+        constraintRelaxationQ2: "你是否默认了图形是规则的？(例如：默认三角形是直角)",
+        constraintRelaxationQ3: "如果把条件去掉一个，结论还成立吗？",
+
+        analogy: "4. 类比迁移 (Analogy)",
+        analogyDesc: "这道题长得像谁？",
+        analogyQ1: "它像不像你做过的某道经典例题？",
+        analogyQ2: "它的结构(Structure)和什么定理解释得通？",
+        analogyQ3: "如果把问题简化(比如n=1, n=2)，规律是什么？",
+
+        // Interactive Features
+        perspectiveSwitch: "换个视角看变量",
+        currentView: "当前看法:",
+        suggestView: "建议看作:",
+        tryThis: "💡 试试:",
+        viewKeyInsight: "查看关键洞察",
+
+        // Incubation
+        incubation: "孵化期 (Incubation)",
+        incubationDesc: "卡住超过 5 分钟？也许该停下来。让潜意识接管工作，先做下一题。",
+        imStuck: "我卡住了 (开始计时)",
+        timeUp: "⏰ 时间到！请立即跳过此题！",
+        cancelTimer: "取消计时",
+
+        // General Strategies
+        generalStrategies: "通用思维破局策略",
+
+        // Placeholder labels for aria/accessibility
+        toggleVideo: "Toggle video",
+        toggleAnswer: "Toggle answer",
+        toggleAnalysis: "Toggle analysis",
+        toggleNote: "Toggle note",
+        toggleDraft: "Toggle draft",
+    },
+
+    // GitHub Setup Guide
+    githubSetup: {
+        createToken: "📝 创建新的 GitHub Token",
+        goToGithub: "前往 GitHub 创建 Token",
+        expiration: "Expiration:",
+        expirationDays: "90 days",
+        mustCheck: "必须勾选：",
+        repoScope: "☑ repo",
+        fullRepoAccess: "(完整的仓库访问权限)",
+        privateTip: "💡 如果你的题库仓库是私有的，必须勾选完整的",
+        permission: "权限",
+        tokenWarning: "⚠️ Token 只会显示一次，请务必保存！",
+        generateToken: "Generate token",
+        nextStep: "📚 下一步",
+        personalAccessToken: "GitHub Personal Access Token",
+    },
+
+    // Misc UI Elements
+    ui: {
+        questionContent: "Question Content",
+        analysis: "Analysis",
+        answer: "Answer",
+        searchTopics: "Search topics...",
+        noTopicsFound: "No topics found.",
+        wallView: "Wall View",
+        gridView: "Grid View",
+        close: "Close",
+        tabularPractice: "Tabular Practice",
+        toggleTheme: "Toggle theme",
+        writable: "Writable",
+        unknown: "Unknown",
+        fork: "Fork",
+        checkAccess: "Check Access",
+        year: "年",
+        noData: "暂无",
+        completed: "已完成",
+        total: "/ 共",
+        questions: "题",
+        geminiApiKey: "Gemini API Key",
+    },
+
+    // AI Settings
+    aiSettings: {
+        title: "AI 功能配置",
+        desc: "配置 Gemini API Key 以启用 AI 辅助功能（题目导入、智能提示、适应性测验等）",
+        apiKeyRequired: "API Key 不能为空",
+        apiKeySaved: "Gemini API Key 已保存",
+        apiKeyRemoved: "API Key 已移除",
+        save: "保存",
+        apiKeyConfigured: "✓ API Key 已配置",
+        remove: "移除",
+        getApiKey: "获取 Gemini API Key",
+        enabledFeatures: "已启用的 AI 功能:",
+        feature1: "AI 智能题目导入（PDF → 结构化数据）",
+        feature2: "AI 辅助生成顿悟提示",
+        feature3: "适应性测验（即将推出）",
+        feature4: "知识图谱自动构建（即将推出）",
+    },
+
+    // Data Management
+    dataManagement: {
+        recordCount: "记录数:",
+        sourceCount: "题库源:",
+    },
+
+    // Service Error Messages
+    errors: {
+        fileNotFound: "文件不存在: {path}",
+        fetchFailed: "获取文件失败: {error}",
+        updateFailed: "更新文件失败: {error}",
+    },
+
+    // Misc Page Elements
+    pages: {
+        notFoundTitle: "Page Not Found",
+        notFoundDesc: "抱歉，我们找不到您要访问的页面。它可能已被移动或不存在。",
+        backToHome: "返回首页",
+        manageInDev: "正在开发中... (Paper ID:",
+        manageNextStep: "下一步计划：在此处显示题目列表表格，支持批量编辑、拖拽排序和快速预览。",
+        noQuestions: "还没有添加任何题目",
+        reviewStart: "开始复习",
+        specialTopic: "专项",
+        questionsCount: "题)",
+    },
+
+    // Sidebar
+    sidebar: {
+        completedProgress: "已完成",
+        totalProgress: "/ 共",
+        questionUnit: "题",
+    },
+
+    // Store defaults
+    store: {
+        defaultRepoName: "题库1 (GitHub)",
+    },
+
     // Subject Config
     subjects: {
         math: "数学",
