@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useCallback, useState, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Question, Status, ViewType } from "@/lib/types";
-import { getBilibiliEmbed, getImageUrl } from "@/lib/utils";
+import { Question, Status } from "@/lib/types";
+import { getBilibiliEmbed } from "@/lib/utils";
 import { useQuestionTimer } from "@/hooks/useQuestionTimer";
 import { EurekaPanel } from "@/components/business/Eureka/EurekaPanel";
 import { QuestionEditPanel } from "@/components/question";
@@ -18,6 +17,7 @@ import { QuestionHeader } from "./QuestionHeader";
 import { QuestionContent } from "./QuestionContent";
 import { QuestionFooter } from "./QuestionFooter";
 import { useQuestionSync } from "./useQuestionSync";
+import { useQuestionModal } from "./useQuestionModal";
 
 interface Props {
     isOpen: boolean;
@@ -35,8 +35,33 @@ export function QuestionModal({
     isOpen, onClose, question, onUpdateStatus,
     onPrev, onNext, hasPrev, hasNext, isLoading
 }: Props) {
+    // 笔记系统状态
+    const { notes, updateNote, syncStatus, syncData, setTime } = useProgressStore();
 
-    const [visibleViews, setVisibleViews] = useState<Set<ViewType>>(new Set(['question']));
+    // 使用 QuestionModal 业务逻辑 Hook
+    const {
+        visibleViews,
+        isEditing,
+        isFullscreen,
+        showGitHubGuide,
+        isStarred,
+        toggleView,
+        setIsEditing,
+        setIsFullscreen,
+        setShowGitHubGuide,
+        toggleStar,
+        handleStatusUpdate,
+    } = useQuestionModal({
+        isOpen,
+        question,
+        hasPrev,
+        hasNext,
+        onPrev,
+        onNext,
+        onClose,
+        onUpdateStatus,
+        onTimerToggle: () => { }, // 临时占位，将在下面被 toggle 覆盖
+    });
 
     // 计时器逻辑 (增强版：支持累计时间)
     const {
@@ -49,158 +74,16 @@ export function QuestionModal({
         isOpen
     });
 
-    // 笔记系统状态
-    const { notes, updateNote, stars, toggleStar, syncStatus, syncData, setTime } = useProgressStore();
-
-    // 编辑器状态
-    const [isEditing, setIsEditing] = useState(false);
-    const [showGitHubGuide, setShowGitHubGuide] = useState(false);
-
-    const [isFullscreen, setIsFullscreen] = useState(false);
-
-    const isStarred = question ? !!stars[question.id] : false;
-
     // 同步逻辑
     const { syncQuestion } = useQuestionSync({
         onSuccess: () => setIsEditing(false),
     });
-
-    // 带反馈的状态更新处理
-    const handleStatusUpdate = useCallback((status: Status) => {
-        if (!question?.id) return;
-
-        onUpdateStatus(question.id, status);
-
-        // Toast 反馈
-        const statusConfig = {
-            mastered: {
-                label: DICT.status.mastered,
-                icon: '✓',
-                className: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300'
-            },
-            confused: {
-                label: DICT.status.confused,
-                icon: '?',
-                className: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-300'
-            },
-            failed: {
-                label: DICT.status.failed,
-                icon: '✗',
-                className: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300'
-            },
-        };
-
-        const config = statusConfig[status as keyof typeof statusConfig];
-        if (config) {
-            toast(`已标记为 ${config.label}`, {
-                duration: 1500,
-                position: 'bottom-center',
-                className: config.className,
-            });
-        }
-    }, [question, onUpdateStatus]);
-
-    // 记录最后打开的题目 ID
-    const { setLastQuestionId } = useProgressStore();
-    const questionId = question?.id;
-
-    // [修复] 新增 Ref：追踪上一次初始化视图时的题目 ID，防止 AutoSync 导致的意外重置
-    const lastInitializedIdRef = useRef<string | null>(null);
-
-    // [修复] 改造 useEffect:仅在 questionId 真正改变且不为空时重置视图
-    useEffect(() => {
-        // 只有当 isOpen 为 true,且 questionId 存在,且与上次初始化的 ID 不同时才执行
-        if (isOpen && questionId && questionId !== lastInitializedIdRef.current) {
-            // React 18+ 会自动批量更新多个 setState
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setVisibleViews(new Set(['question']));
-
-            setLastQuestionId(questionId);
-            lastInitializedIdRef.current = questionId; // 更新记录
-        }
-    }, [questionId, isOpen, setLastQuestionId]);
-
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (!isOpen) return;
-        const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-
-        switch (e.key) {
-            case "ArrowLeft":
-                if (hasPrev && !e.metaKey && !e.ctrlKey && !e.altKey) {
-                    e.preventDefault();
-                    onPrev();
-                }
-                break;
-            case "ArrowRight":
-                if (hasNext && !e.metaKey && !e.ctrlKey && !e.altKey) {
-                    e.preventDefault();
-                    onNext();
-                }
-                break;
-            case "Escape":
-                onClose();
-                break;
-            case "1":
-                handleStatusUpdate('mastered');
-                break;
-            case "2":
-                handleStatusUpdate('confused');
-                break;
-            case "3":
-                handleStatusUpdate('failed');
-                break;
-            case " ": // Space key
-                // 防止在输入笔记时触发暂停
-                if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
-                e.preventDefault();
-                toggle();
-                break;
-        }
-    }, [isOpen, hasPrev, hasNext, onPrev, onNext, onClose, handleStatusUpdate, toggle]);
-
-    useEffect(() => {
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [handleKeyDown]);
-
-    // 预加载当前题目的答案和解析图片，确保点击切换时秒开
-    useEffect(() => {
-        if (!question) return;
-
-        // 检查省流量模式
-        if (useProgressStore.getState().lowDataMode) return;
-
-        const { repoBaseUrl, repoSources } = useProgressStore.getState();
-
-        const preload = (url?: string) => {
-            if (!url) return;
-            const finalUrl = getImageUrl(url, question, repoBaseUrl, repoSources);
-            if (finalUrl) {
-                const img = new Image();
-                img.src = finalUrl;
-            }
-        };
-
-        preload(question.answerImg);
-        preload(question.analysisImg);
-    }, [question]);
 
     if (!question && !isLoading) return null;
 
     // 如果正在加载，显示加载骨架屏或 Loading 状态，但保持 Dialog 结构
     const currentQuestion = question || {} as Question;
     const videoEmbedUrl = currentQuestion.videoUrl ? getBilibiliEmbed(currentQuestion.videoUrl) : null;
-
-    const toggleView = (view: ViewType) => {
-        const newSet = new Set(visibleViews);
-        if (newSet.has(view)) {
-            newSet.delete(view);
-        } else {
-            newSet.add(view);
-        }
-        setVisibleViews(newSet);
-    };
 
     return (
         <>
@@ -230,7 +113,7 @@ export function QuestionModal({
                         formattedTotalTime={formattedTotalTime}
                         formattedHistoricalTime={formattedHistoricalTime}
                         historicalTime={historicalTime}
-                        onToggleStar={() => currentQuestion.id && toggleStar(currentQuestion.id)}
+                        onToggleStar={toggleStar}
                         onToggleEdit={() => setIsEditing(!isEditing)}
                         onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
                         onToggleView={toggleView}
