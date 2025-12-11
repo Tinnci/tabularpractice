@@ -62,6 +62,7 @@ export const PlanetNode: React.FC<PlanetNodeProps> = ({
 
     return (
         <div
+            data-planet-node
             className={cn(
                 "absolute cursor-pointer select-none flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 ease-out",
                 colorClass,
