@@ -60,7 +60,7 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({ nodes, hovered
     }, [nodes, nodeMap, hoveredNodeId]);
 
     return (
-        <svg className="absolute top-1/2 left-1/2 overflow-visible pointer-events-none" style={{ transform: 'translate(-50%, -50%)' }}>
+        <svg className="absolute overflow-visible pointer-events-none" style={{ left: 0, top: 0 }}>
             {/* Center is 0,0 in our coordinate system, but SVG usually starts top-left.
                  The parent <div> centers this <svg> with translate.
                  We need to ensure coordinates match.
