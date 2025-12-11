@@ -32,41 +32,41 @@ export function useForceLayout(
     // Force re-render positions
     const [positions, setPositions] = useState<Vector2[]>([]);
 
-    // Constants for 2D
-    const REPULSION_RADIUS = radius * 0.45; // Interaction radius
-    const REPULSION_STRENGTH = 0.8;
-    const GRAVITY_STRENGTH = 0.005;     // Gentle pull to center
-    const CENTER_REPULSION = 0.01;      // Prevent clustering too tight in exact center
-    const DAMPING = 0.85;               // Friction
-    const HOVER_RADIUS = radius * 0.4;
-    const HOVER_FORCE = 1.5;
+    // Constants for 2D - tuned for good spread
+    const REPULSION_RADIUS = Math.max(60, radius * 0.6); // Wider interaction radius
+    const REPULSION_STRENGTH = 2.0; // Stronger repulsion
+    const GRAVITY_STRENGTH = 0.002;     // Very gentle pull to center
+    const CENTER_REPULSION = 0.05;      // Prevent clustering too tight in exact center
+    const DAMPING = 0.9;               // Friction
+    const HOVER_RADIUS = radius * 0.5;
+    const HOVER_FORCE = 2.0;
 
     useEffect(() => {
         // Initialize nodes if count changes or first run
         const currentNodes = simulationRef.current.nodes;
 
-        if (currentNodes.length !== count) {
-            // Re-initialize (or adjust length)
+        if (currentNodes.length !== count || radius <= 0) {
+            // Re-initialize with golden angle distribution for even spread
             const newNodes: PhysicsNode[] = [];
-            for (let i = 0; i < count; i++) {
-                // Try to keep existing position if available (stability)
-                if (currentNodes[i]) {
-                    newNodes.push(currentNodes[i]);
-                } else {
-                    // Random start position in circle
-                    const angle = Math.random() * Math.PI * 2;
-                    const r = Math.sqrt(Math.random()) * radius * 0.5;
+            const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~137.5 degrees
 
-                    newNodes.push({
-                        x: r * Math.cos(angle),
-                        y: r * Math.sin(angle),
-                        vx: 0,
-                        vy: 0,
-                        id: nodeIds[i] || `node-${i}`
-                    });
-                }
+            for (let i = 0; i < count; i++) {
+                // Golden angle spiral for initial distribution
+                const angle = i * goldenAngle;
+                // Spread from center outward, filling the area evenly
+                const r = Math.sqrt((i + 0.5) / count) * radius * 0.8;
+
+                newNodes.push({
+                    x: r * Math.cos(angle),
+                    y: r * Math.sin(angle),
+                    vx: 0,
+                    vy: 0,
+                    id: nodeIds[i] || `node-${i}`
+                });
             }
             simulationRef.current.nodes = newNodes;
+            // Immediately sync to state
+            setPositions(newNodes.map(n => ({ x: n.x, y: n.y })));
         } else {
             // Update IDs in place just in case
             for (let i = 0; i < count; i++) {
@@ -76,6 +76,7 @@ export function useForceLayout(
             }
         }
     }, [count, radius, nodeIds]);
+
 
     useEffect(() => {
         let frameId: number;

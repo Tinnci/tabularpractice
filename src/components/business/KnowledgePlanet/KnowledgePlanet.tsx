@@ -23,7 +23,7 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
     hoveredNodeId
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
     const [internalHoverId, setInternalHoverId] = useState<string | null>(null);
 
     // Combine external and internal hover
@@ -48,8 +48,8 @@ export const KnowledgePlanet: React.FC<KnowledgePlanetProps> = ({
 
     const count = tags.length;
     // Dynamic radius based on current container size
-    // Use smaller dimension to ensure fit
-    const radius = Math.min(dimensions.width, dimensions.height) / 2.5;
+    // Use smaller dimension to ensure fit, with a minimum to prevent 0
+    const radius = Math.max(80, Math.min(dimensions.width, dimensions.height) / 2.5);
 
     // Use Physics Layout
     const nodeIds = useMemo(() => tags.map(t => t.id), [tags]);
