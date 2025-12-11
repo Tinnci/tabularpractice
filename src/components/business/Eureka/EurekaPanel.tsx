@@ -10,7 +10,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check } from "lucide-react";
+import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, ArrowRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -264,26 +264,38 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                             <div className="space-y-2">
                                 {eurekaData.variableRoles.map((role, idx) => (
                                     <Card key={idx} className="p-3 border-2 border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20">
-                                        <div className="space-y-2 text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <code className="px-2 py-0.5 bg-background rounded font-mono text-xs">
+                                        <div className="space-y-3 text-sm">
+                                            {/* Header: Target Symbol */}
+                                            <div className="flex items-center justify-center pb-2 border-b border-orange-200 dark:border-orange-900/50">
+                                                <code className="px-2 py-1 bg-background rounded font-mono text-sm border font-bold text-primary">
                                                     {role.target}
                                                 </code>
-                                                <span className="text-muted-foreground">→</span>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                                <div>
-                                                    <div className="text-muted-foreground">{DICT.eureka.currentView}</div>
-                                                    <div className="font-medium">{role.currentRole}</div>
+
+                                            {/* Transformation Flow: Current -> Suggested */}
+                                            <div className="flex items-center justify-between gap-2 text-xs">
+                                                <div className="flex-1 text-center space-y-1">
+                                                    <div className="text-muted-foreground scale-90">{DICT.eureka.currentView}</div>
+                                                    <div className="font-medium text-muted-foreground line-through decoration-muted-foreground/50">
+                                                        {role.currentRole}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div className="text-muted-foreground">{DICT.eureka.suggestView}</div>
-                                                    <div className="font-medium text-orange-700 dark:text-orange-400">{role.suggestedRole}</div>
+
+                                                <div className="text-orange-400 dark:text-orange-600">
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </div>
+
+                                                <div className="flex-1 text-center space-y-1">
+                                                    <div className="text-muted-foreground scale-90">{DICT.eureka.suggestView}</div>
+                                                    <div className="font-bold text-orange-700 dark:text-orange-400 text-sm">
+                                                        {role.suggestedRole}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="pt-2 border-t border-orange-200 dark:border-orange-900">
-                                                <div className="text-xs text-muted-foreground mb-1">{DICT.eureka.tryThis}</div>
-                                                <div className="text-sm bg-background px-2 py-1 rounded">
+
+                                            {/* Footer: Action/Transformation */}
+                                            <div className="pt-2 mt-1 bg-background/50 rounded p-2 text-center">
+                                                <div className="text-sm">
                                                     <MarkdownContent content={role.transformation} />
                                                 </div>
                                             </div>
