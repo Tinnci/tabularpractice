@@ -596,6 +596,7 @@ export const DICT = {
         currentView: "当前看法:",
         suggestView: "建议看作:",
         tryThis: "💡 试试:",
+        strategies: "解题战略 (Strategies)",
         viewKeyInsight: "查看关键洞察",
 
         // Incubation
