@@ -174,10 +174,10 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                                 {selectedBlocker === option.type && <Check className="w-3 h-3 text-primary-foreground" />}
                                             </div>
                                             <div className="flex-1">
-                                                <div className="font-medium text-sm">{option.label}</div>
+                                                <div className="font-medium text-sm"><MarkdownContent content={option.label} /></div>
                                                 {selectedBlocker === option.type && (
                                                     <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded animate-in fade-in">
-                                                        💡 {option.hint}
+                                                        💡 <MarkdownContent content={option.hint} />
                                                     </div>
                                                 )}
                                             </div>
@@ -229,10 +229,10 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                                     )}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <div className="font-medium text-sm">{option.label}</div>
+                                                    <div className="font-medium text-sm"><MarkdownContent content={option.label} /></div>
                                                     {option.formula && (
-                                                        <div className="mt-1 text-xs font-mono bg-muted/30 p-1 rounded">
-                                                            {option.formula}
+                                                        <div className="mt-1 text-xs bg-muted/30 p-2 rounded">
+                                                            <MarkdownContent content={option.formula} />
                                                         </div>
                                                     )}
                                                     {showFeedback && (
@@ -242,7 +242,7 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                                                 ? "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-300"
                                                                 : "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-300"
                                                         )}>
-                                                            {option.isCorrect ? "✓ " : "✗ "}{option.feedback}
+                                                            {option.isCorrect ? "✓ " : "✗ "}<MarkdownContent content={option.feedback} />
                                                         </div>
                                                     )}
                                                 </div>
@@ -268,7 +268,7 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                             {/* Header: Target Symbol */}
                                             <div className="flex items-center justify-center pb-2 border-b border-orange-200 dark:border-orange-900/50">
                                                 <code className="px-2 py-1 bg-background rounded font-mono text-sm border font-bold text-primary">
-                                                    {role.target}
+                                                    <MarkdownContent content={role.target} />
                                                 </code>
                                             </div>
 
@@ -277,7 +277,7 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                                 <div className="flex-1 text-center space-y-1">
                                                     <div className="text-muted-foreground scale-90">{DICT.eureka.currentView}</div>
                                                     <div className="font-medium text-muted-foreground line-through decoration-muted-foreground/50">
-                                                        {role.currentRole}
+                                                        <MarkdownContent content={role.currentRole} />
                                                     </div>
                                                 </div>
 
@@ -288,7 +288,7 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                                 <div className="flex-1 text-center space-y-1">
                                                     <div className="text-muted-foreground scale-90">{DICT.eureka.suggestView}</div>
                                                     <div className="font-bold text-orange-700 dark:text-orange-400 text-sm">
-                                                        {role.suggestedRole}
+                                                        <MarkdownContent content={role.suggestedRole} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -364,7 +364,7 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                 <Card className="p-4 border-2 border-yellow-300 dark:border-yellow-700 bg-yellow-50/50 dark:bg-yellow-950/20 animate-in fade-in">
                                     <div className="flex items-start gap-3">
                                         <Lightbulb className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                                        <div className="text-sm leading-relaxed">{eurekaData.insight}</div>
+                                        <div className="text-sm leading-relaxed"><MarkdownContent content={eurekaData.insight} /></div>
                                     </div>
                                 </Card>
                             )}
