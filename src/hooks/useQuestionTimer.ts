@@ -53,8 +53,6 @@ export function useQuestionTimer({
 
     const { elapsed, isRunning, start, pause, reset } = stopwatch;
     const activeIdRef = useRef(questionId);
-    // 使用 Ref 追踪 elapsed，避免 useEffect 频繁触发
-    const elapsedRef = useRef(elapsed);
 
     // === 新增：Session 元数据追踪 ===
     const sessionStartRef = useRef<number>(0);
@@ -70,10 +68,6 @@ export function useQuestionTimer({
             initializedRef.current = true;
         }
     }, []);
-
-    useEffect(() => {
-        elapsedRef.current = elapsed;
-    }, [elapsed]);
 
     // 追踪查看答案/解析的行为
     useEffect(() => {
@@ -99,26 +93,13 @@ export function useQuestionTimer({
         }
     }, [visibleViews, isRunning, pause, start, elapsed, isOpen, questionId]);
 
-    // Handle browser tab visibility changes
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            const isReviewing = visibleViews.has('answer') || visibleViews.has('analysis') || visibleViews.has('video');
-
-            if (document.hidden && isRunning) {
-                pause();
-            } else if (!document.hidden && !isRunning && !isReviewing && isOpen && questionId) {
-                start();
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, [isRunning, pause, start, visibleViews, isOpen, questionId]);
+    // [优化] 移除了重复的 visibilitychange 监听，由 useStopwatch 统一处理
 
     // 3. 安全保存逻辑 (封装 store 交互)
     const saveTime = useCallback(() => {
         const currentId = activeIdRef.current;
-        const thinkingTime = elapsedRef.current;
+        // 使用高精度的 elapsed 值进行保存
+        const thinkingTime = stopwatch.getPreciseElapsed();
 
         // 阈值设为 1秒，避免误触产生垃圾数据
         if (currentId && thinkingTime > 1000) {
@@ -141,7 +122,7 @@ export function useQuestionTimer({
             };
             addStudyRecord(record);
         }
-    }, [addTime, addStudyRecord, source]);
+    }, [addTime, addStudyRecord, source, stopwatch]);
 
     // 重置 session 元数据的辅助函数
     const resetSessionMeta = useCallback(() => {

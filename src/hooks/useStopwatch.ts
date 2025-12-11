@@ -3,28 +3,52 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 interface UseStopwatchOptions {
     autoStart?: boolean;
     smartPause?: boolean; // 是否在页面不可见时自动暂停
+    updateInterval?: number; // UI更新间隔（毫秒），默认1000ms
 }
 
-export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwatchOptions = {}) {
-    const [elapsed, setElapsed] = useState(0); // 毫秒
+export function useStopwatch({
+    autoStart = true,
+    smartPause = true,
+    updateInterval = 1000
+}: UseStopwatchOptions = {}) {
+    const [elapsed, setElapsed] = useState(0); // 毫秒 - 用于UI显示，按 updateInterval 更新
     const [isRunning, setIsRunning] = useState(autoStart);
     const [isSmartPaused, setIsSmartPaused] = useState(false); // 标记是否是因为切屏导致的暂停
 
     const startTimeRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0); // 暂停时已过去的时间
+    const preciseElapsedRef = useRef<number>(0); // 高精度elapsed，实时更新但不触发渲染
     const requestRef = useRef<number | null>(null);
     const animateRef = useRef<(() => void) | null>(null);
+    const lastUpdateTimeRef = useRef<number>(0); // 上次更新UI状态的时间
 
-    // 动画循环
-    const animate = useCallback(() => {
+    // 获取当前精确的elapsed值（不触发渲染）
+    const getPreciseElapsed = useCallback(() => {
         if (startTimeRef.current > 0) {
-            const now = performance.now();
-            setElapsed(savedElapsedRef.current + (now - startTimeRef.current));
+            return savedElapsedRef.current + (performance.now() - startTimeRef.current);
         }
+        return savedElapsedRef.current;
+    }, []);
+
+    // 动画循环 - 节流更新状态
+    const animate = useCallback(() => {
+        const now = performance.now();
+
+        if (startTimeRef.current > 0) {
+            const currentElapsed = savedElapsedRef.current + (now - startTimeRef.current);
+            preciseElapsedRef.current = currentElapsed;
+
+            // 只在达到更新间隔时才更新状态（触发渲染）
+            if (now - lastUpdateTimeRef.current >= updateInterval) {
+                setElapsed(currentElapsed);
+                lastUpdateTimeRef.current = now;
+            }
+        }
+
         if (animateRef.current) {
             requestRef.current = requestAnimationFrame(animateRef.current);
         }
-    }, []);
+    }, [updateInterval]);
 
     // 更新 animateRef
     useEffect(() => {
@@ -35,6 +59,7 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
     const start = useCallback(() => {
         setIsRunning(true);
         startTimeRef.current = performance.now();
+        lastUpdateTimeRef.current = performance.now(); // 重置更新时间
         if (animateRef.current) {
             requestRef.current = requestAnimationFrame(animateRef.current);
         }
@@ -49,7 +74,10 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
         }
         // 保存当前流逝的时间，防止下次 start 时时间跳变
         if (startTimeRef.current > 0) {
-            savedElapsedRef.current += performance.now() - startTimeRef.current;
+            const finalElapsed = savedElapsedRef.current + (performance.now() - startTimeRef.current);
+            savedElapsedRef.current = finalElapsed;
+            preciseElapsedRef.current = finalElapsed;
+            setElapsed(finalElapsed); // 暂停时立即更新UI到精确值
         }
         startTimeRef.current = 0;
     }, []);
@@ -59,6 +87,8 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
         setIsRunning(newAutoStart);
         setElapsed(0);
         savedElapsedRef.current = 0;
+        preciseElapsedRef.current = 0;
+        lastUpdateTimeRef.current = performance.now();
         startTimeRef.current = newAutoStart ? performance.now() : 0;
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
         if (newAutoStart && animateRef.current) {
@@ -119,5 +149,14 @@ export function useStopwatch({ autoStart = true, smartPause = true }: UseStopwat
         return `${m}:${s}`;
     }, [elapsed]);
 
-    return { elapsed, isRunning, start, pause, reset, toggle, formattedTime };
+    return {
+        elapsed,
+        isRunning,
+        start,
+        pause,
+        reset,
+        toggle,
+        formattedTime,
+        getPreciseElapsed // 暴露精确时间获取函数，用于保存数据
+    };
 }
