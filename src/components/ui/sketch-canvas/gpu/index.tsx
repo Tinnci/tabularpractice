@@ -6,30 +6,10 @@ import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react
 import tgpu from 'typegpu';
 import * as d from 'typegpu/data';
 import { CanvasUniforms, StrokePoint, vertexShader, fragmentShader } from './shaders';
-import { ReactSketchCanvasRef, ExportedPath } from '../types';
-
-interface GpuSketchCanvasProps {
-    width?: string;
-    height?: string;
-    className?: string;
-    strokeColor?: string;
-    strokeWidth?: number;
-    canvasColor?: string;
-    allowOnlyPointerType?: 'all' | 'mouse' | 'touch' | 'pen';
-    onStroke?: (path: ExportedPath, isEraser: boolean) => void;
-}
-
-interface GpuStroke {
-    points: { x: number, y: number, p: number }[];
-    color: [number, number, number, number];
-    hexColor: string;
-    width: number;
-    isEraser: boolean;
-    startIndex: number;
-}
-
-const MAX_POINTS = 500000;
-const FLOATS_PER_POINT = 8;
+import type { ReactSketchCanvasRef, ExportedPath } from '../types';
+import { hexToRgba } from './utils';
+import type { GpuSketchCanvasProps, GpuStroke } from './types';
+import { MAX_POINTS, FLOATS_PER_POINT } from './types';
 
 const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
     (props, ref) => {
@@ -57,13 +37,6 @@ const GpuSketchCanvas = forwardRef<ReactSketchCanvasRef, GpuSketchCanvasProps>(
         const rafRef = useRef<number | null>(null);
         const totalPointsRef = useRef(0);
         const isEraserRef = useRef(false);
-
-        const hexToRgba = (hex: string): [number, number, number, number] => {
-            const r = parseInt(hex.slice(1, 3), 16) / 255;
-            const g = parseInt(hex.slice(3, 5), 16) / 255;
-            const b = parseInt(hex.slice(5, 7), 16) / 255;
-            return [r, g, b, 1.0];
-        };
 
         const draw = () => {
             if (!rootRef.current || !drawPipelineRef.current || !erasePipelineRef.current || !canvasRef.current) return;
