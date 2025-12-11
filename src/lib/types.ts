@@ -7,7 +7,7 @@ export type Status = 'unanswered' | 'mastered' | 'confused' | 'failed';
 export type NotesMap = Record<string, string>; // key: questionId, value: markdown content
 
 // 视图类型定义
-export type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft';
+export type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft' | 'eureka';
 
 export interface RepoSource {
   id: string;
@@ -73,7 +73,11 @@ export interface Question {
   tagNames?: string[];
 
   // 来源 URL (用于多源模式下的资源加载)
+  // 来源 URL (用于多源模式下的资源加载)
   sourceUrl?: string;
+
+  // 顿悟提示 (Eureka Hints)
+  hints?: Array<{ label: string; content: string }>;
 }
 
 

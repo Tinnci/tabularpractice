@@ -18,6 +18,7 @@ import { Question, Status, ViewType } from "@/lib/types";
 import { getBilibiliEmbed, getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
 import { useQuestionTimer } from "@/hooks/useQuestionTimer";
 import { QuestionTimer } from "@/components/business/QuestionTimer";
+import { EurekaPanel } from "@/components/business/Eureka/EurekaPanel";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -25,7 +26,7 @@ import {
     Copy, Edit2,
     ChevronLeft, ChevronRight, MonitorPlay, PenLine, Star,
     Loader2, ExternalLink, Clock, Pencil,
-    Maximize2, Minimize2
+    Maximize2, Minimize2, Lightbulb
 } from "lucide-react";
 import { useProgressStore } from "@/lib/store";
 import { cn, getImageUrl } from "@/lib/utils";
@@ -524,6 +525,18 @@ export function QuestionModal({
                                         {DICT.exam.draft}
                                     </span>
                                 </Toggle>
+                                <Toggle
+                                    size="sm"
+                                    pressed={visibleViews.has('eureka')}
+                                    onPressedChange={() => toggleView('eureka')}
+                                    className="group h-8 px-2.5 data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-700 dark:data-[state=on]:bg-yellow-900/30 dark:data-[state=on]:text-yellow-400 data-[state=on]:shadow-sm shrink-0 transition-all duration-300 ease-in-out"
+                                    aria-label="Toggle eureka"
+                                >
+                                    <Lightbulb className={cn("h-4 w-4 shrink-0", visibleViews.has('eureka') && "fill-yellow-500 text-yellow-500")} />
+                                    <span className="max-w-0 opacity-0 group-hover:max-w-[3rem] group-hover:opacity-100 group-hover:ml-1.5 data-[state=on]:max-w-[3rem] data-[state=on]:opacity-100 data-[state=on]:ml-1.5 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-xs">
+                                        顿悟
+                                    </span>
+                                </Toggle>
                             </div>
 
                             {/* 全屏切换按钮 */}
@@ -872,6 +885,16 @@ export function QuestionModal({
                                         }
                                     }}
                                     onCancel={() => setIsEditing(false)}
+                                />
+                            </div>
+                        )}
+
+                        {/* 右侧：顿悟面板 */}
+                        {visibleViews.has('eureka') && (
+                            <div className="w-full sm:w-[350px] border-l bg-card shrink-0 h-full">
+                                <EurekaPanel
+                                    question={currentQuestion}
+                                    onClose={() => toggleView('eureka')}
                                 />
                             </div>
                         )}
