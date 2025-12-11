@@ -14,6 +14,7 @@ import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, AlertCi
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { MarkdownContent } from "@/components/question";
 
 interface Props {
     question: Question | null;
@@ -278,10 +279,10 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                                 </div>
                                             </div>
                                             <div className="pt-2 border-t border-orange-200 dark:border-orange-900">
-                                                <div className="text-xs text-muted-foreground">💡 试试: </div>
-                                                <code className="text-xs font-mono bg-background px-2 py-1 rounded mt-1 inline-block">
-                                                    {role.transformation}
-                                                </code>
+                                                <div className="text-xs text-muted-foreground mb-1">💡 试试: </div>
+                                                <div className="text-sm bg-background px-2 py-1 rounded">
+                                                    <MarkdownContent content={role.transformation} />
+                                                </div>
                                             </div>
                                         </div>
                                     </Card>
