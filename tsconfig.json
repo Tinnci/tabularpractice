@@ -28,6 +28,7 @@
       ]
     },
     "types": [
+      "bun-types",
       "@webgpu/types"
     ]
   },
