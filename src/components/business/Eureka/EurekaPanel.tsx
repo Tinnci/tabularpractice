@@ -328,13 +328,17 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                         <Card className="flex-1 p-3 space-y-2 border-l-4 border-l-primary/50 hover:border-l-primary transition-all">
                                             <div className="font-semibold text-sm">{step.title}</div>
                                             <div className="grid gap-2 text-xs">
-                                                <div className="flex gap-2">
-                                                    <span className="text-muted-foreground shrink-0 w-10 text-right">看到:</span>
-                                                    <span className="text-muted-foreground bg-muted/30 px-1.5 rounded">{step.trigger}</span>
+                                                <div className="flex gap-2 items-start">
+                                                    <span className="text-muted-foreground shrink-0 w-10 text-right mt-0.5">看到:</span>
+                                                    <div className="text-muted-foreground bg-muted/30 px-1.5 rounded">
+                                                        <MarkdownContent content={step.trigger} />
+                                                    </div>
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    <span className="text-primary font-medium shrink-0 w-10 text-right">想到:</span>
-                                                    <span className="font-medium text-foreground">{step.action}</span>
+                                                <div className="flex gap-2 items-start">
+                                                    <span className="text-primary font-medium shrink-0 w-10 text-right mt-0.5">想到:</span>
+                                                    <div className="font-medium text-foreground">
+                                                        <MarkdownContent content={step.action} />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </Card>
