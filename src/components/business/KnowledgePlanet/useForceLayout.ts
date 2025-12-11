@@ -72,8 +72,7 @@ export function useForceLayout(
             }
             simulationRef.current.nodes = newNodes;
             simulationRef.current.alpha = 1; // Restart simulation
-            // Immediately sync to state
-            setPositions(newNodes.map(n => ({ x: n.x, y: n.y })));
+            // Note: positions will be synced by the simulation tick
         } else {
             // Update IDs in place just in case
             for (let i = 0; i < count; i++) {

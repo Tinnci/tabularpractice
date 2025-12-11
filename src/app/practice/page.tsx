@@ -268,7 +268,6 @@ export default function PracticePage() {
                         selectedTagIds={selectedTags}
                         onTagToggle={toggleTag}
                         className="w-full h-full"
-                        autoRotate={true}
                         hoveredNodeId={hoveredNodeId}
                     />
                 </ClientOnly>
