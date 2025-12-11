@@ -10,9 +10,10 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle } from "lucide-react";
+import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, AlertCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 interface Props {
     question: Question | null;
@@ -27,6 +28,11 @@ export function EurekaPanel({ question, onClose, className }: Props) {
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [timeLeft, setTimeLeft] = useState(INCUBATION_TIME);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // --- Interactive States ---
+    const [selectedBlocker, setSelectedBlocker] = useState<string | null>(null);
+    const [selectedModel, setSelectedModel] = useState<string | null>(null);
+    const [showInsight, setShowInsight] = useState(false);
 
     const startTimer = () => {
         if (isTimerRunning) return;
@@ -57,19 +63,29 @@ export function EurekaPanel({ question, onClose, className }: Props) {
         };
     }, []);
 
+    useEffect(() => {
+        // Reset interactive states when question changes
+        setSelectedBlocker(null);
+        setSelectedModel(null);
+        setShowInsight(false);
+    }, [question?.id]);
+
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
     };
 
-    // --- Heuristics ---
-    const heuristics = [
+    const eurekaData = question?.eureka;
+    const hasInteractiveContent = eurekaData?.diagnostic || eurekaData?.modelLineup || eurekaData?.variableRoles;
+
+    // --- Fallback: Generic Heuristics ---
+    const genericHeuristics = [
         {
             id: "representation",
             title: "1. 表征重构 (Representation)",
             icon: <BrainCircuit className="w-4 h-4 text-purple-500" />,
-            desc: "试着打破你对题目第一眼的‘固有印象’。",
+            desc: "试着打破你对题目第一眼的'固有印象'。",
             prompts: [
                 "如果我不按现在的顺序做，还有别的路吗？(例如：交换积分次序)",
                 "把这个复杂的式子拆开看(Chunking)，或者合起来看？",
@@ -127,23 +143,177 @@ export function EurekaPanel({ question, onClose, className }: Props) {
             <ScrollArea className="flex-1">
                 <div className="p-4 space-y-6">
 
-                    {/* 1. Context Aware Hints (if any) */}
-                    {question?.hints && question.hints.length > 0 && (
-                        <div className="space-y-2">
-                            <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-primary" />
-                                题目专属线索
+                    {/* 1. Diagnostic Selector (交互式诊断) */}
+                    {eurekaData?.diagnostic && (
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                                <HelpCircle className="w-4 h-4 text-primary" />
+                                {eurekaData.diagnostic.question}
                             </h3>
-                            {question.hints.map((hint, idx) => (
-                                <div key={idx} className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-sm">
-                                    <div className="font-medium text-primary mb-1">{hint.label}</div>
-                                    <div className="text-muted-foreground">{hint.content}</div>
-                                </div>
-                            ))}
+                            <div className="space-y-2">
+                                {eurekaData.diagnostic.options.map((option, idx) => (
+                                    <Card
+                                        key={idx}
+                                        className={cn(
+                                            "p-3 cursor-pointer transition-all border-2",
+                                            selectedBlocker === option.type
+                                                ? "border-primary bg-primary/5"
+                                                : "border-border hover:border-primary/50"
+                                        )}
+                                        onClick={() => setSelectedBlocker(option.type)}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <div className={cn(
+                                                "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0",
+                                                selectedBlocker === option.type ? "border-primary bg-primary" : "border-muted-foreground"
+                                            )}>
+                                                {selectedBlocker === option.type && <Check className="w-3 h-3 text-primary-foreground" />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-medium text-sm">{option.label}</div>
+                                                {selectedBlocker === option.type && (
+                                                    <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded animate-in fade-in">
+                                                        💡 {option.hint}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
                         </div>
                     )}
 
-                    {/* 2. Incubation Timer */}
+                    {/* 2. Model Lineup (模型配对) */}
+                    {eurekaData?.modelLineup && (
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                                <BrainCircuit className="w-4 h-4 text-primary" />
+                                {eurekaData.modelLineup.question}
+                            </h3>
+                            <div className="space-y-2">
+                                {eurekaData.modelLineup.options.map((option) => {
+                                    const isSelected = selectedModel === option.id;
+                                    const showFeedback = isSelected;
+
+                                    return (
+                                        <Card
+                                            key={option.id}
+                                            className={cn(
+                                                "p-3 cursor-pointer transition-all border-2",
+                                                isSelected
+                                                    ? option.isCorrect
+                                                        ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                                                        : "border-red-500 bg-red-50 dark:bg-red-950/20"
+                                                    : "border-border hover:border-primary/50"
+                                            )}
+                                            onClick={() => setSelectedModel(option.id)}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className={cn(
+                                                    "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0",
+                                                    isSelected
+                                                        ? option.isCorrect
+                                                            ? "border-green-500 bg-green-500"
+                                                            : "border-red-500 bg-red-500"
+                                                        : "border-muted-foreground"
+                                                )}>
+                                                    {isSelected && (
+                                                        option.isCorrect
+                                                            ? <Check className="w-3 h-3 text-white" />
+                                                            : <X className="w-3 h-3 text-white" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-sm">{option.label}</div>
+                                                    {option.formula && (
+                                                        <div className="mt-1 text-xs font-mono bg-muted/30 p-1 rounded">
+                                                            {option.formula}
+                                                        </div>
+                                                    )}
+                                                    {showFeedback && (
+                                                        <div className={cn(
+                                                            "mt-2 text-xs p-2 rounded animate-in fade-in",
+                                                            option.isCorrect
+                                                                ? "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-300"
+                                                                : "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-300"
+                                                        )}>
+                                                            {option.isCorrect ? "✓ " : "✗ "}{option.feedback}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 3. Variable Role Cards (变量角色卡) */}
+                    {eurekaData?.variableRoles && eurekaData.variableRoles.length > 0 && (
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-primary" />
+                                换个视角看变量
+                            </h3>
+                            <div className="space-y-2">
+                                {eurekaData.variableRoles.map((role, idx) => (
+                                    <Card key={idx} className="p-3 border-2 border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20">
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <code className="px-2 py-0.5 bg-background rounded font-mono text-xs">
+                                                    {role.target}
+                                                </code>
+                                                <span className="text-muted-foreground">→</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                                <div>
+                                                    <div className="text-muted-foreground">当前看法:</div>
+                                                    <div className="font-medium">{role.currentRole}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-muted-foreground">建议看作:</div>
+                                                    <div className="font-medium text-orange-700 dark:text-orange-400">{role.suggestedRole}</div>
+                                                </div>
+                                            </div>
+                                            <div className="pt-2 border-t border-orange-200 dark:border-orange-900">
+                                                <div className="text-xs text-muted-foreground">💡 试试: </div>
+                                                <code className="text-xs font-mono bg-background px-2 py-1 rounded mt-1 inline-block">
+                                                    {role.transformation}
+                                                </code>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 4. Insight Reveal (关键洞察) */}
+                    {eurekaData?.insight && (
+                        <div className="space-y-2">
+                            {!showInsight ? (
+                                <Button
+                                    variant="outline"
+                                    className="w-full border-dashed border-2 hover:border-primary"
+                                    onClick={() => setShowInsight(true)}
+                                >
+                                    <Lightbulb className="w-4 h-4 mr-2" />
+                                    查看关键洞察
+                                </Button>
+                            ) : (
+                                <Card className="p-4 border-2 border-yellow-300 dark:border-yellow-700 bg-yellow-50/50 dark:bg-yellow-950/20 animate-in fade-in">
+                                    <div className="flex items-start gap-3">
+                                        <Lightbulb className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                                        <div className="text-sm leading-relaxed">{eurekaData.insight}</div>
+                                    </div>
+                                </Card>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 5. Incubation Timer */}
                     <div className="bg-muted/30 rounded-xl p-4 border space-y-3">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-medium flex items-center gap-2">
@@ -167,7 +337,7 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                             </Button>
                         ) : timeLeft === 0 ? (
                             <div className="bg-destructive/10 text-destructive text-sm p-2 rounded text-center font-medium animate-pulse">
-                                时间到！请立即跳过此题！
+                                ⏰ 时间到！请立即跳过此题！
                             </div>
                         ) : (
                             <Button size="sm" variant="ghost" className="w-full text-muted-foreground" onClick={stopTimer}>
@@ -176,34 +346,36 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                         )}
                     </div>
 
-                    {/* 3. General Heuristics */}
-                    <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">思维破局策略</h3>
-                        <Accordion type="single" collapsible className="w-full">
-                            {heuristics.map((item) => (
-                                <AccordionItem key={item.id} value={item.id}>
-                                    <AccordionTrigger className="text-sm py-3">
-                                        <div className="flex items-center gap-2 text-left">
-                                            {item.icon}
-                                            <span>{item.title}</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="px-1 py-1 space-y-3">
-                                            <p className="text-xs text-muted-foreground font-medium">
-                                                {item.desc}
-                                            </p>
-                                            <ul className="text-xs space-y-2 list-disc pl-4 text-muted-foreground">
-                                                {item.prompts.map((p, i) => (
-                                                    <li key={i}>{p}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </div>
+                    {/* 6. Fallback: Generic Heuristics (如果没有特定数据) */}
+                    {!hasInteractiveContent && (
+                        <div className="space-y-2">
+                            <h3 className="text-sm font-medium text-muted-foreground">通用思维破局策略</h3>
+                            <Accordion type="single" collapsible className="w-full">
+                                {genericHeuristics.map((item) => (
+                                    <AccordionItem key={item.id} value={item.id}>
+                                        <AccordionTrigger className="text-sm py-3">
+                                            <div className="flex items-center gap-2 text-left">
+                                                {item.icon}
+                                                <span>{item.title}</span>
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="px-1 py-1 space-y-3">
+                                                <p className="text-xs text-muted-foreground font-medium">
+                                                    {item.desc}
+                                                </p>
+                                                <ul className="text-xs space-y-2 list-disc pl-4 text-muted-foreground">
+                                                    {item.prompts.map((p, i) => (
+                                                        <li key={i}>{p}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        </div>
+                    )}
 
                 </div>
             </ScrollArea>

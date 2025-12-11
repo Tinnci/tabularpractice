@@ -65,19 +65,55 @@ export interface Question {
 
   videoUrl?: string;    // 视频链接 (B站链接，如 https://www.bilibili.com/video/BV1xxxx?t=120)
 
-  // 保留向后兼容
-
 
   // 新增：答案和标签名
   answer?: string;
   tagNames?: string[];
 
   // 来源 URL (用于多源模式下的资源加载)
-  // 来源 URL (用于多源模式下的资源加载)
   sourceUrl?: string;
 
-  // 顿悟提示 (Eureka Hints)
-  hints?: Array<{ label: string; content: string }>;
+  // 顿悟提示 (Eureka Hints) - Interactive Cognitive Scaffolding
+  eureka?: EurekaData;
+}
+
+// --- Eureka 认知脚手架数据结构 ---
+
+export type BlockerType = 'representation' | 'function' | 'constraint' | 'analogy';
+
+export interface EurekaData {
+  // 诊断式提示：让用户自选卡点类型
+  diagnostic?: {
+    question: string; // e.g., "你觉得卡在哪里了？"
+    options: Array<{
+      type: BlockerType;
+      label: string; // e.g., "看不出该用什么方法"
+      hint: string;  // 选中后显示的具体提示
+    }>;
+  };
+
+  // 模型配对 (用于类比迁移)
+  modelLineup?: {
+    question: string; // e.g., "下面哪个模型的结构和这道题最像？"
+    options: Array<{
+      id: string;
+      label: string;     // e.g., "泰勒展开"
+      formula?: string;  // LaTeX formula
+      isCorrect: boolean;
+      feedback: string;  // 选中后的反馈
+    }>;
+  };
+
+  // 变量角色卡 (用于表征重构)
+  variableRoles?: Array<{
+    target: string;      // 要高亮的表达式，e.g., "(x-1)"
+    currentRole: string; // 当前角色，e.g., "看作减法"
+    suggestedRole: string; // 建议角色，e.g., "看作整体 X"
+    transformation: string; // 变换提示，e.g., "令 X = x-1"
+  }>;
+
+  // 关键洞察 (最终揭示)
+  insight?: string;
 }
 
 
