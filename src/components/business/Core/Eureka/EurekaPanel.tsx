@@ -32,7 +32,7 @@ export function EurekaPanel({ question, onClose, className }: Props) {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     // --- Interactive States ---
-    const [selectedBlocker, setSelectedBlocker] = useState<string | null>(null);
+    const [selectedBlocker, setSelectedBlocker] = useState<number | null>(null);
     const [selectedModel, setSelectedModel] = useState<string | null>(null);
     const [showInsight, setShowInsight] = useState(false);
 
@@ -160,22 +160,22 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                         key={idx}
                                         className={cn(
                                             "p-3 cursor-pointer transition-all border-2",
-                                            selectedBlocker === option.type
+                                            selectedBlocker === idx
                                                 ? "border-primary bg-primary/5"
                                                 : "border-border hover:border-primary/50"
                                         )}
-                                        onClick={() => setSelectedBlocker(option.type)}
+                                        onClick={() => setSelectedBlocker(idx)}
                                     >
                                         <div className="flex items-start gap-2">
                                             <div className={cn(
                                                 "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0",
-                                                selectedBlocker === option.type ? "border-primary bg-primary" : "border-muted-foreground"
+                                                selectedBlocker === idx ? "border-primary bg-primary" : "border-muted-foreground"
                                             )}>
-                                                {selectedBlocker === option.type && <Check className="w-3 h-3 text-primary-foreground" />}
+                                                {selectedBlocker === idx && <Check className="w-3 h-3 text-primary-foreground" />}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-medium text-sm"><MarkdownContent content={option.label} /></div>
-                                                {selectedBlocker === option.type && (
+                                                {selectedBlocker === idx && (
                                                     <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded animate-in fade-in">
                                                         💡 <MarkdownContent content={option.hint} />
                                                     </div>
@@ -263,39 +263,47 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                             </h3>
                             <div className="space-y-2">
                                 {eurekaData.variableRoles.map((role, idx) => (
-                                    <Card key={idx} className="p-3 border-2 border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20">
-                                        <div className="space-y-3 text-sm">
-                                            {/* Header: Target Symbol */}
-                                            <div className="flex items-center justify-center pb-2 border-b border-orange-200 dark:border-orange-900/50">
-                                                <code className="px-2 py-1 bg-background rounded font-mono text-sm border font-bold text-primary">
-                                                    <MarkdownContent content={role.target} />
-                                                </code>
-                                            </div>
+                                    <Card key={idx} className="overflow-hidden border shadow-sm transition-all hover:shadow-md">
+                                        {/* Header: The Object of Focus */}
+                                        <div className="bg-muted/30 py-2 flex justify-center border-b">
+                                            <code className="text-sm font-bold bg-background px-3 py-0.5 rounded border shadow-sm text-primary font-mono">
+                                                <MarkdownContent content={role.target} />
+                                            </code>
+                                        </div>
 
-                                            {/* Transformation Flow: Current -> Suggested */}
-                                            <div className="flex items-center justify-between gap-2 text-xs">
-                                                <div className="flex-1 text-center space-y-1">
-                                                    <div className="text-muted-foreground scale-90">{DICT.eureka.currentView}</div>
-                                                    <div className="font-medium text-muted-foreground line-through decoration-muted-foreground/50">
+                                        <div className="p-3 grid gap-3">
+                                            {/* Comparison Grid */}
+                                            <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-2">
+                                                {/* Old View */}
+                                                <div className="flex flex-col gap-1.5 p-2 rounded bg-muted/20 text-center border border-transparent h-full justify-start">
+                                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold border-b border-dashed border-muted-foreground/30 pb-0.5 self-center">
+                                                        {DICT.eureka.currentView}
+                                                    </span>
+                                                    <div className="text-xs text-muted-foreground leading-snug">
                                                         <MarkdownContent content={role.currentRole} />
                                                     </div>
                                                 </div>
 
-                                                <div className="text-orange-400 dark:text-orange-600">
+                                                {/* Arrow */}
+                                                <div className="text-muted-foreground/30 flex justify-center">
                                                     <ArrowRight className="w-4 h-4" />
                                                 </div>
 
-                                                <div className="flex-1 text-center space-y-1">
-                                                    <div className="text-muted-foreground scale-90">{DICT.eureka.suggestView}</div>
-                                                    <div className="font-bold text-orange-700 dark:text-orange-400 text-sm">
+                                                {/* New View */}
+                                                <div className="flex flex-col gap-1.5 p-2 rounded bg-orange-50 dark:bg-orange-950/30 text-center border border-orange-100 dark:border-orange-900/50 h-full justify-start">
+                                                    <span className="text-[10px] uppercase tracking-wider text-orange-600 dark:text-orange-400 font-semibold border-b border-dashed border-orange-200 dark:border-orange-800 pb-0.5 self-center">
+                                                        {DICT.eureka.suggestView}
+                                                    </span>
+                                                    <div className="text-xs font-medium text-foreground leading-snug">
                                                         <MarkdownContent content={role.suggestedRole} />
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Footer: Action/Transformation */}
-                                            <div className="pt-2 mt-1 bg-background/50 rounded p-2 text-center">
-                                                <div className="text-sm">
+                                            <div className="relative text-xs bg-accent/50 p-2.5 rounded-md text-muted-foreground flex gap-2 items-start">
+                                                <span className="shrink-0 text-orange-500 mt-0.5">⚡</span>
+                                                <div className="leading-relaxed">
                                                     <MarkdownContent content={role.transformation} />
                                                 </div>
                                             </div>
