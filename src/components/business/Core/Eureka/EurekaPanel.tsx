@@ -10,7 +10,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, ArrowRight, ListOrdered } from "lucide-react";
+import { Lightbulb, Timer, X, BrainCircuit, Sparkles, HelpCircle, Check, ArrowRight, ArrowDown, ListOrdered } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -272,10 +272,10 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                         </div>
 
                                         <div className="p-3 grid gap-3">
-                                            {/* Comparison Grid */}
-                                            <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-2">
+                                            {/* Comparison Grid (Vertical Flow) */}
+                                            <div className="flex flex-col items-stretch gap-2">
                                                 {/* Old View */}
-                                                <div className="flex flex-col gap-1.5 p-2 rounded bg-muted/20 text-center border border-transparent h-full justify-start">
+                                                <div className="flex flex-col gap-1.5 p-2 rounded bg-muted/20 text-center border border-transparent">
                                                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold border-b border-dashed border-muted-foreground/30 pb-0.5 self-center">
                                                         {DICT.eureka.currentView}
                                                     </span>
@@ -285,12 +285,12 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                                 </div>
 
                                                 {/* Arrow */}
-                                                <div className="text-muted-foreground/30 flex justify-center">
-                                                    <ArrowRight className="w-4 h-4" />
+                                                <div className="text-muted-foreground/30 flex justify-center py-1">
+                                                    <ArrowDown className="w-4 h-4" />
                                                 </div>
 
                                                 {/* New View */}
-                                                <div className="flex flex-col gap-1.5 p-2 rounded bg-orange-50 dark:bg-orange-950/30 text-center border border-orange-100 dark:border-orange-900/50 h-full justify-start">
+                                                <div className="flex flex-col gap-1.5 p-2 rounded bg-orange-50 dark:bg-orange-950/30 text-center border border-orange-100 dark:border-orange-900/50">
                                                     <span className="text-[10px] uppercase tracking-wider text-orange-600 dark:text-orange-400 font-semibold border-b border-dashed border-orange-200 dark:border-orange-800 pb-0.5 self-center">
                                                         {DICT.eureka.suggestView}
                                                     </span>
