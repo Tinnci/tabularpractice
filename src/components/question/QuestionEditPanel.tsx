@@ -23,7 +23,7 @@ import { useProgressStore } from "@/lib/store";
 import { useGeminiEureka } from "@/hooks/useGeminiEureka";
 import { toast } from "sonner";
 
-interface QuestionEditPanelProps {
+export interface QuestionEditPanelProps {
     question: Question;
     onSave: (updatedQuestion: Partial<Question>) => Promise<void>;
     onCancel: () => void;

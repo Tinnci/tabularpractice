@@ -7,7 +7,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface SidebarLeafNodeProps {
+export interface SidebarLeafNodeProps {
     node: TagNode;
     selectedTagId: string | null;
     stat: { total: number; finished: number };

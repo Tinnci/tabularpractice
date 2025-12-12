@@ -14,7 +14,7 @@ import { DICT, formatQuestionNumber } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { getBilibiliEmbed } from "@/lib/utils";
 
-interface PracticeCardStackProps {
+export interface PracticeCardStackProps {
     queue: Question[];
     currentIndex: number;
     onNext: () => void;

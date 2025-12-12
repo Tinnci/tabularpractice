@@ -11,7 +11,7 @@ import { SmartTagList } from "./SmartTagList";
 import { DICT } from "@/lib/i18n";
 import { getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
 
-interface QuestionContentProps {
+export interface QuestionContentProps {
     question: Question;
     isLoading?: boolean;
     isFullscreen: boolean;

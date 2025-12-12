@@ -16,7 +16,7 @@ import { getImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { DICT } from "@/lib/i18n";
 
-interface UseQuestionModalProps {
+export interface UseQuestionModalProps {
     isOpen: boolean;
     question: Question | null;
     hasPrev: boolean;

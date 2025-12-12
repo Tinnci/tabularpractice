@@ -11,7 +11,7 @@ import { Check, X, HelpCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { DICT } from "@/lib/i18n";
 import { Status } from "@/lib/types";
 
-interface QuestionFooterProps {
+export interface QuestionFooterProps {
     hasPrev: boolean;
     hasNext: boolean;
     isLoading?: boolean;

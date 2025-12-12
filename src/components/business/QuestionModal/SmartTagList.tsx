@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { getTagLabel } from "@/data/subject-tags";
 import { DICT } from "@/lib/i18n";
 
-interface SmartTagListProps {
+export interface SmartTagListProps {
     tags?: string[];
     tagNames?: string[];
     limit?: number;

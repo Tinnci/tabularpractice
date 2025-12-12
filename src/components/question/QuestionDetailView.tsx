@@ -111,7 +111,7 @@ const CopyButton = ({ text, img, question }: { text?: string | null, img?: strin
 };
 
 // --- Main Component ---
-interface QuestionDetailViewProps {
+export interface QuestionDetailViewProps {
     question: Question;
     visibleViews: Set<ViewType>;
     isLoading?: boolean;

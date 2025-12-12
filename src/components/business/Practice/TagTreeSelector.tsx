@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 
-interface TagTreeSelectorProps {
+export interface TagTreeSelectorProps {
     tags: EnhancedTagNode[];
     selectedTagIds: Set<string>;
     onTagToggle: (id: string) => void;

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Point } from './types';
 
-interface SvgPathProps {
+export interface SvgPathProps {
     points: Point[];
     strokeColor: string;
     strokeWidth: number;

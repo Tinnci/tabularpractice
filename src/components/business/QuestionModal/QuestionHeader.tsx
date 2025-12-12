@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { Question, ViewType, Status } from "@/lib/types";
 import { DICT, getQuestionTypeLabel, formatQuestionNumber } from "@/lib/i18n";
 
-interface QuestionHeaderProps {
+export interface QuestionHeaderProps {
     question: Question;
     isLoading?: boolean;
     isStarred: boolean;

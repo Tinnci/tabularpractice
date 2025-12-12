@@ -7,7 +7,7 @@ interface ProjectedNode {
     y: number;
 }
 
-interface ConnectionLinesProps {
+export interface ConnectionLinesProps {
     nodes: ProjectedNode[];
     hoveredNodeId: string | null;
 }

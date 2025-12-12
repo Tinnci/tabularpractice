@@ -23,7 +23,7 @@ import { HelpCircle, Columns, LayoutGrid } from "lucide-react";
 import { GlobalSearch } from "@/components/business/GlobalSearch";
 import { Status, PaperGroup } from "@/lib/types";
 
-interface QuestionsHeaderProps {
+export interface QuestionsHeaderProps {
     viewMode: 'wall' | 'grid';
     onViewModeChange: (mode: 'wall' | 'grid') => void;
     onShowShortcutsHelp: () => void;

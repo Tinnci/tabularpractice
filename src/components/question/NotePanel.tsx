@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { DICT } from "@/lib/i18n";
 import { MarkdownContent } from "@/components/question";
 
-interface NotePanelProps {
+export interface NotePanelProps {
     questionId: string;
     initialContent: string;
     onUpdateNote: (id: string, content: string) => void;

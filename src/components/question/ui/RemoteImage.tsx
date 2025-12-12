@@ -8,7 +8,7 @@ import { Question } from "@/lib/types";
 import { DICT } from "@/lib/i18n";
 
 // 远程图片加载组件
-interface RemoteImageProps {
+export interface RemoteImageProps {
     src: string;
     alt: string;
     className?: string;

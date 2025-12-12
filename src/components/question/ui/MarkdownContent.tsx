@@ -26,7 +26,7 @@ export const smartFormatContent = (content: string) => {
 };
 
 // 通用 Markdown 渲染组件
-interface MarkdownContentProps {
+export interface MarkdownContentProps {
     content: string;
     className?: string;
 }

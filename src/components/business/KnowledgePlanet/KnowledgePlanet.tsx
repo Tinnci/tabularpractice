@@ -8,7 +8,7 @@ import { ConnectionLines } from './ConnectionLines';
 import { Home, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { DICT } from '@/lib/i18n';
 
-interface KnowledgePlanetProps {
+export interface KnowledgePlanetProps {
     tags: EnhancedTagNode[];
     selectedTagIds: Set<string>;
     onTagToggle: (id: string) => void;

@@ -6,7 +6,7 @@ import { Question } from "@/lib/types";
 import { toast } from "sonner";
 import { DICT } from "@/lib/i18n";
 
-interface UseQuestionSyncProps {
+export interface UseQuestionSyncProps {
     onSuccess?: () => void;
     onError?: (error: Error) => void;
 }

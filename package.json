@@ -10,7 +10,8 @@
     "knip": "knip",
     "test": "bun test",
     "analyze:i18n": "bun scripts/analyze-i18n-ast.ts",
-    "check:scripts": "bun scripts/check-isolation.ts"
+    "check:scripts": "bun scripts/check-isolation.ts",
+    "check:props": "bun scripts/check-props.ts"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",

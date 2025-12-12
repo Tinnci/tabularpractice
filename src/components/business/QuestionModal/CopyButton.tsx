@@ -8,7 +8,7 @@ import { getImageUrl } from "@/lib/utils";
 import { Question } from "@/lib/types";
 import { DICT } from "@/lib/i18n";
 
-interface CopyButtonProps {
+export interface CopyButtonProps {
     text?: string | null;
     img?: string | null;
     question: Question;

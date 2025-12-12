@@ -2,7 +2,7 @@ import React from 'react';
 import { EnhancedTagNode } from '@/hooks/useTagStats';
 import { cn } from '@/lib/utils';
 
-interface PlanetNodeProps {
+export interface PlanetNodeProps {
     node: EnhancedTagNode;
     x: number;
     y: number;

@@ -15,7 +15,7 @@ import '@xyflow/react/dist/style.css';
 import { Question } from '@/lib/types';
 import { useGraphData } from './useGraphData';
 
-interface KnowledgeGraphProps {
+export interface KnowledgeGraphProps {
     questions: Question[];
     subjectKey?: string;
     onNodeClick?: (tagId: string, tagLabel: string) => void;

@@ -12,7 +12,7 @@ export { RemoteImage } from "./ui/RemoteImage";
 
 
 // 题目内容渲染器 - 统一处理 Markdown 和图片的显示逻辑
-interface QuestionContentRendererProps {
+export interface QuestionContentRendererProps {
     contentMd?: string | null;
     contentImg?: string | null;
     question?: Question | null;

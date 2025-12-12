@@ -15,7 +15,7 @@ import type { ExportedPath } from "@/components/ui/sketch-canvas/types";
 import { GpuSketchCanvas } from "@/components/ui/sketch-canvas/gpu";
 import { useTheme } from "next-themes";
 
-interface DraftPanelProps {
+export interface DraftPanelProps {
     questionId: string;
     isVisible: boolean;
 }

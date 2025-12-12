@@ -13,7 +13,7 @@ import { DICT } from "@/lib/i18n";
 import { ViewType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-interface QuestionToolbarProps {
+export interface QuestionToolbarProps {
     visibleViews: Set<ViewType>;
     onToggleView: (view: ViewType) => void;
     videoUrl?: string;
