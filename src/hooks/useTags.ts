@@ -1,7 +1,6 @@
 import useSWR from 'swr';
 import { TagNode } from '@/data/subject-tags';
 import { useProgressStore } from '@/lib/store';
-import { PINYIN_TO_ID_MAP } from '@/data/legacy-tags';
 
 // Flat Tag Definition from JSON
 export interface FlatTag {
@@ -27,10 +26,11 @@ const tagsFetcher = async (urls: string[]) => {
 };
 
 /**
- * Standardize Tag ID (Pinyin -> English)
+ * Standardize Tag ID
+ * (Legacy pinyin support removed - all data sources now use English IDs)
  */
 function normalizeId(id: string): string {
-    return PINYIN_TO_ID_MAP[id] || id;
+    return id;
 }
 
 /**
