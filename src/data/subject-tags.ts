@@ -253,7 +253,6 @@ const politicsTags: TagNode[] = [
 ];
 
 // 导入遗留的拼音 ID 映射
-import { PINYIN_TO_ID_MAP } from './legacy-tags';
 import { getSubjectKey } from '@/lib/subjectConfig';
 
 // 导出映射关系
@@ -297,9 +296,8 @@ let _globalTagMap: Map<string, string> | null = null;
 
 /**
  * 获取标签的显示名称
- * 支持标准 ID 和拼音 ID
  * 
- * @param tagId - 标签 ID（可能是标准 ID 或拼音 ID）
+ * @param tagId - 标签 ID
  * @returns 标签的中文名称，如果找不到则返回原 ID
  */
 export function getTagLabel(tagId: string): string {
@@ -313,14 +311,6 @@ export function getTagLabel(tagId: string): string {
             flattened.forEach((label, id) => {
                 _globalTagMap!.set(id, label);
             });
-        });
-
-        // 2. 添加拼音 ID 映射
-        Object.entries(PINYIN_TO_ID_MAP).forEach(([pinyinId, standardId]) => {
-            const label = _globalTagMap!.get(standardId);
-            if (label) {
-                _globalTagMap!.set(pinyinId, label);
-            }
         });
     }
 
@@ -339,9 +329,9 @@ export function getGlobalTagMap(): Map<string, string> {
 
 /**
  * 标准化标签 ID
- * 如果是拼音 ID，转换为标准 ID
+ * (已弃用拼音 ID 支持，直接返回原 ID)
  */
 export function normalizeTagId(tagId: string): string {
-    return PINYIN_TO_ID_MAP[tagId] || tagId;
+    return tagId;
 }
 

@@ -46,7 +46,6 @@ export function QuestionEditPanel({
     const [type, setType] = useState<QuestionType>(question.type as QuestionType || "choice");
     const [tags, setTags] = useState<string[]>(question.tags || []);
     const [newTag, setNewTag] = useState("");
-    const [eureka, setEureka] = useState<EurekaData | undefined>(question.eureka);
     const [eurekaJson, setEurekaJson] = useState(question.eureka ? JSON.stringify(question.eureka, null, 2) : "");
 
     // UI 状态
@@ -80,7 +79,7 @@ export function QuestionEditPanel({
             if (eurekaJson.trim()) {
                 try {
                     parsedEureka = JSON.parse(eurekaJson);
-                } catch (e) {
+                } catch {
                     toast.error("Invalid Eureka JSON format");
                     setIsSaving(false);
                     return;
@@ -128,7 +127,6 @@ export function QuestionEditPanel({
         );
 
         if (result) {
-            setEureka(result);
             setEurekaJson(JSON.stringify(result, null, 2));
             toast.success("Eureka content generated!");
         }
@@ -373,7 +371,7 @@ export function QuestionEditPanel({
                                     className="min-h-[300px] font-mono text-xs"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    💡 Tip: Click "Generate with AI" to auto-generate Eureka hints, or manually edit the JSON above.
+                                    💡 Tip: Click &quot;Generate with AI&quot; to auto-generate Eureka hints, or manually edit the JSON above.
                                 </p>
                             </div>
                         )}
