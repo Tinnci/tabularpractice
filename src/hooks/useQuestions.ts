@@ -1,6 +1,7 @@
 import useSWR from 'swr';
 import { useProgressStore } from '@/lib/store';
 import { Question, PaperDetail, PaperGroup } from '@/lib/types';
+import { deduplicateQuestions, deduplicatePaperGroups } from '@/lib/domain/statistics';
 
 
 
@@ -26,15 +27,8 @@ const multiSourceFetcher = async (urls: string[]) => {
     const results = await Promise.all(promises);
     const allQuestions = results.flat();
 
-    // 去重：基于 ID
-    const uniqueQuestions = new Map<string, Question>();
-    allQuestions.forEach(q => {
-        if (!uniqueQuestions.has(q.id)) {
-            uniqueQuestions.set(q.id, q);
-        }
-    });
-
-    return Array.from(uniqueQuestions.values());
+    // Deduplicate using domain function
+    return deduplicateQuestions(allQuestions);
 };
 
 // 多源 PaperGroups fetcher
@@ -54,15 +48,8 @@ const multiSourcePaperGroupsFetcher = async (urls: string[]) => {
     const results = await Promise.all(promises);
     const allGroups = results.flat() as PaperGroup[];
 
-    // 去重：如果多个源有相同的 ID，保留第一个
-    const uniqueGroups = new Map<string, PaperGroup>();
-    allGroups.forEach(group => {
-        if (!uniqueGroups.has(group.id)) {
-            uniqueGroups.set(group.id, group);
-        }
-    });
-
-    return Array.from(uniqueGroups.values());
+    // Deduplicate using domain function
+    return deduplicatePaperGroups(allGroups);
 };
 
 export function useQuestions() {
