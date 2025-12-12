@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { SettingsModal } from "@/components/business/SettingsModal"
-import { AiImportModal } from "@/components/business/AiImportModal"
+import { SettingsModal } from "@/components/business/Settings"
+import { AiImportModal } from "@/components/business/Settings"
 import { ModeToggle } from "@/components/mode-toggle"
 import { MobileSidebar } from "@/components/layout/MobileSidebar"
 import { usePathname } from "next/navigation"

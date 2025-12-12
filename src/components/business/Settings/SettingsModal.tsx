@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,11 +12,11 @@ import {
 } from "@/components/ui/dialog"
 import { Settings } from "lucide-react"
 import { DICT } from "@/lib/i18n"
-import { DataManagement } from "./Settings/DataManagement"
-import { GithubConfig } from "./Settings/GithubConfig"
-import { RepoSources } from "./Settings/RepoSources"
-import { AppearanceFilter } from "./Settings/AppearanceFilter"
-import { AiSettings } from "./Settings/AiSettings"
+import { DataManagement } from "./DataManagement"
+import { GithubConfig } from "./GithubConfig"
+import { RepoSources } from "./RepoSources"
+import { AppearanceFilter } from "./AppearanceFilter"
+import { AiSettings } from "./AiSettings"
 
 export function SettingsModal() {
     const [open, setOpen] = useState(false)

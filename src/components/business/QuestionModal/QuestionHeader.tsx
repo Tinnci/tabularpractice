@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { QuestionTimer } from "@/components/business/QuestionTimer";
+import { QuestionTimer } from "@/components/business/Shared";
 import { SmartTagList } from "./SmartTagList";
 import {
     Star, Edit2, Loader2, MonitorPlay, Eye, FileText,

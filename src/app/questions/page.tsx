@@ -1,7 +1,7 @@
 "use client"
 
-import { VerticalExamWall } from "@/components/business/VerticalExamWall";
-import { ExamWall } from "@/components/business/ExamWall";
+import { VerticalExamWall } from "@/components/business/Shared";
+import { ExamWall } from "@/components/business/Shared";
 import { Sidebar } from "@/components/business/Sidebar";
 import { QuestionModal } from "@/components/business/QuestionModal";
 
@@ -12,7 +12,7 @@ import { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useProgressStore } from "@/lib/store";
 import { DICT } from "@/lib/i18n";
 import { QuestionsHeader } from "@/components/business/Questions/QuestionsHeader";
-import { ShortcutsHelpModal } from "@/components/business/ShortcutsHelpModal";
+import { ShortcutsHelpModal } from "@/components/business/Shared";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useContextQuestions } from "@/hooks/useContextQuestions";

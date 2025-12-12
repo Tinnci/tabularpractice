@@ -4,13 +4,13 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Question, Status } from "@/lib/types";
 import { getBilibiliEmbed } from "@/lib/utils";
 import { useQuestionTimer } from "@/hooks/useQuestionTimer";
-import { EurekaPanel } from "@/components/business/Eureka/EurekaPanel";
+import { EurekaPanel } from "@/components/business/Core";
 import { QuestionEditPanel } from "@/components/question";
 import { useProgressStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { DICT, formatQuestionNumber } from "@/lib/i18n";
 import { toast } from "sonner";
-import { GitHubRepoSetupGuide } from "../GitHubRepoSetupGuide";
+import { GitHubRepoSetupGuide } from "../Settings";
 
 // 导入子组件
 import { QuestionHeader } from "./QuestionHeader";

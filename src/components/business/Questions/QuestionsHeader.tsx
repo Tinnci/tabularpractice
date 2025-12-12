@@ -20,7 +20,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HelpCircle, Columns, LayoutGrid } from "lucide-react";
-import { GlobalSearch } from "@/components/business/GlobalSearch";
+import { GlobalSearch } from "@/components/business/Shared";
 import { Status, PaperGroup } from "@/lib/types";
 
 export interface QuestionsHeaderProps {

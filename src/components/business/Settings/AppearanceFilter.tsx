@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Settings, RefreshCw, FileText, Layers } from "lucide-react"

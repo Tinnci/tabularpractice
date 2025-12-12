@@ -10,8 +10,8 @@ import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
 import { DICT } from "@/lib/i18n";
 
-import { DashboardOnboarding } from "@/components/business/DashboardOnboarding";
-import { ActivityHeatmap } from "@/components/business/ActivityHeatmap";
+import { DashboardOnboarding } from "@/components/business/Dashboard";
+import { ActivityHeatmap } from "@/components/business/Dashboard";
 import { useProgressStore } from "@/lib/store";
 
 // Dynamically import Recharts to prevent SSR issues

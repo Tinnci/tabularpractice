@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PwaRegister } from "@/components/PwaRegister";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { AutoSyncManager } from "@/components/business/AutoSyncManager";
-import { SyncConflictModal } from "@/components/business/SyncConflictModal";
+import { AutoSyncManager } from "@/components/business/Core";
+import { SyncConflictModal } from "@/components/business/Settings";
 
 
 

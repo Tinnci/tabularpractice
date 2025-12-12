@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { KnowledgeGraph } from '@/components/business/KnowledgeGraph';
+import { KnowledgeGraph } from "@/components/business/Knowledge";
 import { useQuestions } from '@/hooks/useQuestions';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

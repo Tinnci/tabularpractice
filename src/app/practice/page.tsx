@@ -11,7 +11,7 @@ import { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/lib/store";
 import { DICT } from "@/lib/i18n";
-import { KnowledgePlanet } from "@/components/business/KnowledgePlanet";
+import { KnowledgePlanet } from "@/components/business/Knowledge";
 import { useTagStats } from "@/hooks/useTagStats";
 import { getSubjectKey } from "@/lib/subjectConfig";
 import { TagTreeSelector } from "@/components/business/Practice/TagTreeSelector";

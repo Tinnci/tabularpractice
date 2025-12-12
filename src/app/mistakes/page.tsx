@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMistakes } from '@/hooks/useMistakes';
-import { MistakeReviewCard } from '@/components/business/MistakeReviewCard';
+import { MistakeReviewCard } from "@/components/business/Mistakes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Play, AlertCircle, CheckCircle2, BrainCircuit, XCircle, HelpCircle } from "lucide-react";

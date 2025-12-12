@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button"
 import { Database, Download, Upload, AlertTriangle } from "lucide-react"
 import { DICT } from "@/lib/i18n"

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Layers, ChevronRight, PieChart, Hash } from "lucide-react";
 import { useState, useMemo } from "react";
-import { ProgressOverview } from "./ProgressOverview";
+import { ProgressOverview } from "../Dashboard";
 import {
     Accordion,
     AccordionContent,
@@ -27,8 +27,8 @@ import { useContextQuestions } from "@/hooks/useContextQuestions";
 import { DICT } from "@/lib/i18n";
 import { useTags } from "@/hooks/useTags";
 import { getSubjectKey } from "@/lib/subjectConfig";
-import { SidebarLeafNode } from "./Sidebar/SidebarLeafNode";
-import { useSidebarStats } from "./Sidebar/useSidebarStats";
+import { SidebarLeafNode } from "./SidebarLeafNode";
+import { useSidebarStats } from "./useSidebarStats";
 
 export function SidebarContent({ className, onSelect, questions }: { className?: string, onSelect?: () => void, questions?: Question[] }) {
     const { selectedTagId, setSelectedTagId, currentGroupId, filterSubject } = useProgressStore();
