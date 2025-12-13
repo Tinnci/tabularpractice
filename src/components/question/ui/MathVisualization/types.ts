@@ -106,9 +106,10 @@ export interface VectorField3DConfig {
     fx: string;            // P(x,y,z)
     fy: string;            // Q(x,y,z)
     fz: string;            // R(x,y,z)
-    xRange: [number, number];
-    yRange: [number, number];
-    zRange: [number, number];
+    range?: [number, number]; // Simplified range for cubic bounds
+    xRange?: [number, number];
+    yRange?: [number, number];
+    zRange?: [number, number];
     density?: number;
     showDivergence?: boolean;
     showCurl?: boolean;
@@ -169,7 +170,9 @@ export interface Gradient3DConfig {
     showGradientVector?: boolean;
     showDirectionalDerivative?: {
         direction: [number, number, number];
+        label?: string;
     };
+    range?: [number, number];
 }
 
 // ============== Linear Algebra Visualization Types ==============
@@ -218,8 +221,37 @@ export interface JointDistribution3DConfig {
 
 // ============== Union Type ==============
 
+export interface EnhancedFunctionPlotConfig extends FunctionPlotConfig {
+    criticalPoints?: Array<{
+        x: number;
+        y: number;
+        type: "maximum" | "minimum" | "inflection" | "root" | "custom";
+        label?: string;
+        color?: string;
+    }>;
+    asymptotes?: Array<{
+        type: "vertical" | "horizontal" | "oblique";
+        value?: number;
+        slope?: number;
+        intercept?: number;
+        label?: string;
+        color?: string;
+    }>;
+    shadedRegions?: Array<{
+        xRange: [number, number];
+        upperFn: string;
+        lowerFn?: string;
+        color?: string;
+        opacity?: number;
+        label?: string;
+    }>;
+    showControls?: boolean;
+    showLegend?: boolean;
+}
+
 export type Visualization2DConfig =
     | FunctionPlotConfig
+    | EnhancedFunctionPlotConfig
     | IntegralRegion2DConfig
     | ParametricCurve2DConfig
     | VectorField2DConfig
@@ -243,6 +275,12 @@ export type VisualizationConfig = {
     title?: string;
     config: Visualization2DConfig | Visualization3DConfig;
 };
+
+export interface MathVisualizationRendererProps {
+    config: VisualizationConfig;
+    height?: number;
+    className?: string;
+}
 
 // ============== Tag to Visualization Mapping ==============
 

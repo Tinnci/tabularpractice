@@ -7,8 +7,8 @@ import { useMemo } from "react";
 import { Viz2DInfoHint } from "./Viz2DControls";
 
 export interface CurveConfig {
-    /** Function defining the curve */
-    fn: (x: number) => number;
+    /** Function defining the curve (string expr or function) */
+    fn: string | ((x: number) => number);
     /** Display color */
     color?: string;
     /** Label for the curve */
@@ -18,10 +18,10 @@ export interface CurveConfig {
 export interface IntegralRegion2DProps {
     /** X-axis range for the integration region [a, b] */
     xRange: [number, number];
-    /** Lower bound function y = f(x) */
-    lowerBound: (x: number) => number;
-    /** Upper bound function y = g(x) */
-    upperBound: (x: number) => number;
+    /** Lower bound function y = f(x) (string expr or function) */
+    lowerBound: string | ((x: number) => number);
+    /** Upper bound function y = g(x) (string expr or function) */
+    upperBound: string | ((x: number) => number);
     /** Curves to display (optional, for context) */
     curves?: CurveConfig[];
     /** Fill color for the shaded region */
@@ -38,21 +38,33 @@ export interface IntegralRegion2DProps {
     padding?: number;
 }
 
-/**
- * Visualizes a 2D integration region between two curves.
- * 
- * @example
- * // Region between y = x^2 and y = x on [0.5, 1]
- * <IntegralRegion2D
- *   xRange={[0.5, 1]}
- *   lowerBound={(x) => x * x}
- *   upperBound={(x) => x}
- *   curves={[
- *     { fn: (x) => x * x, color: "blue", label: "y = x²" },
- *     { fn: (x) => x, color: "red", label: "y = x" }
- *   ]}
- * />
- */
+// Safe function parser
+function parseExpr(expr: string | ((x: number) => number)): (x: number) => number {
+    if (typeof expr === "function") return expr;
+
+    try {
+        // Basic safe parsing for common math functions
+        const mathFns = {
+            sin: Math.sin, cos: Math.cos, tan: Math.tan,
+            asin: Math.asin, acos: Math.acos, atan: Math.atan,
+            exp: Math.exp, log: Math.log, ln: Math.log,
+            sqrt: Math.sqrt, abs: Math.abs, pow: Math.pow,
+            PI: Math.PI, E: Math.E,
+        };
+
+        const processed = expr
+            .replace(/\^/g, "**")
+            .replace(/(\d)x/g, "$1*x")
+            .replace(/x(\d)/g, "x*$1");
+
+        const fn = new Function("x", ...Object.keys(mathFns), `return ${processed};`);
+        return (x) => fn(x, ...Object.values(mathFns));
+    } catch (err) {
+        console.warn(`Failed to parse expression: ${expr}`, err);
+        return () => 0;
+    }
+}
+
 export function IntegralRegion2D({
     xRange,
     lowerBound,
@@ -65,6 +77,14 @@ export function IntegralRegion2D({
     className,
     padding = 0.5,
 }: IntegralRegion2DProps) {
+    // Parse functions
+    const lowerFn = useMemo(() => parseExpr(lowerBound), [lowerBound]);
+    const upperFn = useMemo(() => parseExpr(upperBound), [upperBound]);
+    const parsedCurves = useMemo(() => curves.map(c => ({
+        ...c,
+        fn: parseExpr(c.fn)
+    })), [curves]);
+
     // Generate polygon points for shaded region
     const polygonPoints = useMemo(() => {
         const points: vec.Vector2[] = [];
@@ -74,17 +94,17 @@ export function IntegralRegion2D({
         // Upper curve from left to right
         for (let i = 0; i <= samples; i++) {
             const x = a + i * step;
-            points.push([x, upperBound(x)]);
+            points.push([x, upperFn(x)]);
         }
 
         // Lower curve from right to left
         for (let i = samples; i >= 0; i--) {
             const x = a + i * step;
-            points.push([x, lowerBound(x)]);
+            points.push([x, lowerFn(x)]);
         }
 
         return points;
-    }, [xRange, lowerBound, upperBound, samples]);
+    }, [xRange, lowerFn, upperFn, samples]);
 
     // Calculate view bounds
     const viewBounds = useMemo(() => {
@@ -92,7 +112,7 @@ export function IntegralRegion2D({
         let yMin = Infinity, yMax = -Infinity;
 
         // Sample both curves to find y bounds
-        const allFns = [lowerBound, upperBound, ...curves.map(c => c.fn)];
+        const allFns = [lowerFn, upperFn, ...parsedCurves.map(c => c.fn)];
         allFns.forEach(fn => {
             for (let i = 0; i <= samples; i++) {
                 const x = a + (b - a) * i / samples;
@@ -104,14 +124,21 @@ export function IntegralRegion2D({
             }
         });
 
+        // Default range if calculation fails
+        if (!isFinite(yMin) || !isFinite(yMax)) {
+            yMin = -5;
+            yMax = 5;
+        }
+
+        const height = yMax - yMin || 2;
         const xPad = (b - a) * padding;
-        const yPad = (yMax - yMin) * padding;
+        const yPad = height * padding;
 
         return {
             x: [a - xPad, b + xPad] as [number, number],
             y: [yMin - yPad, yMax + yPad] as [number, number],
         };
-    }, [xRange, lowerBound, upperBound, curves, samples, padding]);
+    }, [xRange, lowerFn, upperFn, parsedCurves, samples, padding]);
 
     return (
         <div className={cn(
@@ -132,7 +159,7 @@ export function IntegralRegion2D({
                 />
 
                 {/* Additional context curves */}
-                {curves.map((curve, idx) => (
+                {parsedCurves.map((curve, idx) => (
                     <Plot.OfX
                         key={idx}
                         y={curve.fn}
@@ -141,7 +168,7 @@ export function IntegralRegion2D({
                 ))}
 
                 {/* Curve labels */}
-                {curves.map((curve, idx) => {
+                {parsedCurves.map((curve, idx) => {
                     if (!curve.label) return null;
                     const labelX = xRange[0] + (xRange[1] - xRange[0]) * 0.8;
                     const labelY = curve.fn(labelX);

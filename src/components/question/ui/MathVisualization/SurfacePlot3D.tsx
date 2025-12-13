@@ -311,7 +311,7 @@ export interface SurfacePlot3DProps {
     xRange?: [number, number];
     yRange?: [number, number];
     zRange?: [number, number];
-    colorScheme?: "viridis" | "plasma" | "coolwarm" | "rainbow";
+    colorScheme?: "viridis" | "plasma" | "inferno" | "magma" | "rainbow" | "coolwarm";
     opacity?: number;
     showWireframe?: boolean;
     showContours?: boolean;

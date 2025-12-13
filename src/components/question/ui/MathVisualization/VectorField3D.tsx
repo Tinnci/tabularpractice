@@ -80,7 +80,11 @@ export interface VectorField3DVisualizerProps {
     /** R(x,y,z) - z component */
     fz: string;
     /** Range for all axes */
+    /** Range for all axes (deprecated, use xRange/yRange/zRange) */
     range?: [number, number];
+    xRange?: [number, number];
+    yRange?: [number, number];
+    zRange?: [number, number];
     /** Number of arrows per axis */
     density?: number;
     /** Arrow scale factor */
@@ -95,7 +99,10 @@ export function VectorField3DVisualizer({
     fx,
     fy,
     fz,
-    range = [-2, 2],
+    range,
+    xRange,
+    yRange,
+    zRange,
     density = 4,
     scale = 0.3,
     height = 400,
@@ -105,6 +112,10 @@ export function VectorField3DVisualizer({
     const fnX = useMemo(() => parseExpr3D(fx), [fx]);
     const fnY = useMemo(() => parseExpr3D(fy), [fy]);
     const fnZ = useMemo(() => parseExpr3D(fz), [fz]);
+
+    const finalXRange = xRange || range || [-2, 2];
+    const finalYRange = yRange || range || [-2, 2];
+    const finalZRange = zRange || range || [-2, 2];
 
     // Calculate divergence if needed
     const calculateDivergence = useMemo(() => {
@@ -120,15 +131,20 @@ export function VectorField3DVisualizer({
 
     const arrows = useMemo(() => {
         const result: React.ReactNode[] = [];
-        const [min, max] = range;
-        const step = (max - min) / density;
+        const [xMin, xMax] = finalXRange;
+        const [yMin, yMax] = finalYRange;
+        const [zMin, zMax] = finalZRange;
+
+        const xStep = (xMax - xMin) / density;
+        const yStep = (yMax - yMin) / density;
+        const zStep = (zMax - zMin) / density;
 
         for (let i = 0; i <= density; i++) {
             for (let j = 0; j <= density; j++) {
                 for (let k = 0; k <= density; k++) {
-                    const x = min + i * step;
-                    const y = min + j * step;
-                    const z = min + k * step;
+                    const x = xMin + i * xStep;
+                    const y = yMin + j * yStep;
+                    const z = zMin + k * zStep;
 
                     const vx = fnX(x, y, z);
                     const vy = fnY(x, y, z);
@@ -158,7 +174,7 @@ export function VectorField3DVisualizer({
         }
 
         return result;
-    }, [fnX, fnY, fnZ, range, density, scale, showDivergence, calculateDivergence]);
+    }, [fnX, fnY, fnZ, finalXRange, finalYRange, finalZRange, density, scale, showDivergence, calculateDivergence]);
 
     return (
         <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-100 dark:bg-slate-900 relative", className)} style={{ height }}>
@@ -196,15 +212,9 @@ export function VectorField3DVisualizer({
 
 export interface ClosedSurface3DProps {
     /** Surface type */
-    surface: "sphere" | "ellipsoid" | "cube" | "cylinder";
+    surface: "sphere" | "ellipsoid" | "cube" | "cylinder" | "cone" | "custom";
     /** Surface parameters */
-    params?: {
-        radius?: number;
-        a?: number;
-        b?: number;
-        c?: number;
-        height?: number;
-    };
+    params?: Record<string, number>;
     /** Vector field for flux visualization */
     vectorField?: {
         fx: string;
@@ -326,6 +336,30 @@ export function ClosedSurface3D({
                             transparent
                             opacity={showVolume ? 0.3 : 0.6}
                             side={THREE.DoubleSide}
+                        />
+                    </mesh>
+                );
+            case "cone":
+                return (
+                    <mesh rotation={[Math.PI, 0, 0]} position={[0, (params.height || 2) / 2, 0]}>
+                        <coneGeometry args={[params.radius || 1, params.height || 2, 32]} />
+                        <meshStandardMaterial
+                            color="#3b82f6"
+                            opacity={showVolume ? 0.3 : 0.6}
+                            transparent
+                            side={THREE.DoubleSide}
+                        />
+                    </mesh>
+                );
+            case "custom":
+                // Placeholder for custom geometry
+                return (
+                    <mesh>
+                        <boxGeometry args={[1, 1, 1]} />
+                        <meshStandardMaterial
+                            color="#a855f7"
+                            opacity={showVolume ? 0.3 : 0.6}
+                            transparent
                         />
                     </mesh>
                 );
