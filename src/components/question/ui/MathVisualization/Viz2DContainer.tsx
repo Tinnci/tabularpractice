@@ -205,31 +205,31 @@ export function Viz2DContainer({
         switch (layoutMode) {
             case "split-horizontal":
                 return (
-                    <div className="flex gap-2 h-full">
-                        <div className="flex-1 min-w-0">{children}</div>
-                        <div className="flex-1 min-w-0">{secondaryContent}</div>
+                    <div className="flex gap-2 h-full transition-all duration-300 ease-in-out">
+                        <div className="flex-1 min-w-0 transition-all duration-300">{children}</div>
+                        <div className="flex-1 min-w-0 transition-all duration-300">{secondaryContent}</div>
                     </div>
                 );
             case "split-vertical":
                 return (
-                    <div className="flex flex-col gap-2 h-full">
-                        <div className="flex-1 min-h-0">{children}</div>
-                        <div className="flex-1 min-h-0">{secondaryContent}</div>
+                    <div className="flex flex-col gap-2 h-full transition-all duration-300 ease-in-out">
+                        <div className="flex-1 min-h-0 transition-all duration-300">{children}</div>
+                        <div className="flex-1 min-h-0 transition-all duration-300">{secondaryContent}</div>
                     </div>
                 );
             case "pip":
                 return (
-                    <div className="relative h-full">
-                        {children}
+                    <div className="relative h-full transition-all duration-300 ease-in-out">
+                        <div className="w-full h-full transition-all duration-300">{children}</div>
                         {secondaryContent && (
-                            <div className="absolute bottom-3 right-3 w-1/3 h-1/3 rounded-lg border-2 border-primary/50 shadow-lg overflow-hidden bg-background/90 backdrop-blur-sm">
+                            <div className="absolute bottom-3 right-3 w-1/3 h-1/3 rounded-lg border-2 border-primary/50 shadow-lg overflow-hidden bg-background/90 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-xl z-10">
                                 {secondaryContent}
                             </div>
                         )}
                     </div>
                 );
             default:
-                return children;
+                return <div className="w-full h-full transition-all duration-300">{children}</div>;
         }
     };
 

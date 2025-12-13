@@ -31,6 +31,14 @@ export {
     type Viz2DControlsProps,
 } from "./Viz2DControls";
 
+// Split View & Comparison
+export {
+    SplitViewCompare,
+    PictureInPicture,
+    type SplitViewCompareProps,
+    type PictureInPictureProps,
+} from "./SplitViewCompare";
+
 // ============== Universal Renderer ==============
 
 export {
