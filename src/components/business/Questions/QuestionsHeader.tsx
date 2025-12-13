@@ -28,6 +28,7 @@ export interface QuestionsHeaderProps {
     onViewModeChange: (mode: 'wall' | 'grid') => void;
     onShowShortcutsHelp: () => void;
     filteredCount: number;
+    currentDoneCount: number;  // 当前筛选条件下已刷的题目数
     onQuestionSelect: (id: string) => void;
 }
 
@@ -36,6 +37,7 @@ export function QuestionsHeader({
     onViewModeChange,
     onShowShortcutsHelp,
     filteredCount,
+    currentDoneCount,
     onQuestionSelect
 }: QuestionsHeaderProps) {
     const {
@@ -167,7 +169,7 @@ export function QuestionsHeader({
 
                 <div className="hidden lg:flex flex-col items-end text-[10px] text-muted-foreground border-l pl-3 leading-tight">
                     <span>{DICT.wall.totalCount.replace('{count}', filteredCount.toString())}</span>
-                    <span>{DICT.wall.doneCount.replace('{count}', Object.keys(progress).length.toString())}</span>
+                    <span>{DICT.wall.doneCount.replace('{count}', currentDoneCount.toString())}</span>
                 </div>
             </div>
         </div>

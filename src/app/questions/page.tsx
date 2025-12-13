@@ -178,6 +178,11 @@ function QuestionsContent() {
     return filtered;
   }, [contextQuestions, filterStatus, filterStarred, stars]);
 
+  // 计算当前上下文中已刷的题目数（不考虑筛选条件，只统计当前paper/group下所有已刷题目）
+  const currentDoneCount = useMemo(() => {
+    return contextQuestions.filter(q => (q.status || 'unanswered') !== 'unanswered').length;
+  }, [contextQuestions]);
+
   const handleQuestionClick = (id: string) => {
     updateUrl({ questionId: id });
   };
@@ -260,6 +265,7 @@ function QuestionsContent() {
           onViewModeChange={handleViewModeChange}
           onShowShortcutsHelp={() => setShowShortcutsHelp(true)}
           filteredCount={filteredQuestions.length}
+          currentDoneCount={currentDoneCount}
           onQuestionSelect={(id) => updateUrl({ questionId: id })}
         />
 
