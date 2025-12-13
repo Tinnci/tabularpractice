@@ -142,7 +142,7 @@ function parseExpression(expr: string): (x: number) => number {
     return (x: number) => {
         try {
             // Replace common patterns
-            let processed = expr
+            const processed = expr
                 .replace(/\^/g, "**")  // x^2 -> x**2
                 .replace(/(\d)x/g, "$1*x")  // 2x -> 2*x
                 .replace(/x(\d)/g, "x*$1");  // x2 -> x*2
@@ -163,7 +163,7 @@ function parseExpression(expr: string): (x: number) => number {
 // 3D Loading fallback
 function Viz3DLoading() {
     return (
-        <div className="w-full h-[400px] flex items-center justify-center bg-slate-900 rounded-lg border">
+        <div className="w-full h-[400px] flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-lg border">
             <div className="text-sm text-muted-foreground animate-pulse">
                 🔄 加载 3D 可视化...
             </div>
@@ -293,7 +293,7 @@ export function MathVisualizationRenderer({
                     {is3D && <span className="text-xs text-primary/60">(拖拽旋转)</span>}
                 </div>
             )}
-            <div className={cn("rounded-lg overflow-hidden border", is3D ? "" : "bg-background")}>
+            <div className={cn("rounded-lg overflow-hidden border", is3D ? "bg-slate-100 dark:bg-slate-900" : "bg-background")}>
                 {visualization}
             </div>
         </div>

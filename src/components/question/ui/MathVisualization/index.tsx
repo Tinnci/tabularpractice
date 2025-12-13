@@ -21,6 +21,7 @@ export {
 export { SurfacePlot3D, type SurfacePlot3DProps } from "./SurfacePlot3D";
 export { VectorField3DVisualizer, ClosedSurface3D } from "./VectorField3D";
 export { Gradient3DVisualizer } from "./Gradient3D";
+export { Viz3DControls, Viz3DInfoHint } from "./Viz3DControls";
 
 // Type definitions for all visualization scenarios
 export * from "./types";

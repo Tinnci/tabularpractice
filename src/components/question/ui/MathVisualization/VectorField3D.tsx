@@ -5,6 +5,7 @@ import { OrbitControls, Line, Text, Sphere } from "@react-three/drei";
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { cn } from "@/lib/utils";
+import { Viz3DInfoHint } from "./Viz3DControls";
 
 // ============== Expression Parser ==============
 
@@ -160,7 +161,8 @@ export function VectorField3DVisualizer({
     }, [fnX, fnY, fnZ, range, density, scale, showDivergence, calculateDivergence]);
 
     return (
-        <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-900", className)} style={{ height }}>
+        <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-100 dark:bg-slate-900 relative", className)} style={{ height }}>
+            <Viz3DInfoHint />
             <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
                 <ambientLight intensity={0.6} />
                 <directionalLight position={[5, 5, 5]} intensity={0.8} />
@@ -333,7 +335,8 @@ export function ClosedSurface3D({
     };
 
     return (
-        <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-900", className)} style={{ height }}>
+        <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-100 dark:bg-slate-900 relative", className)} style={{ height }}>
+            <Viz3DInfoHint />
             <Canvas camera={{ position: [3, 3, 3], fov: 50 }}>
                 <ambientLight intensity={0.6} />
                 <directionalLight position={[5, 5, 5]} intensity={0.8} />

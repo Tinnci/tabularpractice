@@ -5,6 +5,7 @@ import { OrbitControls, Grid, Text, Line } from "@react-three/drei";
 import React, { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { cn } from "@/lib/utils";
+import { Viz3DInfoHint } from "./Viz3DControls";
 
 // ============== Expression Parser ==============
 
@@ -353,7 +354,8 @@ export function SurfacePlot3D({
     }, [fn, showGradient, gradientPoint]);
 
     return (
-        <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-900", className)} style={{ height }}>
+        <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-100 dark:bg-slate-900 relative", className)} style={{ height }}>
+            <Viz3DInfoHint />
             <Canvas
                 camera={{ position: [4, 4, 4], fov: 50 }}
                 gl={{ antialias: true }}
