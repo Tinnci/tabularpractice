@@ -16,6 +16,7 @@ export interface SettingsSlice {
     };
     geminiApiKey: string | null;
     vercelApiKey: string | null;
+    aiBaseUrl: string; // Custom Base URL for OpenAI-compatible providers
     aiProvider: 'google' | 'vercel';
 
     // Deprecated but kept for compatibility
@@ -28,6 +29,7 @@ export interface SettingsSlice {
     setAppearance: (settings: Partial<SettingsSlice['appearance']>) => void;
     setGeminiApiKey: (key: string | null) => void;
     setVercelApiKey: (key: string | null) => void;
+    setAiBaseUrl: (url: string) => void;
     setAiProvider: (provider: 'google' | 'vercel') => void;
     setRepoBaseUrl: (url: string) => void;
 
@@ -58,6 +60,7 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
     },
     geminiApiKey: null,
     vercelApiKey: null,
+    aiBaseUrl: 'https://api.openai.com/v1', // Default to OpenAI
     aiProvider: 'google',
     repoBaseUrl: '',
     hiddenPaperIds: [],
@@ -97,6 +100,7 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
 
     setGeminiApiKey: (key) => set({ geminiApiKey: key }),
     setVercelApiKey: (key) => set({ vercelApiKey: key }),
+    setAiBaseUrl: (url) => set({ aiBaseUrl: url }),
     setAiProvider: (provider) => set({ aiProvider: provider }),
 
     setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),

@@ -12,7 +12,7 @@ export interface ParsedData {
 }
 
 export function useGeminiParser() {
-    const { geminiApiKey, vercelApiKey, aiProvider } = useProgressStore();
+    const { geminiApiKey, vercelApiKey, aiProvider, aiBaseUrl } = useProgressStore();
     const [isProcessing, setIsProcessing] = useState(false);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -56,10 +56,35 @@ export function useGeminiParser() {
 
                 setAvailableModels(geminiModels);
             } else {
-                // For Vercel/OpenAI Gateway, we might not be able to list models easily without a dedicated endpoint or proxy.
-                // We'll provide a standard list for now.
-                setAvailableModels(['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo']);
-                // If the user has a way to list models via their gateway, we could add it here.
+                // Try to fetch models from the compatible API
+                let modelsFound = false;
+                if (aiBaseUrl && vercelApiKey) {
+                    try {
+                        // Handle potential trailing slash in base URL
+                        const baseUrl = aiBaseUrl.replace(/\/+$/, "");
+                        const response = await fetch(`${baseUrl}/models`, {
+                            headers: {
+                                "Authorization": `Bearer ${vercelApiKey}`
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Assume standard OpenAI format: { data: [{ id: "..." }, ...] }
+                            if (data.data && Array.isArray(data.data)) {
+                                setAvailableModels(data.data.map((m: any) => m.id));
+                                modelsFound = true;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Failed to list models from custom provider, using defaults", e);
+                    }
+                }
+
+                if (!modelsFound) {
+                    // Fallback standard list
+                    setAvailableModels(['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo']);
+                }
             }
         } catch (error) {
             console.error('Failed to fetch models:', error);
@@ -150,12 +175,9 @@ export function useGeminiParser() {
                 });
                 text = response.text || "";
             } else {
-                // Vercel AI Gateway / OpenAI Compatible (via fetch to avoid openai package)
-                // Default to OpenAI URL or allow base URL config if we had it.
-                // For Vercel AI Gateway, users often use a custom base URL.
-                // We'll assume standard OpenAI-compatible API for now as fallback.
-
-                const response = await fetch("https://ai.vercel.com/openai/v1/chat/completions", {
+                // User-configured OpenAI Compatible API (e.g., Vercel AI Gateway, LocalAI, etc.)
+                const baseUrl = (aiBaseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
+                const response = await fetch(`${baseUrl}/chat/completions`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

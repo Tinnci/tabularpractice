@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useContextQuestions } from "@/hooks/useContextQuestions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,14 @@ const DEFAULT_SESSION_STATE: PracticeSessionState = {
 };
 
 export default function PracticePage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <PracticePageContent />
+        </Suspense>
+    );
+}
+
+function PracticePageContent() {
     const { mergedQuestions } = useContextQuestions();
     const { updateStatus, addTime, practiceSession, setPracticeSession, updatePracticeSessionProgress, currentGroupId } = useProgressStore();
     const subjectKey = useMemo(() => getSubjectKey(currentGroupId || 'math'), [currentGroupId]);
@@ -101,6 +110,25 @@ export default function PracticePage() {
             });
         }
     }, [practiceSession, mergedQuestions, sessionState.isStarted]);
+
+    // Handle URL query params (e.g., ?tag=xyz)
+    const searchParams = useSearchParams();
+    const tagParam = searchParams.get('tag');
+    const tagParamProcessed = useRef(false);
+
+    useEffect(() => {
+        if (!tagParam || tagParamProcessed.current || sessionState.isStarted) return;
+
+        // If we have a tag param, we should probably clear existing tags and set this one
+        // and set isModalOpen to true (which is defaults)
+        setSessionState(prev => ({
+            ...prev,
+            selectedTags: new Set([tagParam]),
+            isModalOpen: true
+        }));
+
+        tagParamProcessed.current = true;
+    }, [tagParam, sessionState.isStarted]);
 
     // Destructure for easier access
     const { isStarted, queue, currentIndex, selectedTypes, selectedTags, isShuffle } = sessionState;

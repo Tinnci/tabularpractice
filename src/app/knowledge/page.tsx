@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { ArrowLeft, Network, BookOpen, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DICT } from '@/lib/i18n';
 import { toast } from 'sonner';
 
 export default function KnowledgePage() {
+    const router = useRouter();
     const [subjectKey, setSubjectKey] = useState('math');
     const { questionsIndex: questions, isLoading } = useQuestions();
     const [selectedTag, setSelectedTag] = useState<{ id: string; label: string } | null>(null);
@@ -23,8 +25,7 @@ export default function KnowledgePage() {
 
     const handleStartPractice = () => {
         if (selectedTag) {
-            // TODO: 跳转到练习页面，并自动过滤该 Tag
-            window.location.href = `/practice?tag=${selectedTag.id}`;
+            router.push(`/practice?tag=${selectedTag.id}`);
         }
     };
 

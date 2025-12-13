@@ -19,11 +19,12 @@ interface Props {
 }
 
 export function AiImportModal({ isOpen, onClose }: Props) {
-    const { geminiApiKey, setGeminiApiKey, vercelApiKey, setVercelApiKey, aiProvider, addCustomData } = useProgressStore();
+    const { geminiApiKey, setGeminiApiKey, vercelApiKey, setVercelApiKey, aiProvider, addCustomData, aiBaseUrl, setAiBaseUrl } = useProgressStore();
     // Initialize input based on current provider
     const [apiKeyInput, setApiKeyInput] = useState(
         aiProvider === 'google' ? (geminiApiKey || "") : (vercelApiKey || "")
     );
+    const [baseUrlInput, setBaseUrlInput] = useState(aiBaseUrl || "https://api.openai.com/v1");
     const [file, setFile] = useState<File | null>(null);
     const [step, setStep] = useState<'api-key' | 'upload' | 'preview'>('api-key');
     const [parsedData, setParsedData] = useState<{ questions: Question[], paper: Paper, group: PaperGroup } | null>(null);
@@ -53,6 +54,7 @@ export function AiImportModal({ isOpen, onClose }: Props) {
             setGeminiApiKey(apiKeyInput.trim());
         } else {
             setVercelApiKey(apiKeyInput.trim());
+            setAiBaseUrl(baseUrlInput.trim());
         }
         setStep('upload');
     };
@@ -157,6 +159,20 @@ export function AiImportModal({ isOpen, onClose }: Props) {
                                 />
                                 <Button onClick={handleSaveApiKey}>{DICT.ai.saveApiKey}</Button>
                             </div>
+
+                            {aiProvider !== 'google' && (
+                                <div className="space-y-2 mt-4">
+                                    <Label>API Base URL</Label>
+                                    <Input
+                                        value={baseUrlInput}
+                                        onChange={(e) => setBaseUrlInput(e.target.value)}
+                                        placeholder="https://api.openai.com/v1"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Default: https://api.openai.com/v1
+                                    </p>
+                                </div>
+                            )}
                             <div className="flex items-center justify-between">
                                 <p className="text-xs text-muted-foreground">
                                     {DICT.ai.apiKeyTip}
