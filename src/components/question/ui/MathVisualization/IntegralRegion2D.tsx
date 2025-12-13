@@ -4,6 +4,7 @@ import { Mafs, Coordinates, Plot, Polygon, Text, Theme, vec } from "mafs";
 import "mafs/core.css";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
+import { Viz2DInfoHint } from "./Viz2DControls";
 
 export interface CurveConfig {
     /** Function defining the curve */
@@ -113,8 +114,14 @@ export function IntegralRegion2D({
     }, [xRange, lowerBound, upperBound, curves, samples, padding]);
 
     return (
-        <div className={cn("w-full rounded-lg overflow-hidden border bg-background", className)}>
-            <Mafs height={height} viewBox={viewBounds}>
+        <div className={cn(
+            "relative w-full rounded-lg overflow-hidden border",
+            "bg-slate-50 dark:bg-slate-900/50",
+            "[&_.MafsView]:!bg-transparent",
+            className
+        )}>
+            <Viz2DInfoHint />
+            <Mafs height={height} viewBox={viewBounds} pan={true}>
                 <Coordinates.Cartesian />
 
                 {/* Shaded integration region */}

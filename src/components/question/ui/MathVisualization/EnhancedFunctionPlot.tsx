@@ -16,7 +16,7 @@ import { Mafs, Coordinates, Plot, Point, Text, Line, Theme, Polygon, vec } from 
 import "mafs/core.css";
 import { cn } from "@/lib/utils";
 import { useMemo, useState, useCallback } from "react";
-import { Viz2DInfoHint, ZoomIndicator } from "./Viz2DControls";
+import { Viz2DControls, ZoomIndicator } from "./Viz2DControls";
 
 // ============== Types ==============
 
@@ -334,9 +334,8 @@ export function EnhancedFunctionPlot({
         return [yMin - padding, yMax + padding] as [number, number];
     }, [parsedFunctions, viewBounds]);
 
-    // Zoom handlers - reserved for future interactive zoom controls
-    // TODO: Connect these to Viz2DControls when full interactivity is needed
-    const _handleZoomIn = useCallback(() => {
+    // Zoom handlers for control buttons
+    const handleZoomIn = useCallback(() => {
         const factor = 0.8;
         setViewBounds(prev => {
             const centerX = (prev.x[0] + prev.x[1]) / 2;
@@ -349,7 +348,7 @@ export function EnhancedFunctionPlot({
         setZoomLevel(prev => prev / factor);
     }, []);
 
-    const _handleZoomOut = useCallback(() => {
+    const handleZoomOut = useCallback(() => {
         const factor = 1.25;
         setViewBounds(prev => {
             const centerX = (prev.x[0] + prev.x[1]) / 2;
@@ -362,7 +361,7 @@ export function EnhancedFunctionPlot({
         setZoomLevel(prev => prev / factor);
     }, []);
 
-    const _handleReset = useCallback(() => {
+    const handleReset = useCallback(() => {
         setViewBounds({ x: initialXRange, y: initialYRange });
         setZoomLevel(1);
     }, [initialXRange, initialYRange]);
@@ -389,9 +388,12 @@ export function EnhancedFunctionPlot({
 
             {/* Controls */}
             {showControls && (
-                <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-                    <Viz2DInfoHint />
-                </div>
+                <Viz2DControls
+                    onReset={handleReset}
+                    onZoomIn={handleZoomIn}
+                    onZoomOut={handleZoomOut}
+                    zoomLevel={zoomLevel}
+                />
             )}
 
             {/* Legend */}
@@ -423,6 +425,7 @@ export function EnhancedFunctionPlot({
                     y: calculatedYRange,
                 }}
                 preserveAspectRatio={false}
+                pan={true}
             >
                 {showGrid && <Coordinates.Cartesian />}
 

@@ -191,7 +191,7 @@ export function ParametricCurve2D({
     y,
     tRange,
     color = Theme.blue,
-    weight: _weight = 2, // TODO: Use weight for Line.Segment when Mafs supports lineWidth
+    // Note: 'weight' prop is defined in interface for future use when Mafs supports lineWidth
     showDirection = false,
     directionArrowCount = 5,
     tangentVectors = [],
@@ -321,6 +321,7 @@ export function ParametricCurve2D({
                 height={height}
                 viewBox={viewBounds}
                 preserveAspectRatio={false}
+                pan={true}
             >
                 <Coordinates.Cartesian />
 

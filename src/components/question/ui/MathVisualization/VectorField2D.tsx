@@ -313,6 +313,7 @@ export function VectorField2D({
                     y: yRange,
                 }}
                 preserveAspectRatio={false}
+                pan={true}
             >
                 <Coordinates.Cartesian />
 
