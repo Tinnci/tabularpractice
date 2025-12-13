@@ -1,10 +1,38 @@
 "use client";
 
-// 2D Visualizations (Mafs-based)
+// ============== 2D Visualizations (Mafs-based) ==============
+
+// Core 2D components
 export { IntegralRegion2D, type IntegralRegion2DProps } from "./IntegralRegion2D";
 export { FunctionPlot, type FunctionPlotProps } from "./FunctionPlot";
 
-// Universal Renderer (handles both 2D and 3D)
+// Enhanced 2D components
+export { EnhancedFunctionPlot, type EnhancedFunctionPlotProps } from "./EnhancedFunctionPlot";
+export { VectorField2D, type VectorField2DProps } from "./VectorField2D";
+export { ParametricCurve2D, type ParametricCurve2DProps } from "./ParametricCurve2D";
+
+// 2D Container System (extensible layouts, zoom, pan)
+export {
+    Viz2DContainer,
+    MafsWrapper,
+    useViz2D,
+    type Viz2DContainerProps,
+    type ViewBounds,
+    type LayoutMode,
+    type ViewMode,
+} from "./Viz2DContainer";
+
+// 2D Controls
+export {
+    Viz2DControls,
+    Viz2DInfoHint,
+    ZoomIndicator,
+    LayoutModeSelector,
+    type Viz2DControlsProps,
+} from "./Viz2DControls";
+
+// ============== Universal Renderer ==============
+
 export {
     MathVisualizationRenderer,
     type MathVisualizationRendererProps,
@@ -17,11 +45,17 @@ export {
     type Gradient3DConfig,
 } from "./MathVisualizationRenderer";
 
-// 3D Visualizations (Three.js-based) - lazy loaded
+// ============== 3D Visualizations (Three.js-based) ==============
+
+// 3D components - lazy loaded
 export { SurfacePlot3D, type SurfacePlot3DProps } from "./SurfacePlot3D";
 export { VectorField3DVisualizer, ClosedSurface3D } from "./VectorField3D";
 export { Gradient3DVisualizer } from "./Gradient3D";
+
+// 3D Controls
 export { Viz3DControls, Viz3DInfoHint } from "./Viz3DControls";
 
-// Type definitions for all visualization scenarios
+// ============== Type Definitions ==============
+
 export * from "./types";
+
