@@ -7,6 +7,8 @@ export interface FlatTag {
     id: string;
     name: string;
     parentId: string | null;
+    subjectKey?: string;  // 科目标识，仅根节点有
+    isRoot?: boolean;     // 是否为顶级分类
 }
 
 // Fetcher for tags.json
@@ -68,13 +70,8 @@ export function buildTagTree(flatTags: FlatTag[]): TagNode[] {
     return rootNodes;
 }
 
-// Simple mapping of Subject -> Root Tag IDs (Normalized)
-// This bridges the external data with the app's subject concept
-const SUBJECT_ROOTS: Record<string, string[]> = {
-    math: ['advanced-math', 'linear-algebra', 'probability-statistics'],
-    english: ['vocabulary-grammar', 'reading-comprehension', 'cloze-test', 'writing'],
-    politics: ['marxism', 'mao-theory', 'modern-history', 'morality-law', 'current-affairs']
-};
+// 数据驱动：不再硬编码科目根节点映射
+// 科目根节点现在由 tags.json 中的 subjectKey 和 isRoot 字段定义
 
 export function useTags() {
     const repoSources = useProgressStore(state => state.repoSources);
@@ -96,18 +93,22 @@ export function useTags() {
     const tagTree = data ? buildTagTree(data) : [];
 
     // Helper to get tags for a specific subject
+    // 数据驱动：从 tags.json 的 subjectKey 和 isRoot 字段动态读取
     const getRootsForSubject = (subjectKey: string) => {
         if (!data) return [];
-        const allowedRoots = SUBJECT_ROOTS[subjectKey] || null;
 
-        // If config exists, filter by it
-        if (allowedRoots) {
-            return tagTree.filter(node => allowedRoots.includes(node.id));
+        // 从数据中找出属于该科目的根节点ID
+        const rootIds = data
+            .filter(tag => tag.subjectKey === subjectKey && tag.isRoot)
+            .map(tag => normalizeId(tag.id));
+
+        // 如果数据中没有定义，返回空数组
+        if (rootIds.length === 0) {
+            return [];
         }
 
-        // If no config (e.g. 'major'/other), return nothing or everything?
-        // Maybe default to everything if small, or nothing.
-        return [];
+        // 返回树形结构中对应的根节点
+        return tagTree.filter(node => rootIds.includes(node.id));
     };
 
     return {
