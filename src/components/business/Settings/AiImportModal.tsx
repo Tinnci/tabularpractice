@@ -19,8 +19,11 @@ interface Props {
 }
 
 export function AiImportModal({ isOpen, onClose }: Props) {
-    const { geminiApiKey, setGeminiApiKey, addCustomData } = useProgressStore();
-    const [apiKeyInput, setApiKeyInput] = useState(geminiApiKey || "");
+    const { geminiApiKey, setGeminiApiKey, vercelApiKey, setVercelApiKey, aiProvider, addCustomData } = useProgressStore();
+    // Initialize input based on current provider
+    const [apiKeyInput, setApiKeyInput] = useState(
+        aiProvider === 'google' ? (geminiApiKey || "") : (vercelApiKey || "")
+    );
     const [file, setFile] = useState<File | null>(null);
     const [step, setStep] = useState<'api-key' | 'upload' | 'preview'>('api-key');
     const [parsedData, setParsedData] = useState<{ questions: Question[], paper: Paper, group: PaperGroup } | null>(null);
@@ -32,10 +35,12 @@ export function AiImportModal({ isOpen, onClose }: Props) {
         availableModels,
         fetchAvailableModels,
         processFile: processFileApi
-    } = useGeminiParser(geminiApiKey);
+    } = useGeminiParser();
 
-    // 如果已有 API Key，直接跳到上传步骤
-    if (step === 'api-key' && geminiApiKey) {
+    // Check if we have the key for the CURRENT provider
+    const currentKey = aiProvider === 'google' ? geminiApiKey : vercelApiKey;
+
+    if (step === 'api-key' && currentKey) {
         setStep('upload');
     }
 
@@ -44,7 +49,11 @@ export function AiImportModal({ isOpen, onClose }: Props) {
             toast.error(DICT.ai.invalidKey);
             return;
         }
-        setGeminiApiKey(apiKeyInput.trim());
+        if (aiProvider === 'google') {
+            setGeminiApiKey(apiKeyInput.trim());
+        } else {
+            setVercelApiKey(apiKeyInput.trim());
+        }
         setStep('upload');
     };
 

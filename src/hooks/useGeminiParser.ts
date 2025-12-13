@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { toast } from "sonner";
 import { DICT } from "@/lib/i18n";
 import { Question, Paper, PaperGroup } from "@/lib/types";
+import { useProgressStore } from "@/lib/store";
 
 export interface ParsedData {
     questions: Question[];
@@ -10,7 +11,8 @@ export interface ParsedData {
     group: PaperGroup;
 }
 
-export function useGeminiParser(apiKey: string | null) {
+export function useGeminiParser() {
+    const { geminiApiKey, vercelApiKey, aiProvider } = useProgressStore();
     const [isProcessing, setIsProcessing] = useState(false);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -30,47 +32,62 @@ export function useGeminiParser(apiKey: string | null) {
     };
 
     const fetchAvailableModels = async () => {
-        if (!apiKey || isFetchingModels) return;
-
         setIsFetchingModels(true);
         try {
-            const ai = new GoogleGenAI({ apiKey });
-            const models = await ai.models.list();
+            if (aiProvider === 'google') {
+                if (!geminiApiKey) {
+                    setAvailableModels(['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']);
+                    return;
+                }
+                const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+                const models = await ai.models.list();
 
-            // Collect all models from the async iterable
-            const allModels = [];
-            for await (const model of models) {
-                allModels.push(model);
+                const allModels = [];
+                for await (const model of models) {
+                    allModels.push(model);
+                }
+
+                const geminiModels = allModels
+                    .filter((m: any) => {
+                        const methods = m.supportedGenerationMethods || [];
+                        return m.name.includes('gemini') && methods.includes('generateContent');
+                    })
+                    .map((m: any) => m.name.replace('models/', ''));
+
+                setAvailableModels(geminiModels);
+            } else {
+                // For Vercel/OpenAI Gateway, we might not be able to list models easily without a dedicated endpoint or proxy.
+                // We'll provide a standard list for now.
+                setAvailableModels(['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo']);
+                // If the user has a way to list models via their gateway, we could add it here.
             }
-
-            // Filter for Gemini models that support generateContent
-            const geminiModels = allModels
-                .filter((m: unknown) => {
-                    if (typeof m !== 'object' || m === null || !('name' in m)) return false;
-                    const model = m as { name: string; supportedGenerationMethods?: string[] };
-                    const methods = model.supportedGenerationMethods || [];
-                    return model.name.includes('gemini') && methods.includes('generateContent');
-                })
-                .map((m: unknown) => (m as { name: string }).name.replace('models/', ''));
-
-            setAvailableModels(geminiModels);
         } catch (error) {
             console.error('Failed to fetch models:', error);
             toast.error(DICT.ai.fetchFail);
-            setAvailableModels(['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']);
+            setAvailableModels(
+                aiProvider === 'google'
+                    ? ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']
+                    : ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo']
+            );
         } finally {
             setIsFetchingModels(false);
         }
     };
 
     const processFile = async (file: File, modelName: string): Promise<ParsedData | null> => {
-        if (!file || !apiKey) return null;
+        if (!file) return null;
+        if (aiProvider === 'google' && !geminiApiKey) {
+            toast.error(DICT.aiSettings.apiKeyRequired);
+            return null;
+        }
+        if (aiProvider === 'vercel' && !vercelApiKey) {
+            toast.error(DICT.aiSettings.apiKeyRequired);
+            return null;
+        }
 
         setIsProcessing(true);
         try {
             const base64Data = await fileToBase64(file);
-
-            const ai = new GoogleGenAI({ apiKey });
 
             const prompt = `
             ${DICT.ai.promptRole}
@@ -113,22 +130,66 @@ export function useGeminiParser(apiKey: string | null) {
             6. ${DICT.ai.req6}
             `;
 
-            const response = await ai.models.generateContent({
-                model: modelName,
-                contents: [
-                    {
-                        parts: [
-                            { text: prompt },
-                            { inlineData: { mimeType: file.type, data: base64Data } }
-                        ]
-                    }
-                ],
-                config: {
-                    responseMimeType: 'application/json'
-                }
-            });
+            let text = "";
 
-            const text = response.text;
+            if (aiProvider === 'google') {
+                const ai = new GoogleGenAI({ apiKey: geminiApiKey! });
+                const response = await ai.models.generateContent({
+                    model: modelName,
+                    contents: [
+                        {
+                            parts: [
+                                { text: prompt },
+                                { inlineData: { mimeType: file.type, data: base64Data } }
+                            ]
+                        }
+                    ],
+                    config: {
+                        responseMimeType: 'application/json'
+                    }
+                });
+                text = response.text || "";
+            } else {
+                // Vercel AI Gateway / OpenAI Compatible (via fetch to avoid openai package)
+                // Default to OpenAI URL or allow base URL config if we had it.
+                // For Vercel AI Gateway, users often use a custom base URL.
+                // We'll assume standard OpenAI-compatible API for now as fallback.
+
+                const response = await fetch("https://ai.vercel.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${vercelApiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: modelName,
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: prompt },
+                                    {
+                                        type: "image_url",
+                                        image_url: {
+                                            url: `data:${file.type};base64,${base64Data}`
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    throw new Error(`API Error: ${response.status} ${err}`);
+                }
+
+                const data = await response.json();
+                text = data.choices[0]?.message?.content || "";
+            }
+
             if (!text) throw new Error("No content generated");
 
             // Basic cleanup

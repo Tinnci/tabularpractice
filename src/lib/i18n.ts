@@ -659,16 +659,21 @@ export const DICT = {
     },
 
     // AI Settings
+    // AI Settings
     aiSettings: {
         title: "AI 功能配置",
-        desc: "配置 Gemini API Key 以启用 AI 辅助功能（题目导入、智能提示、适应性测验等）",
+        desc: "配置 AI API Key 以启用智能辅助功能（题目导入、智能提示、适应性测验等）",
+        provider: "AI 提供商",
+        googleGemini: "Google Gemini (官方)",
+        vercelAiGateway: "Vercel AI Gateway",
         apiKeyRequired: "API Key 不能为空",
-        apiKeySaved: "Gemini API Key 已保存",
+        apiKeySaved: "API Key 已保存",
         apiKeyRemoved: "API Key 已移除",
         save: "保存",
         apiKeyConfigured: "✓ API Key 已配置",
         remove: "移除",
-        getApiKey: "获取 Gemini API Key",
+        getApiKey: "获取 API Key",
+        vercelKeyPlaceholder: "Vercel AI SDK Key / OpenAI Key via Gateway",
         enabledFeatures: "已启用的 AI 功能:",
         feature1: "AI 智能题目导入（PDF → 结构化数据）",
         feature2: "AI 辅助生成顿悟提示",

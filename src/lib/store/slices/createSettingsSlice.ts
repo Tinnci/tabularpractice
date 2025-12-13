@@ -15,6 +15,8 @@ export interface SettingsSlice {
         compactMode: boolean;
     };
     geminiApiKey: string | null;
+    vercelApiKey: string | null;
+    aiProvider: 'google' | 'vercel';
 
     // Deprecated but kept for compatibility
     repoBaseUrl: string;
@@ -25,6 +27,8 @@ export interface SettingsSlice {
     setLowDataMode: (enabled: boolean) => void;
     setAppearance: (settings: Partial<SettingsSlice['appearance']>) => void;
     setGeminiApiKey: (key: string | null) => void;
+    setVercelApiKey: (key: string | null) => void;
+    setAiProvider: (provider: 'google' | 'vercel') => void;
     setRepoBaseUrl: (url: string) => void;
 
     hiddenPaperIds: string[];
@@ -53,6 +57,8 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
         compactMode: true,
     },
     geminiApiKey: null,
+    vercelApiKey: null,
+    aiProvider: 'google',
     repoBaseUrl: '',
     hiddenPaperIds: [],
     hiddenGroupIds: [],
@@ -90,6 +96,8 @@ export const createSettingsSlice: StateCreator<StoreState, [], [], SettingsSlice
     })),
 
     setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+    setVercelApiKey: (key) => set({ vercelApiKey: key }),
+    setAiProvider: (provider) => set({ aiProvider: provider }),
 
     setRepoBaseUrl: (url) => set({ repoBaseUrl: url }),
 
