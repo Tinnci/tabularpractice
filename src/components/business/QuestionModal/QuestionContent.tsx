@@ -6,6 +6,7 @@ import { Loader2, BookOpen, Eye, FileText, Clock, ExternalLink } from "lucide-re
 import { cn } from "@/lib/utils";
 import { Question, ViewType } from "@/lib/types";
 import { MarkdownContent, RemoteImage, DraftPanel, NotePanel } from "@/components/question";
+import { MathVisualizationRenderer, type VisualizationConfig } from "@/components/question/ui/MathVisualization";
 import { CopyButton } from "./CopyButton";
 import { SmartTagList } from "./SmartTagList";
 import { DICT } from "@/lib/i18n";
@@ -187,19 +188,31 @@ export function QuestionContent({
                                 question={question}
                             />
                         </div>
-                        <div className="p-4 sm:p-6 flex justify-center">
-                            {question.analysisMd ? (
-                                <div className="w-full text-left">
-                                    <MarkdownContent content={question.analysisMd} />
+                        <div className="p-4 sm:p-6 space-y-4">
+                            {/* 解析文本/图片 */}
+                            <div className="flex justify-center">
+                                {question.analysisMd ? (
+                                    <div className="w-full text-left">
+                                        <MarkdownContent content={question.analysisMd} />
+                                    </div>
+                                ) : question.analysisImg ? (
+                                    <RemoteImage
+                                        src={question.analysisImg}
+                                        alt={DICT.exam.analysis}
+                                        question={question}
+                                    />
+                                ) : (
+                                    <span className="text-muted-foreground text-sm">{DICT.exam.noAnalysis}</span>
+                                )}
+                            </div>
+
+                            {/* 可视化图示 (如果有) */}
+                            {question.eureka?.visualization && (
+                                <div className="border-t pt-4">
+                                    <MathVisualizationRenderer
+                                        config={question.eureka.visualization as unknown as VisualizationConfig}
+                                    />
                                 </div>
-                            ) : question.analysisImg ? (
-                                <RemoteImage
-                                    src={question.analysisImg}
-                                    alt={DICT.exam.analysis}
-                                    question={question}
-                                />
-                            ) : (
-                                <span className="text-muted-foreground text-sm">{DICT.exam.noAnalysis}</span>
                             )}
                         </div>
                     </div>
