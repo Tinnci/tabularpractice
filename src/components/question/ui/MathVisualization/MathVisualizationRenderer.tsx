@@ -3,7 +3,13 @@
 import { Mafs, Coordinates, Plot, Polygon, Text, Theme, vec, Line } from "mafs";
 import "mafs/core.css";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
+import { useMemo, Suspense, lazy } from "react";
+
+// Lazy load 3D components for code splitting
+const SurfacePlot3D = lazy(() => import("./SurfacePlot3D").then(m => ({ default: m.SurfacePlot3D })));
+const VectorField3DVisualizer = lazy(() => import("./VectorField3D").then(m => ({ default: m.VectorField3DVisualizer })));
+const ClosedSurface3D = lazy(() => import("./VectorField3D").then(m => ({ default: m.ClosedSurface3D })));
+const Gradient3DVisualizer = lazy(() => import("./Gradient3D").then(m => ({ default: m.Gradient3DVisualizer })));
 
 /**
  * Configuration for a mathematical visualization.
@@ -11,11 +17,24 @@ import { useMemo } from "react";
  */
 export interface VisualizationConfig {
     /** Type of visualization */
-    type: "integral-region-2d" | "function-plot" | "parametric" | "vector-field";
+    type:
+    // 2D types
+    | "integral-region-2d"
+    | "function-plot"
+    | "parametric"
+    | "vector-field-2d"
+    // 3D types  
+    | "surface-plot-3d"
+    | "vector-field-3d"
+    | "closed-surface-3d"
+    | "gradient-3d"
+    | "parametric-surface-3d"
+    | "curve-3d"
+    | "integral-region-3d";
     /** Title shown above the visualization */
     title?: string;
     /** Configuration specific to the visualization type */
-    config: IntegralRegion2DConfig | FunctionPlotConfig;
+    config: IntegralRegion2DConfig | FunctionPlotConfig | SurfacePlot3DConfig | VectorField3DConfig | ClosedSurface3DConfig | Gradient3DConfig;
 }
 
 export interface FunctionPlotConfig {
@@ -53,6 +72,54 @@ export interface IntegralRegion2DConfig {
         y: number;
         text: string;
     }>;
+}
+
+// ============== 3D Configuration Types ==============
+
+export interface SurfacePlot3DConfig {
+    type: "surface-plot-3d";
+    /** z = f(x,y) expression */
+    function: string;
+    xRange?: [number, number];
+    yRange?: [number, number];
+    colorScheme?: "viridis" | "plasma" | "coolwarm" | "rainbow";
+    opacity?: number;
+    showWireframe?: boolean;
+    criticalPoints?: Array<{
+        x: number;
+        y: number;
+        type: "maximum" | "minimum" | "saddle";
+        label?: string;
+    }>;
+}
+
+export interface VectorField3DConfig {
+    type: "vector-field-3d";
+    fx: string;
+    fy: string;
+    fz: string;
+    range?: [number, number];
+    density?: number;
+    showDivergence?: boolean;
+}
+
+export interface ClosedSurface3DConfig {
+    type: "closed-surface-3d";
+    surface: "sphere" | "ellipsoid" | "cube" | "cylinder";
+    params?: { radius?: number; a?: number; b?: number; c?: number; height?: number };
+    vectorField?: { fx: string; fy: string; fz: string };
+    showFluxArrows?: boolean;
+    showVolume?: boolean;
+}
+
+export interface Gradient3DConfig {
+    type: "gradient-3d";
+    function: string;
+    point: [number, number, number];
+    showLevelSurface?: boolean;
+    showGradientVector?: boolean;
+    showDirectionalDerivative?: { direction: [number, number, number]; label?: string };
+    range?: [number, number];
 }
 
 // Safe function parser - converts string expression to function
@@ -93,6 +160,17 @@ function parseExpression(expr: string): (x: number) => number {
     };
 }
 
+// 3D Loading fallback
+function Viz3DLoading() {
+    return (
+        <div className="w-full h-[400px] flex items-center justify-center bg-slate-900 rounded-lg border">
+            <div className="text-sm text-muted-foreground animate-pulse">
+                🔄 加载 3D 可视化...
+            </div>
+        </div>
+    );
+}
+
 export interface MathVisualizationRendererProps {
     config: VisualizationConfig;
     height?: number;
@@ -102,6 +180,7 @@ export interface MathVisualizationRendererProps {
 /**
  * Universal renderer for mathematical visualizations.
  * Parses configuration from eureka data and renders appropriate visualization.
+ * Supports both 2D (Mafs) and 3D (Three.js) visualizations.
  */
 export function MathVisualizationRenderer({
     config,
@@ -109,6 +188,7 @@ export function MathVisualizationRenderer({
     className,
 }: MathVisualizationRendererProps) {
     const visualization = useMemo(() => {
+        // 2D Visualizations
         if (config.type === "integral-region-2d") {
             const cfg = config.config as IntegralRegion2DConfig;
             return (
@@ -129,19 +209,91 @@ export function MathVisualizationRenderer({
             );
         }
 
+        // 3D Visualizations (lazy loaded)
+        if (config.type === "surface-plot-3d") {
+            const cfg = config.config as SurfacePlot3DConfig;
+            return (
+                <Suspense fallback={<Viz3DLoading />}>
+                    <SurfacePlot3D
+                        function={cfg.function}
+                        xRange={cfg.xRange}
+                        yRange={cfg.yRange}
+                        colorScheme={cfg.colorScheme}
+                        opacity={cfg.opacity}
+                        showWireframe={cfg.showWireframe}
+                        criticalPoints={cfg.criticalPoints}
+                        height={400}
+                    />
+                </Suspense>
+            );
+        }
+
+        if (config.type === "vector-field-3d") {
+            const cfg = config.config as VectorField3DConfig;
+            return (
+                <Suspense fallback={<Viz3DLoading />}>
+                    <VectorField3DVisualizer
+                        fx={cfg.fx}
+                        fy={cfg.fy}
+                        fz={cfg.fz}
+                        range={cfg.range}
+                        density={cfg.density}
+                        showDivergence={cfg.showDivergence}
+                        height={400}
+                    />
+                </Suspense>
+            );
+        }
+
+        if (config.type === "closed-surface-3d") {
+            const cfg = config.config as ClosedSurface3DConfig;
+            return (
+                <Suspense fallback={<Viz3DLoading />}>
+                    <ClosedSurface3D
+                        surface={cfg.surface}
+                        params={cfg.params}
+                        vectorField={cfg.vectorField}
+                        showFluxArrows={cfg.showFluxArrows}
+                        showVolume={cfg.showVolume}
+                        height={400}
+                    />
+                </Suspense>
+            );
+        }
+
+        if (config.type === "gradient-3d") {
+            const cfg = config.config as Gradient3DConfig;
+            return (
+                <Suspense fallback={<Viz3DLoading />}>
+                    <Gradient3DVisualizer
+                        function={cfg.function}
+                        point={cfg.point}
+                        showLevelSurface={cfg.showLevelSurface}
+                        showGradientVector={cfg.showGradientVector}
+                        showDirectionalDerivative={cfg.showDirectionalDerivative}
+                        range={cfg.range}
+                        height={400}
+                    />
+                </Suspense>
+            );
+        }
+
         return null;
     }, [config, height]);
 
     if (!visualization) return null;
 
+    const is3D = config.type.endsWith("-3d");
+
     return (
         <div className={cn("space-y-2", className)}>
             {config.title && (
                 <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    📊 {config.title}
+                    {is3D ? "🎨" : "📊"} {config.title}
+                    {is3D && <span className="text-xs text-primary/60">(拖拽旋转)</span>}
                 </div>
             )}
-            <div className="rounded-lg overflow-hidden border bg-background">
+            <div className={cn("rounded-lg overflow-hidden border", is3D ? "" : "bg-background")}>
                 {visualization}
             </div>
         </div>
