@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { MarkdownContent } from "@/components/question";
+import { MathVisualizationRenderer, type VisualizationConfig } from "@/components/question/ui/MathVisualization";
 import { DICT } from "@/lib/i18n";
 
 interface Props {
@@ -186,6 +187,13 @@ export function EurekaPanel({ question, onClose, className }: Props) {
                                 ))}
                             </div>
                         </div>
+                    )}
+
+                    {/* 1.5. Visualization (数学可视化) */}
+                    {eurekaData?.visualization && (
+                        <MathVisualizationRenderer
+                            config={eurekaData.visualization as unknown as VisualizationConfig}
+                        />
                     )}
 
                     {/* 2. Model Lineup (模型配对) */}

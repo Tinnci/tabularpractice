@@ -119,6 +119,13 @@ export interface EurekaData {
     action: string;   // 执行动作，e.g. "利用轮换对称性化简"
   }>;
 
+  // 数学可视化 (用于积分区域、函数图像等)
+  visualization?: {
+    type: 'integral-region-2d' | 'function-plot' | 'parametric' | 'vector-field';
+    title?: string;
+    config: Record<string, unknown>;
+  };
+
   // 关键洞察 (最终揭示)
   insight?: string;
 }

@@ -9,6 +9,8 @@ import { RemoteImage } from "./ui/RemoteImage";
 // though direct import from ./ui/* is preferred for tree-shaking usually.
 export { MarkdownContent } from "./ui/MarkdownContent";
 export { RemoteImage } from "./ui/RemoteImage";
+export { IntegralRegion2D, FunctionPlot } from "./ui/MathVisualization";
+
 
 
 // 题目内容渲染器 - 统一处理 Markdown 和图片的显示逻辑
