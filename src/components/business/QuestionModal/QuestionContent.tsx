@@ -8,10 +8,12 @@ import { cn } from "@/lib/utils";
 import { Question, ViewType, ContentViewMode } from "@/lib/types";
 import { MarkdownContent, RemoteImage, DraftPanel, NotePanel } from "@/components/question";
 import { MathVisualizationRenderer, type VisualizationConfig } from "@/components/question/ui/MathVisualization";
+import { ControlVisualizationRenderer, type ControlVisualizationConfig } from "@/components/question/ui/ControlVisualization";
 import { CopyButton } from "./CopyButton";
 import { SmartTagList } from "./SmartTagList";
 import { DICT } from "@/lib/i18n";
 import { getBilibiliTimestamp, formatTimestamp } from "@/lib/utils";
+
 
 export interface QuestionContentProps {
     question: Question;
@@ -21,6 +23,19 @@ export interface QuestionContentProps {
     videoEmbedUrl: string | null;
     notes: Record<string, string>;
     onUpdateNote: (questionId: string, content: string) => void;
+}
+
+// Control visualization type identifiers
+const CONTROL_VIZ_TYPES = [
+    'step-response', 'bode-plot', 'root-locus', 'block-diagram',
+    'circuit-diagram', 'nyquist-plot', 'phase-portrait', 'state-transition'
+];
+
+// Helper: Check if visualization is a control theory type
+function isControlVisualization(viz: unknown): boolean {
+    if (!viz || typeof viz !== 'object') return false;
+    const config = viz as { type?: string };
+    return CONTROL_VIZ_TYPES.includes(config.type ?? '');
 }
 
 export function QuestionContent({
@@ -343,9 +358,16 @@ export function QuestionContent({
                             {/* 可视化图示 (如果有) */}
                             {question.eureka?.visualization && (
                                 <div className="border-t pt-4">
-                                    <MathVisualizationRenderer
-                                        config={question.eureka.visualization as unknown as VisualizationConfig}
-                                    />
+                                    {/* 检测可视化类型并使用对应渲染器 */}
+                                    {isControlVisualization(question.eureka.visualization) ? (
+                                        <ControlVisualizationRenderer
+                                            config={question.eureka.visualization as unknown as ControlVisualizationConfig}
+                                        />
+                                    ) : (
+                                        <MathVisualizationRenderer
+                                            config={question.eureka.visualization as unknown as VisualizationConfig}
+                                        />
+                                    )}
                                 </div>
                             )}
                         </div>
