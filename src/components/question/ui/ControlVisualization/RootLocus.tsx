@@ -121,14 +121,24 @@ export function RootLocus({
                     );
                 })}
 
-                {/* Custom branches */}
+                {/* Custom branches with linear interpolation */}
                 {branches?.map((branch, i) => (
                     <Plot.Parametric
                         key={`branch-${i}`}
                         xy={(t) => {
-                            const idx = Math.floor(t * (branch.points.length - 1));
-                            const p = branch.points[Math.min(idx, branch.points.length - 1)];
-                            return [p.re, p.im];
+                            // t goes from 0 to 1
+                            const totalSegments = branch.points.length - 1;
+                            const idxFloat = t * totalSegments;
+                            const idx = Math.floor(idxFloat);
+                            const ratio = idxFloat - idx;
+
+                            const p1 = branch.points[Math.min(idx, totalSegments)];
+                            const p2 = branch.points[Math.min(idx + 1, totalSegments)];
+
+                            const re = p1.re + (p2.re - p1.re) * ratio;
+                            const im = p1.im + (p2.im - p1.im) * ratio;
+
+                            return [re, im];
                         }}
                         t={[0, 1]}
                         color="#3b82f6"

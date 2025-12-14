@@ -203,6 +203,36 @@ export function CircuitDiagram({
         return `${minX - padding} ${minY - padding} ${width} ${svgHeight}`;
     }, [components]);
 
+    // Helper to calculate port position
+    const getPortPosition = (comp: CircuitComponent, port: 'left' | 'right' | 'top' | 'bottom'): { x: number, y: number } => {
+        // Dimensions of components (approximate based on SVG symbols)
+        const offset = 30; // Half-width for 2-terminal components
+
+        let localX = 0;
+        let localY = 0;
+
+        // Determine local port position based on component type
+        // Most 2-terminal components (R, L, C, V) are horizontal by default: Left (-30, 0), Right (30, 0)
+        if (['resistor', 'capacitor', 'inductor', 'voltage-source', 'switch'].includes(comp.type)) {
+            if (port === 'left') localX = -offset;
+            if (port === 'right') localX = offset;
+        }
+        // Ground is vertical: Top (0, 0) is connection point
+        else if (comp.type === 'ground') {
+            if (port === 'top') { localX = 0; localY = -15; } // The wire connects at top
+        }
+
+        // Apply rotation
+        const rad = ((comp.rotation || 0) * Math.PI) / 180;
+        const rotatedX = localX * Math.cos(rad) - localY * Math.sin(rad);
+        const rotatedY = localX * Math.sin(rad) + localY * Math.cos(rad);
+
+        return {
+            x: comp.position.x + rotatedX,
+            y: comp.position.y + rotatedY
+        };
+    };
+
     // Render connections as SVG paths
     const renderConnections = () => {
         return connections.map((conn, i) => {
@@ -211,24 +241,110 @@ export function CircuitDiagram({
 
             if (!fromComp || !toComp) return null;
 
-            // Calculate connection points (simplified: center to center)
-            const x1 = fromComp.position.x + 30; // Offset for component width
-            const y1 = fromComp.position.y;
-            const x2 = toComp.position.x - 30;
-            const y2 = toComp.position.y;
+            // Determine ports based on relative positions if not specified? 
+            // Ideally config should say "fromPort: 'right', toPort: 'left'"
+            // For now, heuristic: logical flow is Left -> Right usually.
+            // But if components are rotated, we need to be smarter.
+
+            // Heuristic for default ports:
+            // "Right" port of source -> "Left" port of target
+            // But we must check rotation to see where "Right" physically is.
+
+            const p1 = getPortPosition(fromComp, 'right');
+            const p2 = getPortPosition(toComp, 'left');
 
             // Use bend points if provided
             if (conn.bendPoints && conn.bendPoints.length > 0) {
-                const pathParts = [`M${x1},${y1}`];
-                conn.bendPoints.forEach(bp => {
-                    pathParts.push(`L${bp.x},${bp.y}`);
+                // Smart Orthogonal Routing through bend points
+                let pathD = `M${p1.x},${p1.y}`;
+
+                let currentX = p1.x;
+                let currentY = p1.y;
+
+                // Determine exit direction from p1 (Source)
+                // Heuristic: Based on port position relative to component center
+                const srcCenter = fromComp.position;
+                const dx1 = p1.x - srcCenter.x;
+                const dy1 = p1.y - srcCenter.y;
+
+                // Determine dominant direction of port
+                // Right: dx>10, Left: dx<-10, Bottom: dy>10, Top: dy<-10
+                let exitDir: 'horizontal' | 'vertical' = 'horizontal';
+                let exitSign = 0;
+
+                if (Math.abs(dx1) > Math.abs(dy1)) {
+                    exitDir = 'horizontal';
+                    exitSign = Math.sign(dx1);
+                } else {
+                    exitDir = 'vertical';
+                    exitSign = Math.sign(dy1);
+                }
+
+                // Add a small stub to exit the component cleanly
+                const STUB_LEN = 10;
+                if (exitDir === 'horizontal') {
+                    currentX += exitSign * STUB_LEN;
+                } else {
+                    currentY += exitSign * STUB_LEN;
+                }
+                pathD += ` L${currentX},${currentY}`;
+
+                // Process each target point (bend points + final point)
+                const targets = [...conn.bendPoints, p2];
+
+                targets.forEach(target => {
+                    // Check if we need to route diagonally
+                    if (Math.abs(target.x - currentX) > 1 && Math.abs(target.y - currentY) > 1) {
+
+                        // Decide order: H-V or V-H
+                        let goHorizontalFirst = true;
+
+                        if (exitDir === 'horizontal') {
+                            goHorizontalFirst = true;
+                            // Exception: if target x is "behind" us, we MUST turn vertical immediately.
+                            if ((target.x - currentX) * exitSign < 0) {
+                                goHorizontalFirst = false;
+                            }
+                        } else { // Vertical exit
+                            goHorizontalFirst = false;
+                            // Exception: if target y is "behind" us, we MUST turn horizontal immediately.
+                            if ((target.y - currentY) * exitSign < 0) {
+                                goHorizontalFirst = true;
+                            }
+                        }
+
+                        if (goHorizontalFirst) {
+                            pathD += ` L${target.x},${currentY} L${target.x},${target.y}`;
+                            // We ended moving vertically (to reach target.y)
+                            exitDir = 'vertical';
+                            exitSign = Math.sign(target.y - currentY) || 1;
+                        } else {
+                            pathD += ` L${currentX},${target.y} L${target.x},${target.y}`;
+                            // We ended moving horizontally (to reach target.x)
+                            exitDir = 'horizontal';
+                            exitSign = Math.sign(target.x - currentX) || 1;
+                        }
+
+                    } else {
+                        // Aligned in one axis, just straight line
+                        pathD += ` L${target.x},${target.y}`;
+                        // Update direction based on movement
+                        if (Math.abs(target.x - currentX) > 1) {
+                            exitDir = 'horizontal';
+                            exitSign = Math.sign(target.x - currentX);
+                        } else if (Math.abs(target.y - currentY) > 1) {
+                            exitDir = 'vertical';
+                            exitSign = Math.sign(target.y - currentY);
+                        }
+                    }
+                    currentX = target.x;
+                    currentY = target.y;
                 });
-                pathParts.push(`L${x2},${y2}`);
 
                 return (
                     <path
                         key={`conn-${i}`}
-                        d={pathParts.join(" ")}
+                        d={pathD}
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
@@ -237,33 +353,16 @@ export function CircuitDiagram({
                 );
             }
 
-            // Simple straight or L-shaped connection
-            if (Math.abs(y1 - y2) < 5) {
-                // Horizontal
-                return (
-                    <line
-                        key={`conn-${i}`}
-                        x1={x1}
-                        y1={y1}
-                        x2={x2}
-                        y2={y2}
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    />
-                );
-            } else {
-                // L-shaped
-                const midX = (x1 + x2) / 2;
-                return (
-                    <path
-                        key={`conn-${i}`}
-                        d={`M${x1},${y1} L${midX},${y1} L${midX},${y2} L${x2},${y2}`}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    />
-                );
-            }
+            // Simple L-shaped connection
+            return (
+                <path
+                    key={`conn-${i}`}
+                    d={`M${p1.x},${p1.y} L${(p1.x + p2.x) / 2},${p1.y} L${(p1.x + p2.x) / 2},${p2.y} L${p2.x},${p2.y}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                />
+            );
         });
     };
 

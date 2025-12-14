@@ -171,6 +171,14 @@ export function BodePlot({
         Math.log10(omegaRange[1])
     ];
 
+    // Determine phase range
+    const phaseRange = useMemo(() => {
+        const phases = omegaPoints.map(phaseFunction);
+        const min = Math.min(...phases);
+        const max = Math.max(...phases);
+        return [Math.floor(min / 90) * 90 - 45, Math.ceil(max / 90) * 90 + 45] as [number, number];
+    }, [omegaPoints, phaseFunction]);
+
     return (
         <div className={cn("rounded-lg border bg-background overflow-hidden", className)}>
             {/* Magnitude Plot */}
@@ -233,7 +241,7 @@ export function BodePlot({
                 </div>
                 <Mafs
                     height={height / 2}
-                    viewBox={{ x: logOmegaRange, y: [-270, 90] }}
+                    viewBox={{ x: logOmegaRange, y: phaseRange }}
                     preserveAspectRatio={false}
                 >
                     <Coordinates.Cartesian

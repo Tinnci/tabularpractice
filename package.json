@@ -11,7 +11,8 @@
     "test": "bun test",
     "analyze:i18n": "bun scripts/analyze-i18n-ast.ts",
     "check:scripts": "bun scripts/check-isolation.ts",
-    "check:props": "bun scripts/check-props.ts"
+    "check:props": "bun scripts/check-props.ts",
+    "verify": "bun scripts/analyze-code.ts"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",

@@ -175,6 +175,123 @@ const mathTags: TagNode[] = [
     }
 ];
 
+// 控制理论知识点
+const controlTheoryTags: TagNode[] = [
+    {
+        id: "classic-control",
+        label: "经典控制理论",
+        children: [
+            {
+                id: "modeling",
+                label: "系统建模",
+                children: [
+                    { id: "transfer-function", label: "传递函数" },
+                    { id: "block-diagram", label: "方框图简化" },
+                    { id: "signal-flow-graph", label: "信号流图" },
+                    { id: "circuit-modeling", label: "电路系统建模" },
+                    { id: "mechanical-modeling", label: "机械系统建模" }
+                ]
+            },
+            {
+                id: "time-domain-analysis",
+                label: "时域分析",
+                children: [
+                    { id: "stability-analysis", label: "稳定性分析" },
+                    { id: "steady-state-error", label: "稳态误差" },
+                    { id: "transient-response", label: "暂态响应" },
+                    { id: "routh-criterion", label: "劳斯判据" }
+                ]
+            },
+            {
+                id: "root-locus",
+                label: "根轨迹法",
+                children: [
+                    { id: "root-locus-drawing", label: "根轨迹绘制" },
+                    { id: "root-locus-analysis", label: "利用根轨迹分析" }
+                ]
+            },
+            {
+                id: "frequency-domain",
+                label: "频域分析",
+                children: [
+                    { id: "bode-plot", label: "伯德图 (Bode Plot)" },
+                    { id: "nyquist-plot", label: "奈奎斯特图 (Nyquist Plot)" },
+                    { id: "frequency-stability", label: "频域稳定性判据" },
+                    { id: "phase-margin", label: "相角裕度" }
+                ]
+            },
+            {
+                id: "compensation",
+                label: "系统校正",
+                children: [
+                    { id: "lead-compensation", label: "超前校正" },
+                    { id: "lag-compensation", label: "滞后校正" },
+                    { id: "pid-control", label: "PID控制" }
+                ]
+            }
+        ]
+    },
+    {
+        id: "modern-control",
+        label: "现代控制理论",
+        children: [
+            {
+                id: "state-space",
+                label: "状态空间法",
+                children: [
+                    { id: "state-equation", label: "状态方程建立" },
+                    { id: "state-transition-matrix", label: "状态转移矩阵" },
+                    { id: "linear-transformation", label: "线性变换" },
+                    { id: "canonical-form", label: "标准型 (能控/能观/约当)" }
+                ]
+            },
+            {
+                id: "controllability-observability",
+                label: "能控性与能观性",
+                children: [
+                    { id: "controllability", label: "能控性判定" },
+                    { id: "observability", label: "能观性判定" },
+                    { id: "decomposition", label: "结构分解" }
+                ]
+            },
+            {
+                id: "linear-system-design",
+                label: "线性系统设计",
+                children: [
+                    { id: "pole-placement", label: "极点配置" },
+                    { id: "state-observer", label: "状态观测器" },
+                    { id: "quadratic-optimal", label: "二次型最优控制" }
+                ]
+            },
+            {
+                id: "stability-theory",
+                label: "稳定性理论",
+                children: [
+                    { id: "lyapunov-stability", label: "李雅普诺夫稳定性" }
+                ]
+            }
+        ]
+    },
+    {
+        id: "discrete-system",
+        label: "离散控制系统",
+        children: [
+            { id: "z-transform", label: "Z变换理论" },
+            { id: "pulse-transfer-function", label: "脉冲传递函数" },
+            { id: "discrete-stability", label: "离散系统稳定性" },
+            { id: "discrete-design", label: "离散系统设计" }
+        ]
+    },
+    {
+        id: "nonlinear-system",
+        label: "非线性系统",
+        children: [
+            { id: "phase-plane", label: "相平面法" },
+            { id: "describing-function", label: "描述函数法" }
+        ]
+    }
+];
+
 // 英语知识点
 const englishTags: TagNode[] = [
     {
@@ -259,7 +376,8 @@ import { getSubjectKey } from '@/lib/subjectConfig';
 export const SUBJECT_TAGS_MAP: Record<string, TagNode[]> = {
     math: mathTags,
     english: englishTags,
-    politics: politicsTags
+    politics: politicsTags,
+    "control-theory": controlTheoryTags
 };
 
 /**

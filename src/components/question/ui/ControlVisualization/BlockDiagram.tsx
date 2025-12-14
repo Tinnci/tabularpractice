@@ -174,8 +174,10 @@ export function BlockDiagram({
             targetHandle: conn.toPort === "bottom" ? "bottom" : conn.toPort === "top" ? "top" : undefined,
             label: conn.label,
             labelStyle: { fontSize: 10, fontFamily: "monospace" },
+            type: "smoothstep", // Use orthogonal routing
             style: {
                 stroke: conn.signalType === "discrete" ? "#8b5cf6" : "#64748b",
+                strokeWidth: 1.5,
                 strokeDasharray: conn.signalType === "discrete" ? "5,5" : undefined,
             },
             animated: conn.signalType === "discrete",
