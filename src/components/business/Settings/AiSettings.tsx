@@ -26,11 +26,16 @@ export function AiSettings() {
     const [vercelKeyInput, setVercelKeyInput] = useState(vercelApiKey || "");
     const [showKey, setShowKey] = useState(false);
 
-    // Update local state when store changes (e.g. hydration)
+    // Sync from store when it loads (hydration fix)
     useEffect(() => {
-        if (geminiApiKey) setGoogleKeyInput(geminiApiKey);
-        if (vercelApiKey) setVercelKeyInput(vercelApiKey);
-    }, [geminiApiKey, vercelApiKey]);
+        if (geminiApiKey && googleKeyInput === "") setGoogleKeyInput(geminiApiKey);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [geminiApiKey]);
+
+    useEffect(() => {
+        if (vercelApiKey && vercelKeyInput === "") setVercelKeyInput(vercelApiKey);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [vercelApiKey]);
 
     const handleSave = () => {
         if (aiProvider === 'google') {

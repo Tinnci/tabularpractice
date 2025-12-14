@@ -48,11 +48,11 @@ export function useGeminiParser() {
                 }
 
                 const geminiModels = allModels
-                    .filter((m: any) => {
-                        const methods = m.supportedGenerationMethods || [];
-                        return m.name.includes('gemini') && methods.includes('generateContent');
+                    .filter((m) => {
+                        const methods = (m as { supportedGenerationMethods?: string[] }).supportedGenerationMethods || [];
+                        return m.name?.includes('gemini') && methods.includes('generateContent');
                     })
-                    .map((m: any) => m.name.replace('models/', ''));
+                    .map((m) => (m.name || '').replace('models/', ''));
 
                 setAvailableModels(geminiModels);
             } else {
@@ -72,7 +72,7 @@ export function useGeminiParser() {
                             const data = await response.json();
                             // Assume standard OpenAI format: { data: [{ id: "..." }, ...] }
                             if (data.data && Array.isArray(data.data)) {
-                                setAvailableModels(data.data.map((m: any) => m.id));
+                                setAvailableModels(data.data.map((m: { id: string }) => m.id));
                                 modelsFound = true;
                             }
                         }

@@ -53,23 +53,23 @@ async function validatePaperImages(paperId: string) {
     };
 
     if (data.questions) {
-        for (const [id, q] of Object.entries(data.questions) as [string, any][]) {
+        for (const [id, q] of Object.entries(data.questions) as [string, { contentImg?: string | null; answerImg?: string | null; analysisImg?: string | null }][]) {
             const oldContentImg = q.contentImg;
-            const newContentImg = await checkImage(id, 'contentImg', q.contentImg);
+            const newContentImg = await checkImage(id, 'contentImg', q.contentImg ?? null);
             if (oldContentImg !== newContentImg) {
                 q.contentImg = newContentImg;
                 changed = true;
             }
 
             const oldAnswerImg = q.answerImg;
-            const newAnswerImg = await checkImage(id, 'answerImg', q.answerImg);
+            const newAnswerImg = await checkImage(id, 'answerImg', q.answerImg ?? null);
             if (oldAnswerImg !== newAnswerImg) {
                 q.answerImg = newAnswerImg;
                 changed = true;
             }
 
             const oldAnalysisImg = q.analysisImg;
-            const newAnalysisImg = await checkImage(id, 'analysisImg', q.analysisImg);
+            const newAnalysisImg = await checkImage(id, 'analysisImg', q.analysisImg ?? null);
             if (oldAnalysisImg !== newAnalysisImg) {
                 q.analysisImg = newAnalysisImg;
                 changed = true;

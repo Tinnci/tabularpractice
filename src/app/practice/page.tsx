@@ -119,15 +119,18 @@ function PracticePageContent() {
     useEffect(() => {
         if (!tagParam || tagParamProcessed.current || sessionState.isStarted) return;
 
-        // If we have a tag param, we should probably clear existing tags and set this one
-        // and set isModalOpen to true (which is defaults)
-        setSessionState(prev => ({
-            ...prev,
-            selectedTags: new Set([tagParam]),
-            isModalOpen: true
-        }));
+        // Use setTimeout to avoid "setState during render" warning, although this is an effect.
+        // It ensures the update happens after the current render cycle completes.
+        const timer = setTimeout(() => {
+            setSessionState(prev => ({
+                ...prev,
+                selectedTags: new Set([tagParam]),
+                isModalOpen: true
+            }));
+            tagParamProcessed.current = true;
+        }, 0);
 
-        tagParamProcessed.current = true;
+        return () => clearTimeout(timer);
     }, [tagParam, sessionState.isStarted]);
 
     // Destructure for easier access

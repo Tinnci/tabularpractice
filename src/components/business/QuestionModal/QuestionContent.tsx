@@ -32,6 +32,55 @@ function isControlVisualization(viz: unknown): boolean {
     return (CONTROL_VIZ_TYPES as readonly string[]).includes(config.type ?? '');
 }
 
+// Helper component for toggling between Markdown and Image views
+interface ContentViewModeSwitchProps {
+    mode: ContentViewMode;
+    onModeChange: (mode: ContentViewMode) => void;
+    hasMd: boolean;
+    hasImg: boolean;
+}
+
+const ContentViewModeSwitch = ({
+    mode,
+    onModeChange,
+    hasMd,
+    hasImg,
+}: ContentViewModeSwitchProps) => {
+    // Only show switch if both content types are available
+    if (!hasMd || !hasImg) return null;
+
+    return (
+        <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+            <Button
+                variant={mode === 'markdown' ? 'secondary' : 'ghost'}
+                size="sm"
+                className={cn(
+                    "h-6 px-2 text-xs gap-1 transition-colors",
+                    mode === 'markdown' && "shadow-sm"
+                )}
+                onClick={() => onModeChange('markdown')}
+                title={DICT.exam.viewModeMarkdown}
+            >
+                <FileCode className="w-3 h-3" />
+                <span className="hidden sm:inline">{DICT.exam.viewModeMarkdown}</span>
+            </Button>
+            <Button
+                variant={mode === 'image' ? 'secondary' : 'ghost'}
+                size="sm"
+                className={cn(
+                    "h-6 px-2 text-xs gap-1 transition-colors",
+                    mode === 'image' && "shadow-sm"
+                )}
+                onClick={() => onModeChange('image')}
+                title={DICT.exam.viewModeImage}
+            >
+                <ImageIcon className="w-3 h-3" />
+                <span className="hidden sm:inline">{DICT.exam.viewModeImage}</span>
+            </Button>
+        </div>
+    );
+};
+
 export function QuestionContent({
     question,
     isLoading,
@@ -49,53 +98,6 @@ export function QuestionContent({
     // Helper: Check if both Markdown and Image exist for a section
     const hasBothContentTypes = (md?: string, img?: string): boolean => {
         return !!(md && img);
-    };
-
-    // Reusable switch component for toggling between Markdown and Image views
-    const ContentViewModeSwitch = ({
-        mode,
-        onModeChange,
-        hasMd,
-        hasImg,
-    }: {
-        mode: ContentViewMode;
-        onModeChange: (mode: ContentViewMode) => void;
-        hasMd: boolean;
-        hasImg: boolean;
-    }) => {
-        // Only show switch if both content types are available
-        if (!hasMd || !hasImg) return null;
-
-        return (
-            <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
-                <Button
-                    variant={mode === 'markdown' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className={cn(
-                        "h-6 px-2 text-xs gap-1 transition-colors",
-                        mode === 'markdown' && "shadow-sm"
-                    )}
-                    onClick={() => onModeChange('markdown')}
-                    title={DICT.exam.viewModeMarkdown}
-                >
-                    <FileCode className="w-3 h-3" />
-                    <span className="hidden sm:inline">{DICT.exam.viewModeMarkdown}</span>
-                </Button>
-                <Button
-                    variant={mode === 'image' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className={cn(
-                        "h-6 px-2 text-xs gap-1 transition-colors",
-                        mode === 'image' && "shadow-sm"
-                    )}
-                    onClick={() => onModeChange('image')}
-                    title={DICT.exam.viewModeImage}
-                >
-                    <ImageIcon className="w-3 h-3" />
-                    <span className="hidden sm:inline">{DICT.exam.viewModeImage}</span>
-                </Button>
-            </div>
-        );
     };
 
     if (isLoading) {
