@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { StepResponseConfig } from "./types";
 import "mafs/core.css";
 
-interface StepResponseProps extends Omit<StepResponseConfig, "type"> {
+export interface StepResponseProps extends Omit<StepResponseConfig, "type"> {
     height?: number;
     className?: string;
 }

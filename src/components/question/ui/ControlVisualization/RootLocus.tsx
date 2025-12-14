@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { RootLocusConfig } from "./types";
 import "mafs/core.css";
 
-interface RootLocusProps extends Omit<RootLocusConfig, "type"> {
+export interface RootLocusProps extends Omit<RootLocusConfig, "type"> {
     height?: number;
     className?: string;
 }

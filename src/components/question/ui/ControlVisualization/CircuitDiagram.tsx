@@ -4,14 +4,14 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { CircuitDiagramConfig, CircuitComponent, CircuitConnection } from "./types";
 
-interface CircuitDiagramProps extends Omit<CircuitDiagramConfig, "type"> {
+export interface CircuitDiagramProps extends Omit<CircuitDiagramConfig, "type"> {
     height?: number;
     className?: string;
 }
 
 // =============== SVG Circuit Component Symbols ===============
 
-interface SymbolProps {
+export interface SymbolProps {
     x: number;
     y: number;
     rotation?: number;

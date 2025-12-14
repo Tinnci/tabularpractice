@@ -16,7 +16,7 @@ import "@xyflow/react/dist/style.css";
 import { cn } from "@/lib/utils";
 import type { BlockDiagramConfig, BlockType } from "./types";
 
-interface BlockDiagramProps extends Omit<BlockDiagramConfig, "type"> {
+export interface BlockDiagramProps extends Omit<BlockDiagramConfig, "type"> {
     height?: number;
     className?: string;
 }

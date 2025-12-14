@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { BodePlotConfig } from "./types";
 import "mafs/core.css";
 
-interface BodePlotProps extends Omit<BodePlotConfig, "type"> {
+export interface BodePlotProps extends Omit<BodePlotConfig, "type"> {
     height?: number;
     className?: string;
 }
