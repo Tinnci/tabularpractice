@@ -271,14 +271,21 @@ export const CONTROL_TAG_VISUALIZATION_MAP: Record<string, string[]> = {
 
     // Classical Control Theory
     "transfer-function": ["block-diagram", "step-response", "bode-plot"],
+    "block-diagram": ["block-diagram"],
+    "signal-flow-graph": ["block-diagram"],
     "circuit-modeling": ["circuit-diagram"],
+    "mechanical-modeling": ["block-diagram"],
     "root-locus": ["root-locus"],
+    "root-locus-drawing": ["root-locus"],
+    "root-locus-analysis": ["root-locus"],
     "frequency-domain": ["bode-plot", "nyquist-plot"],
     "bode-plot": ["bode-plot"],
     "nyquist-plot": ["nyquist-plot"],
+    "frequency-stability": ["bode-plot", "nyquist-plot"],
     "compensation": ["bode-plot", "root-locus"],
     "discrete-system": ["block-diagram", "step-response"],
     "z-transform": ["block-diagram"],
     "stability-analysis": ["root-locus", "bode-plot", "nyquist-plot"],
     "steady-state-error": ["step-response"],
+    "transient-response": ["step-response"],
 };
