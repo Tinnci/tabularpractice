@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Question, ViewType, ContentViewMode } from "@/lib/types";
 import { MarkdownContent, RemoteImage, DraftPanel, NotePanel } from "@/components/question";
 import { MathVisualizationRenderer, type VisualizationConfig } from "@/components/question/ui/MathVisualization";
-import { ControlVisualizationRenderer, type ControlVisualizationConfig } from "@/components/question/ui/ControlVisualization";
+import { ControlVisualizationRenderer, type ControlVisualizationConfig, CONTROL_VIZ_TYPES } from "@/components/question/ui/ControlVisualization";
 import { CopyButton } from "./CopyButton";
 import { SmartTagList } from "./SmartTagList";
 import { DICT } from "@/lib/i18n";
@@ -25,17 +25,11 @@ export interface QuestionContentProps {
     onUpdateNote: (questionId: string, content: string) => void;
 }
 
-// Control visualization type identifiers
-const CONTROL_VIZ_TYPES = [
-    'step-response', 'bode-plot', 'root-locus', 'block-diagram',
-    'circuit-diagram', 'nyquist-plot', 'phase-portrait', 'state-transition'
-];
-
 // Helper: Check if visualization is a control theory type
 function isControlVisualization(viz: unknown): boolean {
     if (!viz || typeof viz !== 'object') return false;
     const config = viz as { type?: string };
-    return CONTROL_VIZ_TYPES.includes(config.type ?? '');
+    return (CONTROL_VIZ_TYPES as readonly string[]).includes(config.type ?? '');
 }
 
 export function QuestionContent({

@@ -245,7 +245,17 @@ export interface ControlVisualizationRendererProps {
     className?: string;
 }
 
-// ============== Tag to Control Visualization Mapping ==============
+// Control visualization type identifiers
+export const CONTROL_VIZ_TYPES = [
+    "circuit-diagram",
+    "block-diagram",
+    "root-locus",
+    "bode-plot",
+    "step-response",
+    "nyquist-plot",
+    "phase-portrait",
+    "state-transition",
+] as const;
 
 export const CONTROL_TAG_VISUALIZATION_MAP: Record<string, string[]> = {
     // Modern Control Theory

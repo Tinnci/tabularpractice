@@ -18,5 +18,5 @@ export type {
     StateTransitionConfig,
 } from "./types";
 
-export { CONTROL_TAG_VISUALIZATION_MAP } from "./types";
+export { CONTROL_TAG_VISUALIZATION_MAP, CONTROL_VIZ_TYPES } from "./types";
 
