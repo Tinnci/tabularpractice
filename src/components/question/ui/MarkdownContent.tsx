@@ -5,6 +5,8 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
+import { ControlVisualizationRenderer } from "./ControlVisualization/ControlVisualizationRenderer";
+import type { ControlVisualizationConfig } from "./ControlVisualization/types";
 
 // 智能格式化内容：自动检测并包装 LaTeX
 export const smartFormatContent = (content: string) => {
@@ -40,6 +42,43 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
             <ReactMarkdown
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
+                components={{
+                    code({ inline, className, children, ...props }: any) {
+                        const match = /language-control-viz/.test(className || '');
+                        if (!inline && match) {
+                            try {
+                                const codeContent = String(children).replace(/\n$/, '');
+                                const parsed = JSON.parse(codeContent);
+                                // Extract height if present in the JSON, defaulting to 300
+                                const { height, ...config } = parsed;
+
+                                return (
+                                    <div className="my-6 not-prose">
+                                        <ControlVisualizationRenderer
+                                            config={config as ControlVisualizationConfig}
+                                            height={typeof height === 'number' ? height : 300}
+                                        />
+                                    </div>
+                                );
+                            } catch (e) {
+                                return (
+                                    <div className="p-4 my-4 border border-red-500 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+                                        <p className="font-bold mb-2">Visualization Error</p>
+                                        <div className="text-sm opacity-80 mb-2">{String(e)}</div>
+                                        <pre className="text-xs bg-black/5 dark:bg-white/5 p-2 rounded overflow-auto max-h-40">
+                                            {String(children)}
+                                        </pre>
+                                    </div>
+                                );
+                            }
+                        }
+                        return (
+                            <code className={className} {...props}>
+                                {children}
+                            </code>
+                        );
+                    }
+                }}
             >
                 {smartFormatContent(content)}
             </ReactMarkdown>
