@@ -314,6 +314,10 @@ export const DICT = {
         startNotePrompt: "点击此处开始记录笔记...",
         analysisAndAnswer: "解析与答案",
         showAnswer: "查看答案",
+        // Content View Mode Switch
+        viewModeMarkdown: "Markdown",
+        viewModeImage: "图片",
+        viewModeSwitch: "切换视图",
     },
 
     // Shortcuts

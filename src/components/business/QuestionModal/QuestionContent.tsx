@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Loader2, BookOpen, Eye, FileText, Clock, ExternalLink } from "lucide-react";
+import { Loader2, BookOpen, Eye, FileText, Clock, ExternalLink, FileCode, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Question, ViewType } from "@/lib/types";
+import { Question, ViewType, ContentViewMode } from "@/lib/types";
 import { MarkdownContent, RemoteImage, DraftPanel, NotePanel } from "@/components/question";
 import { MathVisualizationRenderer, type VisualizationConfig } from "@/components/question/ui/MathVisualization";
 import { CopyButton } from "./CopyButton";
@@ -31,6 +32,63 @@ export function QuestionContent({
     notes,
     onUpdateNote,
 }: QuestionContentProps) {
+    // State for content view modes (per-section)
+    const [questionViewMode, setQuestionViewMode] = useState<ContentViewMode>('markdown');
+    const [answerViewMode, setAnswerViewMode] = useState<ContentViewMode>('markdown');
+    const [analysisViewMode, setAnalysisViewMode] = useState<ContentViewMode>('markdown');
+
+    // Helper: Check if both Markdown and Image exist for a section
+    const hasBothContentTypes = (md?: string, img?: string): boolean => {
+        return !!(md && img);
+    };
+
+    // Reusable switch component for toggling between Markdown and Image views
+    const ContentViewModeSwitch = ({
+        mode,
+        onModeChange,
+        hasMd,
+        hasImg,
+    }: {
+        mode: ContentViewMode;
+        onModeChange: (mode: ContentViewMode) => void;
+        hasMd: boolean;
+        hasImg: boolean;
+    }) => {
+        // Only show switch if both content types are available
+        if (!hasMd || !hasImg) return null;
+
+        return (
+            <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+                <Button
+                    variant={mode === 'markdown' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className={cn(
+                        "h-6 px-2 text-xs gap-1 transition-colors",
+                        mode === 'markdown' && "shadow-sm"
+                    )}
+                    onClick={() => onModeChange('markdown')}
+                    title={DICT.exam.viewModeMarkdown}
+                >
+                    <FileCode className="w-3 h-3" />
+                    <span className="hidden sm:inline">{DICT.exam.viewModeMarkdown}</span>
+                </Button>
+                <Button
+                    variant={mode === 'image' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className={cn(
+                        "h-6 px-2 text-xs gap-1 transition-colors",
+                        mode === 'image' && "shadow-sm"
+                    )}
+                    onClick={() => onModeChange('image')}
+                    title={DICT.exam.viewModeImage}
+                >
+                    <ImageIcon className="w-3 h-3" />
+                    <span className="hidden sm:inline">{DICT.exam.viewModeImage}</span>
+                </Button>
+            </div>
+        );
+    };
+
     if (isLoading) {
         return (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground z-50 bg-background/50 backdrop-blur-sm">
@@ -66,24 +124,49 @@ export function QuestionContent({
                             <div className="flex items-center gap-2">
                                 <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {DICT.exam.questionDesc}
                             </div>
-                            <CopyButton
-                                text={question.contentMd}
-                                img={question.contentImg}
-                                question={question}
-                            />
+                            <div className="flex items-center gap-2">
+                                <ContentViewModeSwitch
+                                    mode={questionViewMode}
+                                    onModeChange={setQuestionViewMode}
+                                    hasMd={!!question.contentMd}
+                                    hasImg={!!question.contentImg}
+                                />
+                                <CopyButton
+                                    text={question.contentMd}
+                                    img={question.contentImg}
+                                    question={question}
+                                />
+                            </div>
                         </div>
                         <div className="p-4 flex justify-center bg-card min-h-[150px] items-center">
-                            {question.contentMd ? (
+                            {/* Render based on view mode preference */}
+                            {hasBothContentTypes(question.contentMd, question.contentImg) ? (
+                                // Both types exist: respect user's view mode preference
+                                questionViewMode === 'markdown' ? (
+                                    <div className="w-full p-2">
+                                        <MarkdownContent content={question.contentMd!} />
+                                    </div>
+                                ) : (
+                                    <RemoteImage
+                                        src={question.contentImg!}
+                                        alt={DICT.exam.questionDesc}
+                                        question={question}
+                                    />
+                                )
+                            ) : question.contentMd ? (
+                                // Only Markdown exists
                                 <div className="w-full p-2">
                                     <MarkdownContent content={question.contentMd} />
                                 </div>
-                            ) : (question.contentImg) ? (
+                            ) : question.contentImg ? (
+                                // Only Image exists
                                 <RemoteImage
-                                    src={question.contentImg || ''}
+                                    src={question.contentImg}
                                     alt={DICT.exam.questionDesc}
                                     question={question}
                                 />
                             ) : (
+                                // Neither exists
                                 <div className="text-muted-foreground text-sm">{DICT.exam.contentMissing}</div>
                             )}
                         </div>
@@ -147,28 +230,54 @@ export function QuestionContent({
                             <div className="flex items-center gap-2">
                                 <Eye className="w-4 h-4" /> {DICT.exam.referenceAnswer}
                             </div>
-                            <CopyButton
-                                text={question.answerMd || (question.answer ? DICT.exam.answerLabel.replace('{answer}', question.answer) : null)}
-                                img={question.answerImg}
-                                question={question}
-                            />
+                            <div className="flex items-center gap-2">
+                                <ContentViewModeSwitch
+                                    mode={answerViewMode}
+                                    onModeChange={setAnswerViewMode}
+                                    hasMd={!!question.answerMd}
+                                    hasImg={!!question.answerImg}
+                                />
+                                <CopyButton
+                                    text={question.answerMd || (question.answer ? DICT.exam.answerLabel.replace('{answer}', question.answer) : null)}
+                                    img={question.answerImg}
+                                    question={question}
+                                />
+                            </div>
                         </div>
                         <div className="p-4 sm:p-6 flex justify-center">
-                            {question.answerMd ? (
+                            {/* Render based on view mode preference */}
+                            {hasBothContentTypes(question.answerMd, question.answerImg) ? (
+                                // Both types exist: respect user's view mode preference
+                                answerViewMode === 'markdown' ? (
+                                    <div className="w-full text-left">
+                                        <MarkdownContent content={question.answerMd!} />
+                                    </div>
+                                ) : (
+                                    <RemoteImage
+                                        src={question.answerImg!}
+                                        alt={DICT.exam.answer}
+                                        question={question}
+                                    />
+                                )
+                            ) : question.answerMd ? (
+                                // Only Markdown exists
                                 <div className="w-full text-left">
                                     <MarkdownContent content={question.answerMd} />
                                 </div>
                             ) : question.answerImg ? (
+                                // Only Image exists
                                 <RemoteImage
                                     src={question.answerImg}
                                     alt={DICT.exam.answer}
                                     question={question}
                                 />
                             ) : question.answer ? (
+                                // Fallback: plain answer text
                                 <div className="w-full text-left">
                                     <MarkdownContent content={question.answer} />
                                 </div>
                             ) : (
+                                // Neither exists
                                 <span className="text-muted-foreground text-sm">{DICT.exam.noAnswer}</span>
                             )}
                         </div>
@@ -182,26 +291,51 @@ export function QuestionContent({
                             <div className="flex items-center gap-2">
                                 <FileText className="w-4 h-4" /> {DICT.exam.detailedAnalysis}
                             </div>
-                            <CopyButton
-                                text={question.analysisMd}
-                                img={question.analysisImg}
-                                question={question}
-                            />
+                            <div className="flex items-center gap-2">
+                                <ContentViewModeSwitch
+                                    mode={analysisViewMode}
+                                    onModeChange={setAnalysisViewMode}
+                                    hasMd={!!question.analysisMd}
+                                    hasImg={!!question.analysisImg}
+                                />
+                                <CopyButton
+                                    text={question.analysisMd}
+                                    img={question.analysisImg}
+                                    question={question}
+                                />
+                            </div>
                         </div>
                         <div className="p-4 sm:p-6 space-y-4">
                             {/* 解析文本/图片 */}
                             <div className="flex justify-center">
-                                {question.analysisMd ? (
+                                {/* Render based on view mode preference */}
+                                {hasBothContentTypes(question.analysisMd, question.analysisImg) ? (
+                                    // Both types exist: respect user's view mode preference
+                                    analysisViewMode === 'markdown' ? (
+                                        <div className="w-full text-left">
+                                            <MarkdownContent content={question.analysisMd!} />
+                                        </div>
+                                    ) : (
+                                        <RemoteImage
+                                            src={question.analysisImg!}
+                                            alt={DICT.exam.analysis}
+                                            question={question}
+                                        />
+                                    )
+                                ) : question.analysisMd ? (
+                                    // Only Markdown exists
                                     <div className="w-full text-left">
                                         <MarkdownContent content={question.analysisMd} />
                                     </div>
                                 ) : question.analysisImg ? (
+                                    // Only Image exists
                                     <RemoteImage
                                         src={question.analysisImg}
                                         alt={DICT.exam.analysis}
                                         question={question}
                                     />
                                 ) : (
+                                    // Neither exists
                                     <span className="text-muted-foreground text-sm">{DICT.exam.noAnalysis}</span>
                                 )}
                             </div>

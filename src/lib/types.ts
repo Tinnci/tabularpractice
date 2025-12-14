@@ -9,6 +9,9 @@ export type NotesMap = Record<string, string>; // key: questionId, value: markdo
 // 视图类型定义
 export type ViewType = 'question' | 'answer' | 'analysis' | 'video' | 'note' | 'draft' | 'eureka';
 
+// 内容视图模式：用于在同时存在 Markdown 和图片时切换显示方式
+export type ContentViewMode = 'markdown' | 'image';
+
 export interface RepoSource {
   id: string;
   name: string;
