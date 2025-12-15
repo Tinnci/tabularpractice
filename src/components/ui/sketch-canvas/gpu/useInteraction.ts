@@ -70,7 +70,9 @@ export function useInteraction({
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
         if (!isDrawingRef.current || !currentStrokeRef.current) return;
 
-        const events = (e as any).getCoalescedEvents ? (e as any).getCoalescedEvents() : [e];
+        const events = typeof (e as unknown as { getCoalescedEvents?: () => PointerEvent[] }).getCoalescedEvents === 'function'
+            ? (e as unknown as { getCoalescedEvents: () => PointerEvent[] }).getCoalescedEvents()
+            : [e];
         const rect = canvasRef.current!.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
 

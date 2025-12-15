@@ -1,12 +1,15 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import type { ExtraProps } from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
 import { ControlVisualizationRenderer } from "./ControlVisualization/ControlVisualizationRenderer";
 import type { ControlVisualizationConfig } from "./ControlVisualization/types";
+
+type CodeProps = React.ClassAttributes<HTMLElement> & React.HTMLAttributes<HTMLElement> & ExtraProps & { inline?: boolean };
 
 // 智能格式化内容：自动检测并包装 LaTeX
 export const smartFormatContent = (content: string) => {
@@ -43,7 +46,7 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
-                    code({ inline, className, children, ...props }: any) {
+                    code({ inline, className, children, ...props }: CodeProps) {
                         const match = /language-control-viz/.test(className || '');
                         if (!inline && match) {
                             try {

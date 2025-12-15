@@ -7,7 +7,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useProgressStore } from "@/lib/store"
 import { toast } from "sonner"
 import { useState, useRef } from "react"
-import { BackupData, Status } from "@/lib/types"
+import type { BackupData, Status } from "@/lib/types"
+import type JSZip from "jszip"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -119,13 +120,13 @@ export function DataManagement() {
 
                 if ('_zip' in pendingImportData && pendingImportData._zip) {
                     const { draftStore } = await import('@/lib/draftStore');
-                    const zip = pendingImportData._zip as any;
+                    const zip = pendingImportData._zip as JSZip;
                     const draftsFolder = zip.folder("drafts");
 
                     if (draftsFolder) {
                         const draftsToRestore: Record<string, string> = {};
                         const promises: Promise<void>[] = [];
-                        draftsFolder.forEach((relativePath: string, file: any) => {
+                        draftsFolder.forEach((relativePath: string, file: JSZip.JSZipObject) => {
                             if (!file.dir) {
                                 promises.push(file.async("string").then((content: string) => {
                                     draftsToRestore[relativePath.replace('.json', '')] = content;
