@@ -3,14 +3,17 @@
  * Designed to cover control systems topics for SHU 836 and similar exams
  */
 
+import type { SemanticCircuitConfig } from "./semantic-circuit-types";
+
 // ============== Control System Diagram Types ==============
 
-/** Circuit Diagram Component */
+// ============== Control System Diagram Types ==============
+
 export interface CircuitComponent {
     id: string;
-    type: "resistor" | "capacitor" | "inductor" | "voltage-source" | "current-source" | "ground" | "wire" | "node";
+    type: "resistor" | "capacitor" | "inductor" | "voltage-source" | "current-source" | "ground" | "wire" | "node" | "opamp";
     label?: string;
-    value?: string;  // e.g., "R_1", "10kΩ"
+    value?: string;
     position: { x: number; y: number };
     rotation?: 0 | 90 | 180 | 270;
 }
@@ -19,21 +22,13 @@ export interface CircuitConnection {
     from: string;
     to: string;
     style?: "solid" | "dashed";
+    startPoint?: { x: number; y: number };
+    endPoint?: { x: number; y: number };
     bendPoints?: Array<{ x: number; y: number }>;
 }
 
-export interface CircuitDiagramConfig {
-    type: "circuit-diagram";
-    components: CircuitComponent[];
-    connections: CircuitConnection[];
-    annotations?: Array<{
-        x: number;
-        y: number;
-        text: string;  // LaTeX supported
-    }>;
-    inputLabel?: string;
-    outputLabel?: string;
-}
+// Re-export type from semantic config
+export type { SemanticCircuitConfig as CircuitDiagramConfig } from "./semantic-circuit-types";
 
 // ============== Block Diagram Types ==============
 
@@ -256,7 +251,7 @@ export type ControlVisualizationConfig = {
     type: string;
     title?: string;
     config:
-    | Omit<CircuitDiagramConfig, 'type'>
+    | SemanticCircuitConfig
     | Omit<BlockDiagramConfig, 'type'>
     | Omit<RootLocusConfig, 'type'>
     | Omit<BodePlotConfig, 'type'>

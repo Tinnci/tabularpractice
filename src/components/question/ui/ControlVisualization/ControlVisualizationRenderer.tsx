@@ -17,6 +17,7 @@ import { BlockDiagram } from "./BlockDiagram";
 import { CircuitDiagram } from "./CircuitDiagram";
 import { RootLocus } from "./RootLocus";
 import { SignalFlowGraph } from "./SignalFlowGraph";
+import type { SemanticCircuitConfig } from "./semantic-circuit-types";
 
 function NotImplemented({ type }: { type: string }) {
     return (
@@ -86,11 +87,7 @@ export function ControlVisualizationRenderer({
             case "circuit-diagram":
                 return (
                     <CircuitDiagram
-                        components={(innerConfig as CircuitDiagramConfig).components}
-                        connections={(innerConfig as CircuitDiagramConfig).connections}
-                        annotations={(innerConfig as CircuitDiagramConfig).annotations}
-                        inputLabel={(innerConfig as CircuitDiagramConfig).inputLabel}
-                        outputLabel={(innerConfig as CircuitDiagramConfig).outputLabel}
+                        config={innerConfig as SemanticCircuitConfig}
                         height={height}
                     />
                 );

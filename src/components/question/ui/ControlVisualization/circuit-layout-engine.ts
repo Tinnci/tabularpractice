@@ -188,18 +188,36 @@ function fromElkGraph(
         const elkEdge = elkGraph.edges?.find((e: ElkExtendedEdge) => e.id === `e${idx}`);
 
         let bendPoints: { x: number; y: number }[] | undefined;
+        let startPoint: { x: number; y: number } | undefined;
+        let endPoint: { x: number; y: number } | undefined;
 
-        if (elkEdge?.sections?.[0]?.bendPoints) {
-            bendPoints = elkEdge.sections[0].bendPoints.map((bp: { x: number; y: number }) => ({
-                x: snap(bp.x),
-                y: snap(bp.y),
-            }));
+        if (elkEdge?.sections?.[0]) {
+            const section = elkEdge.sections[0];
+
+            startPoint = {
+                x: snap(section.startPoint.x),
+                y: snap(section.startPoint.y)
+            };
+
+            endPoint = {
+                x: snap(section.endPoint.x),
+                y: snap(section.endPoint.y)
+            };
+
+            if (section.bendPoints) {
+                bendPoints = section.bendPoints.map(bp => ({
+                    x: snap(bp.x),
+                    y: snap(bp.y),
+                }));
+            }
         }
 
         return {
             from: orig.from,
             to: orig.to,
             style: orig.style,
+            startPoint,
+            endPoint,
             bendPoints,
         };
     });
