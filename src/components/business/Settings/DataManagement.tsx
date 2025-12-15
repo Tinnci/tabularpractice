@@ -119,14 +119,12 @@ export function DataManagement() {
 
                 if ('_zip' in pendingImportData && pendingImportData._zip) {
                     const { draftStore } = await import('@/lib/draftStore');
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const zip = pendingImportData._zip as any;
                     const draftsFolder = zip.folder("drafts");
 
                     if (draftsFolder) {
                         const draftsToRestore: Record<string, string> = {};
                         const promises: Promise<void>[] = [];
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         draftsFolder.forEach((relativePath: string, file: any) => {
                             if (!file.dir) {
                                 promises.push(file.async("string").then((content: string) => {

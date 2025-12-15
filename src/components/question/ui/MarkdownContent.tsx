@@ -43,7 +43,6 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     code({ inline, className, children, ...props }: any) {
                         const match = /language-control-viz/.test(className || '');
                         if (!inline && match) {
