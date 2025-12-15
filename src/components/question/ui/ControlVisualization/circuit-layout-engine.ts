@@ -49,9 +49,9 @@ function buildLayoutOptions(constraints: CircuitLayoutConstraints): Record<strin
         // Flow direction: left-to-right or top-to-bottom
         'elk.direction': merged.flowDirection === 'left-to-right' ? 'RIGHT' : 'DOWN',
 
-        // Spacing
-        'elk.spacing.nodeNode': String(merged.minSpacing * merged.gridSize),
-        'elk.layered.spacing.nodeNodeBetweenLayers': String(merged.minSpacing * merged.gridSize * 1.5),
+        // Spacing - increased for better readability
+        'elk.spacing.nodeNode': String(merged.minSpacing * merged.gridSize * 1.5), // Horizontal spacing in layer
+        'elk.layered.spacing.nodeNodeBetweenLayers': String(merged.minSpacing * merged.gridSize * 2.5), // Vertical spacing between layers
 
         // Edge routing: orthogonal for clean right-angle connections
         'elk.edgeRouting': 'ORTHOGONAL',
@@ -189,7 +189,19 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
 
     // Build nodes
     const children: ElkNode[] = config.components.map(comp => {
-        const dims = COMPONENT_DIMENSIONS[comp.type] || { width: 40, height: 40 };
+        const baseDims = COMPONENT_DIMENSIONS[comp.type] || { width: 40, height: 40 };
+        const isVertical = comp.orientation === 'vertical';
+
+        // Swap dimensions if vertical
+        // Note: Ground assumes standardized upright orientation, so we usually don't swap unless explicitly requested
+        let width = baseDims.width;
+        let height = baseDims.height;
+
+        if (isVertical && comp.type !== 'ground') {
+            width = baseDims.height;
+            height = baseDims.width;
+        }
+
         const nodeMsg: any = getNodeLayoutOptions(comp, constraints);
 
         // Ensure ports are respected
@@ -197,8 +209,8 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
 
         return {
             id: comp.id,
-            width: dims.width,
-            height: dims.height,
+            width,
+            height,
             layoutOptions: nodeMsg,
             labels: comp.label ? [{ text: comp.label }] : [],
             ports: getComponentPorts(comp, constraints),
@@ -236,9 +248,13 @@ function fromElkGraph(
 
         // Determine rotation based on orientation
         let rotation: 0 | 90 | 180 | 270 = 0;
-        if (orig.orientation === 'vertical' || orig.type === 'ground') {
+
+        // Vertical components (R, C, L, V) need 90 deg rotation
+        if (orig.orientation === 'vertical') {
             rotation = 90;
         }
+        // Ground is drawn upright (0 deg) by default in our SVG symbols
+        // so we don't need to rotate it unless explicitly requested (which is rare)
 
         return {
             id: orig.id,
