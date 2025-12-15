@@ -2,7 +2,15 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import type { ControlVisualizationRendererProps } from "./types";
+import type {
+    ControlVisualizationRendererProps,
+    BodePlotConfig,
+    BlockDiagramConfig,
+    CircuitDiagramConfig,
+    RootLocusConfig,
+    SignalFlowGraphConfig,
+    StepResponseConfig,
+} from "./types";
 import { StepResponse } from "./StepResponse";
 import { BodePlot } from "./BodePlot";
 import { BlockDiagram } from "./BlockDiagram";
@@ -30,33 +38,37 @@ export function ControlVisualizationRenderer({
     className,
 }: ControlVisualizationRendererProps) {
     const visualization = useMemo(() => {
+        // Extract inner config from nested structure
+        const innerConfig = config.config;
+
         switch (config.type) {
             case "step-response":
                 return (
                     <StepResponse
-                        systemType={config.systemType}
-                        timeConstant={config.timeConstant}
-                        gain={config.gain}
-                        dampingRatio={config.dampingRatio}
-                        naturalFrequency={config.naturalFrequency}
-                        customExpression={config.customExpression}
-                        tRange={config.tRange}
-                        yRange={config.yRange}
-                        annotations={config.annotations}
-                        showGrid={config.showGrid}
+                        systemType={(innerConfig as StepResponseConfig).systemType}
+                        timeConstant={(innerConfig as StepResponseConfig).timeConstant}
+                        gain={(innerConfig as StepResponseConfig).gain}
+                        dampingRatio={(innerConfig as StepResponseConfig).dampingRatio}
+                        naturalFrequency={(innerConfig as StepResponseConfig).naturalFrequency}
+                        customExpression={(innerConfig as StepResponseConfig).customExpression}
+                        tRange={(innerConfig as StepResponseConfig).tRange}
+                        yRange={(innerConfig as StepResponseConfig).yRange}
+                        annotations={(innerConfig as StepResponseConfig).annotations}
+                        showGrid={(innerConfig as StepResponseConfig).showGrid}
                         height={height}
                     />
                 );
 
+
             case "bode-plot":
                 return (
                     <BodePlot
-                        transferFunction={config.transferFunction}
-                        omegaRange={config.omegaRange}
-                        showAsymptotes={config.showAsymptotes}
-                        showPhaseMargin={config.showPhaseMargin}
-                        showGainMargin={config.showGainMargin}
-                        annotations={config.annotations}
+                        transferFunction={(innerConfig as BodePlotConfig).transferFunction}
+                        omegaRange={(innerConfig as BodePlotConfig).omegaRange}
+                        showAsymptotes={(innerConfig as BodePlotConfig).showAsymptotes}
+                        showPhaseMargin={(innerConfig as BodePlotConfig).showPhaseMargin}
+                        showGainMargin={(innerConfig as BodePlotConfig).showGainMargin}
+                        annotations={(innerConfig as BodePlotConfig).annotations}
                         height={height}
                     />
                 );
@@ -64,9 +76,9 @@ export function ControlVisualizationRenderer({
             case "block-diagram":
                 return (
                     <BlockDiagram
-                        blocks={config.blocks}
-                        connections={config.connections}
-                        title={config.title}
+                        blocks={(innerConfig as BlockDiagramConfig).blocks}
+                        connections={(innerConfig as BlockDiagramConfig).connections}
+                        title={(innerConfig as BlockDiagramConfig).title}
                         height={height}
                     />
                 );
@@ -74,11 +86,11 @@ export function ControlVisualizationRenderer({
             case "circuit-diagram":
                 return (
                     <CircuitDiagram
-                        components={config.components}
-                        connections={config.connections}
-                        annotations={config.annotations}
-                        inputLabel={config.inputLabel}
-                        outputLabel={config.outputLabel}
+                        components={(innerConfig as CircuitDiagramConfig).components}
+                        connections={(innerConfig as CircuitDiagramConfig).connections}
+                        annotations={(innerConfig as CircuitDiagramConfig).annotations}
+                        inputLabel={(innerConfig as CircuitDiagramConfig).inputLabel}
+                        outputLabel={(innerConfig as CircuitDiagramConfig).outputLabel}
                         height={height}
                     />
                 );
@@ -86,17 +98,17 @@ export function ControlVisualizationRenderer({
             case "root-locus":
                 return (
                     <RootLocus
-                        openLoopPoles={config.openLoopPoles}
-                        openLoopZeros={config.openLoopZeros}
-                        asymptotes={config.asymptotes}
-                        separationPoints={config.separationPoints}
-                        imaginaryAxisCrossings={config.imaginaryAxisCrossings}
-                        branches={config.branches}
-                        kRange={config.kRange}
-                        realAxisRange={config.realAxisRange}
-                        imagAxisRange={config.imagAxisRange}
-                        showArrows={config.showArrows}
-                        showKValues={config.showKValues}
+                        openLoopPoles={(innerConfig as RootLocusConfig).openLoopPoles}
+                        openLoopZeros={(innerConfig as RootLocusConfig).openLoopZeros}
+                        asymptotes={(innerConfig as RootLocusConfig).asymptotes}
+                        separationPoints={(innerConfig as RootLocusConfig).separationPoints}
+                        imaginaryAxisCrossings={(innerConfig as RootLocusConfig).imaginaryAxisCrossings}
+                        branches={(innerConfig as RootLocusConfig).branches}
+                        kRange={(innerConfig as RootLocusConfig).kRange}
+                        realAxisRange={(innerConfig as RootLocusConfig).realAxisRange}
+                        imagAxisRange={(innerConfig as RootLocusConfig).imagAxisRange}
+                        showArrows={(innerConfig as RootLocusConfig).showArrows}
+                        showKValues={(innerConfig as RootLocusConfig).showKValues}
                         height={height}
                     />
                 );
@@ -104,9 +116,9 @@ export function ControlVisualizationRenderer({
             case "signal-flow-graph":
                 return (
                     <SignalFlowGraph
-                        nodes={config.nodes}
-                        edges={config.edges}
-                        title={config.title}
+                        nodes={(innerConfig as SignalFlowGraphConfig).nodes}
+                        edges={(innerConfig as SignalFlowGraphConfig).edges}
+                        title={(innerConfig as SignalFlowGraphConfig).title}
                         height={height}
                     />
                 );

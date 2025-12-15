@@ -251,7 +251,11 @@ export interface SignalFlowGraphConfig {
     title?: string;
 }
 
-export type ControlVisualizationConfig =
+// Unified Visualization Config (matching MathVisualization structure)
+export type ControlVisualizationConfig = {
+    type: string;
+    title?: string;
+    config:
     | CircuitDiagramConfig
     | BlockDiagramConfig
     | RootLocusConfig
@@ -261,6 +265,7 @@ export type ControlVisualizationConfig =
     | PhasePortraitConfig
     | StateTransitionConfig
     | SignalFlowGraphConfig;
+};
 
 export interface ControlVisualizationRendererProps {
     config: ControlVisualizationConfig;
