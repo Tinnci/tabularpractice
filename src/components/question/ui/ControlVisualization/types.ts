@@ -227,7 +227,29 @@ export interface StateTransitionConfig {
     showEigenvalues?: boolean;
 }
 
-// ============== Union Type ==============
+// ============== Signal Flow Graph Types ==============
+
+export interface SignalFlowNode {
+    id: string;
+    label?: string;
+    position: { x: number; y: number };
+    type: "input" | "output" | "node" | "summing";
+}
+
+export interface SignalFlowEdge {
+    from: string;
+    to: string;
+    gain: string; // e.g., "G1", "H1", "1", "-1"
+    type?: "straight" | "curved";
+    curveOffset?: number; // For parallel edges
+}
+
+export interface SignalFlowGraphConfig {
+    type: "signal-flow-graph";
+    nodes: SignalFlowNode[];
+    edges: SignalFlowEdge[];
+    title?: string;
+}
 
 export type ControlVisualizationConfig =
     | CircuitDiagramConfig
@@ -237,7 +259,8 @@ export type ControlVisualizationConfig =
     | StepResponseConfig
     | NyquistPlotConfig
     | PhasePortraitConfig
-    | StateTransitionConfig;
+    | StateTransitionConfig
+    | SignalFlowGraphConfig;
 
 export interface ControlVisualizationRendererProps {
     config: ControlVisualizationConfig;
@@ -245,10 +268,12 @@ export interface ControlVisualizationRendererProps {
     className?: string;
 }
 
-// Control visualization type identifiers
+
+// Update Control Viz Types List
 export const CONTROL_VIZ_TYPES = [
     "circuit-diagram",
     "block-diagram",
+    "signal-flow-graph", // Added
     "root-locus",
     "bode-plot",
     "step-response",
@@ -257,22 +282,25 @@ export const CONTROL_VIZ_TYPES = [
     "state-transition",
 ] as const;
 
+// Update Tag Map
 export const CONTROL_TAG_VISUALIZATION_MAP: Record<string, string[]> = {
+    // ... (Keep existing)
     // Modern Control Theory
-    "state-space": ["block-diagram", "state-transition"],
+    "state-space": ["block-diagram", "state-transition", "signal-flow-graph"],
     "linear-transformation": ["state-transition"],
-    "canonical-form": ["block-diagram"],
+    "canonical-form": ["block-diagram", "signal-flow-graph"],
     "state-transition-matrix": ["state-transition"],
-    "controllability": ["block-diagram"],
-    "observability": ["block-diagram"],
-    "pole-placement": ["root-locus"],
+    "controllability": ["block-diagram", "signal-flow-graph"],
+    "observability": ["block-diagram", "signal-flow-graph"],
+    "pole-placement": ["root-locus", "signal-flow-graph"],
     "state-observer": ["block-diagram"],
     "lyapunov-stability": ["phase-portrait"],
 
     // Classical Control Theory
-    "transfer-function": ["block-diagram", "step-response", "bode-plot"],
+    "transfer-function": ["block-diagram", "step-response", "bode-plot", "signal-flow-graph"],
     "block-diagram": ["block-diagram"],
-    "signal-flow-graph": ["block-diagram"],
+    "signal-flow-graph": ["signal-flow-graph"],
+    "masons-rule": ["signal-flow-graph"], // Added
     "circuit-modeling": ["circuit-diagram"],
     "mechanical-modeling": ["block-diagram"],
     "root-locus": ["root-locus"],
@@ -283,8 +311,8 @@ export const CONTROL_TAG_VISUALIZATION_MAP: Record<string, string[]> = {
     "nyquist-plot": ["nyquist-plot"],
     "frequency-stability": ["bode-plot", "nyquist-plot"],
     "compensation": ["bode-plot", "root-locus"],
-    "discrete-system": ["block-diagram", "step-response"],
-    "z-transform": ["block-diagram"],
+    "discrete-system": ["block-diagram", "step-response", "signal-flow-graph"],
+    "z-transform": ["block-diagram", "signal-flow-graph"],
     "stability-analysis": ["root-locus", "bode-plot", "nyquist-plot"],
     "steady-state-error": ["step-response"],
     "transient-response": ["step-response"],

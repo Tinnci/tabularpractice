@@ -8,6 +8,7 @@ import { BodePlot } from "./BodePlot";
 import { BlockDiagram } from "./BlockDiagram";
 import { CircuitDiagram } from "./CircuitDiagram";
 import { RootLocus } from "./RootLocus";
+import { SignalFlowGraph } from "./SignalFlowGraph";
 
 function NotImplemented({ type }: { type: string }) {
     return (
@@ -99,6 +100,17 @@ export function ControlVisualizationRenderer({
                         height={height}
                     />
                 );
+
+            case "signal-flow-graph":
+                return (
+                    <SignalFlowGraph
+                        nodes={config.nodes}
+                        edges={config.edges}
+                        title={config.title}
+                        height={height}
+                    />
+                );
+
 
             case "nyquist-plot":
             case "phase-portrait":
