@@ -103,14 +103,10 @@ function getNodeLayoutOptions(
         case 'ground':
             if (merged.groundAtBottom) {
                 // In LEFT-to-RIGHT layout, "bottom" means high Y value
-                // Force ground to be in its own last layer
-                options['elk.layered.layering.layerConstraint'] = 'LAST';
-                // Push to bottom within its layer
+                // Push to bottom within its layer (don't use LAST layer constraint to avoid edge conflicts)
                 options['elk.layered.crossingMinimization.inLayerConstraint'] = 'LAST';
                 // Increase priority to force lower position
                 options['elk.priority'] = '10';
-                // Add position constraint
-                options['elk.layered.nodePlacement.favorStraightEdges'] = 'false';
             }
             break;
 
@@ -257,7 +253,7 @@ function fromElkGraph(
     const snap = (val: number) => Math.round(val);
 
     // Map ELK nodes back to components
-    let components: CircuitComponent[] = originalConfig.components.map(orig => {
+    const components: CircuitComponent[] = originalConfig.components.map(orig => {
         const elkNode = elkGraph.children?.find((n: ElkNode) => n.id === orig.id);
 
         // Determine rotation based on orientation
