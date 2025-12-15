@@ -119,19 +119,89 @@ function getNodeLayoutOptions(
 /**
  * Convert semantic config to ELK graph
  */
+// Helper to create a port
+function createPort(id: string, side: 'WEST' | 'EAST' | 'NORTH' | 'SOUTH' | 'CENTER'): any {
+    const port: any = {
+        id,
+        layoutOptions: {
+            'elk.port.side': side === 'CENTER' ? 'WEST' : side, // CENTER fallback
+        }
+    };
+
+    // For specific centering or fixed positions, we rely on side constraints
+    return port;
+}
+
+/**
+ * Generate ports for a component based on its type and orientation
+ */
+function getComponentPorts(
+    comp: SemanticCircuitComponent,
+    constraints: CircuitLayoutConstraints
+): any[] {
+    const ports: any[] = [];
+    const isVertical = comp.orientation === 'vertical';
+
+    // 1. Two-terminal components (Resistor, Capacitor, Inductor, Voltage Source)
+    if (['resistor', 'capacitor', 'inductor', 'voltage-source', 'current-source', 'switch'].includes(comp.type)) {
+        if (isVertical) {
+            // Vertical: Top and Bottom
+            ports.push(createPort(`${comp.id}_p1`, 'NORTH'));
+            ports.push(createPort(`${comp.id}_p2`, 'SOUTH'));
+        } else {
+            // Horizontal: Left and Right
+            // If direction is Left-to-Right, strict inputs usually on West, Outputs on East
+            // But allowing both sides handles bidirectional flow flexibility
+            ports.push(createPort(`${comp.id}_left`, 'WEST'));
+            ports.push(createPort(`${comp.id}_right`, 'EAST'));
+        }
+    }
+    // 2. Ground - Single top port
+    else if (comp.type === 'ground') {
+        ports.push(createPort(`${comp.id}_top`, 'NORTH'));
+    }
+    // 3. One-port terminals (Input/Output labels treated as nodes)
+    else if (comp.role === 'input') {
+        ports.push(createPort(`${comp.id}_p`, 'EAST')); // Input feeds into circuit to the right
+    }
+    else if (comp.role === 'output') {
+        ports.push(createPort(`${comp.id}_p`, 'WEST')); // Output receives from circuit to the left
+    }
+    // 4. Nodes (Connections points) - Omni-directional
+    else if (comp.type === 'node') {
+        // Nodes are tricky. To allow connections from all sides, we can define one center port
+        // or ports on all 4 sides. 
+        // ELK works best with explicit sides. Let's add all 4 to be safe.
+        ports.push(createPort(`${comp.id}_n`, 'NORTH'));
+        ports.push(createPort(`${comp.id}_s`, 'SOUTH'));
+        ports.push(createPort(`${comp.id}_e`, 'EAST'));
+        ports.push(createPort(`${comp.id}_w`, 'WEST'));
+    }
+
+    return ports;
+}
+
+/**
+ * Convert semantic config to ELK graph
+ */
 function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
     const constraints = config.constraints || {};
 
     // Build nodes
     const children: ElkNode[] = config.components.map(comp => {
         const dims = COMPONENT_DIMENSIONS[comp.type] || { width: 40, height: 40 };
+        const nodeMsg: any = getNodeLayoutOptions(comp, constraints);
+
+        // Ensure ports are respected
+        nodeMsg['elk.portConstraints'] = 'FIXED_SIDE';
 
         return {
             id: comp.id,
             width: dims.width,
             height: dims.height,
-            layoutOptions: getNodeLayoutOptions(comp, constraints),
+            layoutOptions: nodeMsg,
             labels: comp.label ? [{ text: comp.label }] : [],
+            ports: getComponentPorts(comp, constraints),
         };
     });
 
