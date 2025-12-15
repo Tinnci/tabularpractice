@@ -83,7 +83,10 @@ export function CircuitDiagram({
     }, [connections, displayComponents]);
 
     return (
-        <div className={cn("rounded-lg border bg-background overflow-hidden flex flex-col", className)}>
+        <div
+            className={cn("rounded-lg border bg-background overflow-hidden flex flex-col", className)}
+            style={{ height }}
+        >
             {/* Header / Toolbar */}
             <div className="px-3 py-2 text-sm font-medium border-b bg-muted/30 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
