@@ -38,6 +38,65 @@ export const getPortPosition = (comp: CircuitComponent, port: 'left' | 'right' |
 };
 
 /**
+ * Intelligently determines the best port for a connection based on component position and type.
+ */
+const getBestPort = (
+    comp: CircuitComponent,
+    otherComp: CircuitComponent,
+    isSource: boolean
+): 'left' | 'right' | 'top' | 'bottom' => {
+    // For ground, always use top
+    if (comp.type === 'ground') return 'top';
+
+    // For nodes, doesn't matter (they're just points)
+    if (comp.type === 'node') return 'left';
+
+    // Calculate relative position
+    const dx = otherComp.position.x - comp.position.x;
+    const dy = otherComp.position.y - comp.position.y;
+
+    // Consider rotation
+    const rotation = comp.rotation || 0;
+
+    // For horizontal components (R, L, C, V) with rotation 0 or 180
+    if (rotation === 0 || rotation === 180) {
+        // Horizontal orientation
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Other component is more to left/right
+            if (dx > 0) {
+                return rotation === 0 ? 'right' : 'left';
+            } else {
+                return rotation === 0 ? 'left' : 'right';
+            }
+        } else {
+            // Other component is more above/below, but we're horizontal
+            // Use whichever end is closer
+            return dx >= 0 ? 'right' : 'left';
+        }
+    }
+
+    // For vertical components (rotation 90 or 270)
+    if (rotation === 90 || rotation === 270) {
+        // Component is vertical
+        if (Math.abs(dy) > Math.abs(dx)) {
+            // Other component is more above/below
+            if (dy > 0) {
+                // For 90°: right becomes bottom, left becomes top
+                return rotation === 90 ? 'right' : 'left';
+            } else {
+                return rotation === 90 ? 'left' : 'right';
+            }
+        } else {
+            // Other component is more left/right, but we're vertical
+            return dy >= 0 ? 'right' : 'left';
+        }
+    }
+
+    // Default fallback
+    return isSource ? 'right' : 'left';
+};
+
+/**
  * Calculates the SVG path definition ('d' attribute) for a connection.
  */
 export const calculateConnectionPath = (
@@ -47,10 +106,12 @@ export const calculateConnectionPath = (
 ): string => {
     if (!fromComp || !toComp) return "";
 
-    // Heuristic for default ports if explicit ports are not yet supported in connection type
-    // Default flow: Source Right -> Target Left
-    const p1 = getPortPosition(fromComp, 'right');
-    const p2 = getPortPosition(toComp, 'left');
+    // Intelligently determine ports based on positions
+    const fromPort = getBestPort(fromComp, toComp, true);
+    const toPort = getBestPort(toComp, fromComp, false);
+
+    const p1 = getPortPosition(fromComp, fromPort);
+    const p2 = getPortPosition(toComp, toPort);
 
     const bendPoints = connection.bendPoints || [];
 
@@ -90,18 +151,12 @@ export const calculateConnectionPath = (
                 pathD += ` L${target.x},${target.y}`;
             } else {
                 // Orthogonal routing logic
-                // If we were moving horizontally, usually continue horizontally if possible, unless target is "behind"
-                // Simple heuristic logic:
                 let moveH = true;
 
                 if (exitDir === 'horizontal') {
-                    // Try to move horizontal first
                     moveH = true;
-                    // But if target X is backwards relative to our flow, maybe switch?
-                    // Actually, simple Manhattan routing: usually just X, then Y or Y then X
-                    // Let's stick to X then Y unless overridden
                     if (Math.abs(dx) < Math.abs(dy) && Math.abs(dy) > 20) {
-                        // specialized logic could reside here
+                        // Could add specialized logic here
                     }
                 } else {
                     moveH = false;
