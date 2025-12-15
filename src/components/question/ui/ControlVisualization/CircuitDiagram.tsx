@@ -2,11 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Wand2, Grid3X3, RotateCw, LayoutTemplate } from "lucide-react";
+import { Grid3X3 } from "lucide-react";
 import type { CircuitDiagramConfig } from "./types";
 import { COMPONENT_RENDERERS } from "./CircuitSymbols";
 import { calculateConnectionPath } from "./CircuitRouteUtils";
-import { getLayoutedComponents } from "./layout";
 
 export interface CircuitDiagramProps extends Omit<CircuitDiagramConfig, "type"> {
     height?: number;
@@ -19,7 +18,8 @@ const snapToGrid = (val: number) => Math.round(val / GRID_SIZE) * GRID_SIZE;
 
 /**
  * Circuit Diagram Visualization Component
- * Renders RLC circuit diagrams using custom SVG symbols
+ * Renders RLC circuit diagrams using custom SVG symbols.
+ * Uses manual layout from data (validated by check-diagrams.ts).
  */
 export function CircuitDiagram({
     components: initialComponents,
@@ -30,29 +30,20 @@ export function CircuitDiagram({
     height = 300,
     className,
 }: CircuitDiagramProps) {
-    const [useAutoLayout, setUseAutoLayout] = useState(false);
     const [useGridSnap, setUseGridSnap] = useState(true);
 
-    // Process components based on layout settings
+    // Process components: optionally snap to grid
     const displayComponents = useMemo(() => {
-        let processed = initialComponents;
+        if (!useGridSnap) return initialComponents;
 
-        if (useAutoLayout) {
-            processed = getLayoutedComponents(initialComponents, connections, "LR");
-        }
-
-        if (useGridSnap) {
-            processed = processed.map(c => ({
-                ...c,
-                position: {
-                    x: snapToGrid(c.position.x),
-                    y: snapToGrid(c.position.y)
-                }
-            }));
-        }
-
-        return processed;
-    }, [initialComponents, connections, useAutoLayout, useGridSnap]);
+        return initialComponents.map(c => ({
+            ...c,
+            position: {
+                x: snapToGrid(c.position.x),
+                y: snapToGrid(c.position.y)
+            }
+        }));
+    }, [initialComponents, useGridSnap]);
 
     // Calculate SVG viewBox based on component positions
     const viewBox = useMemo(() => {
@@ -102,16 +93,6 @@ export function CircuitDiagram({
                         title="对齐网格 (Snap to Grid)"
                     >
                         <Grid3X3 className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => setUseAutoLayout(!useAutoLayout)}
-                        className={cn(
-                            "p-1.5 rounded-md transition-colors hover:bg-muted",
-                            useAutoLayout ? "text-primary bg-primary/10" : "text-muted-foreground"
-                        )}
-                        title="自动布局 (Auto Layout)"
-                    >
-                        <LayoutTemplate className="w-4 h-4" />
                     </button>
                 </div>
             </div>
