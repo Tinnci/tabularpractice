@@ -238,8 +238,17 @@ export function CircuitDiagram({
                                         c => config.components.find(sc => sc.id === c.id)?.role === "output"
                                     );
                                     if (outputComp) {
-                                        x = outputComp.position.x + 50;
-                                        y = outputComp.position.y;
+                                        x = outputComp.position.x + 40;
+                                        y = outputComp.position.y - 5;
+                                    }
+                                } else if (ann.position === "custom" && ann.x === 0 && ann.y === 0) {
+                                    // Auto-calculate for output label
+                                    const outputComp = layout.components.find(
+                                        c => config.components.find(sc => sc.id === c.id)?.role === "output"
+                                    );
+                                    if (outputComp) {
+                                        x = outputComp.position.x + 40;
+                                        y = outputComp.position.y - 5;
                                     }
                                 }
 
@@ -249,7 +258,7 @@ export function CircuitDiagram({
                                         x={x}
                                         y={y}
                                         className="text-sm fill-current font-mono"
-                                        textAnchor="middle"
+                                        textAnchor="start"
                                     >
                                         {ann.text}
                                     </text>

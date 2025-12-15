@@ -97,8 +97,12 @@ function getNodeLayoutOptions(
         case 'ground':
             if (merged.groundAtBottom) {
                 // In LEFT-to-RIGHT layout, "bottom" means high Y value
-                // Use in-layer constraint to push to bottom of its layer
+                // Use LAST layer constraint to ensure ground is at the bottom
+                options['elk.layered.layering.layerConstraint'] = 'LAST';
+                // Also push to bottom within its layer
                 options['elk.layered.crossingMinimization.inLayerConstraint'] = 'LAST';
+                // Add priority to ensure it's processed last
+                options['elk.priority'] = '1';
             }
             break;
 
@@ -251,9 +255,15 @@ function fromElkGraph(
         // Determine rotation based on orientation
         let rotation: 0 | 90 | 180 | 270 = 0;
 
-        // Vertical components (R, C, L, V) need 90 deg rotation
+        // Vertical components (R, C, L, V) need rotation
         if (orig.orientation === 'vertical') {
-            rotation = 90;
+            // For capacitors, use 270° (or -90°) so left plate becomes top plate
+            // This ensures positive plate is consistently at the top
+            if (orig.type === 'capacitor') {
+                rotation = 270;
+            } else {
+                rotation = 90;
+            }
         }
         // Ground is drawn upright (0 deg) by default in our SVG symbols
         // so we don't need to rotate it unless explicitly requested (which is rare)
