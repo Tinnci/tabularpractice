@@ -256,15 +256,15 @@ export type ControlVisualizationConfig = {
     type: string;
     title?: string;
     config:
-    | CircuitDiagramConfig
-    | BlockDiagramConfig
-    | RootLocusConfig
-    | BodePlotConfig
-    | StepResponseConfig
-    | NyquistPlotConfig
-    | PhasePortraitConfig
-    | StateTransitionConfig
-    | SignalFlowGraphConfig;
+    | Omit<CircuitDiagramConfig, 'type'>
+    | Omit<BlockDiagramConfig, 'type'>
+    | Omit<RootLocusConfig, 'type'>
+    | Omit<BodePlotConfig, 'type'>
+    | Omit<StepResponseConfig, 'type'>
+    | Omit<NyquistPlotConfig, 'type'>
+    | Omit<PhasePortraitConfig, 'type'>
+    | Omit<StateTransitionConfig, 'type'>
+    | Omit<SignalFlowGraphConfig, 'type'>;
 };
 
 export interface ControlVisualizationRendererProps {
