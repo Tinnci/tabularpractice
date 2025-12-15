@@ -134,7 +134,7 @@ function createPort(
     x: number,
     y: number
 ): ElkPort {
-    const port: any = {
+    const port = {
         id,
         x,
         y,
@@ -143,9 +143,9 @@ function createPort(
         layoutOptions: {
             'elk.port.side': side,
         }
-    };
+    } as unknown as ElkPort;
 
-    return port as ElkPort;
+    return port;
 }
 
 /**
@@ -279,11 +279,12 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
     const componentById = new Map<string, SemanticCircuitComponent>();
     for (const c of config.components) componentById.set(c.id, c);
 
-    // Track outgoing edges per component (used for safer constraint decisions)
-    const outgoingCount = new Map<string, number>();
-    for (const conn of config.connections) {
-        outgoingCount.set(conn.from, (outgoingCount.get(conn.from) ?? 0) + 1);
-    }
+    // Note: we don't try to force ground into LAST layer (that affects X in LTR).
+
+    type ElkEdgeWithPorts = ElkExtendedEdge & {
+        sourcePorts?: string[];
+        targetPorts?: string[];
+    };
 
     // Build nodes
     const children: ElkNode[] = config.components.map(comp => {
@@ -301,16 +302,6 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
         }
 
         const nodeMsg: Record<string, string> = getNodeLayoutOptions(comp, constraints);
-
-        // If ground has no outgoing edges, we can safely force it to LAST layer.
-        // This avoids ELK's constraint exception when a LAST node has outgoing edges.
-        if (comp.role === 'ground') {
-            const merged = { ...DEFAULT_CIRCUIT_CONSTRAINTS, ...constraints };
-            const out = outgoingCount.get(comp.id) ?? 0;
-            if (merged.groundAtBottom && out === 0) {
-                nodeMsg['elk.layered.layering.layerConstraint'] = 'LAST';
-            }
-        }
 
         // Ensure ports are respected
         nodeMsg['elk.portConstraints'] = 'FIXED_SIDE';
@@ -338,7 +329,7 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
         const targetPort = resolvePortId(toComp, toSide);
 
         // ELK expects node IDs in sources/targets; ports are supplied via sourcePorts/targetPorts.
-        const edge: any = {
+        const edge: ElkEdgeWithPorts = {
             id: `e${idx}`,
             sources: [conn.from],
             targets: [conn.to],
@@ -347,7 +338,7 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
         if (sourcePort) edge.sourcePorts = [sourcePort];
         if (targetPort) edge.targetPorts = [targetPort];
 
-        return edge as ElkExtendedEdge;
+        return edge;
     });
 
     return {
@@ -370,6 +361,69 @@ function fromElkGraph(
     // ELK computes precise routing based on ports, so we should trust its output coordinate precision.
     // Rounding to 1px is sufficient to avoid sub-pixel blurring.
     const snap = (val: number) => Math.round(val);
+
+    const constraints = originalConfig.constraints || {};
+    const merged = { ...DEFAULT_CIRCUIT_CONSTRAINTS, ...constraints };
+    const origById = new Map(originalConfig.components.map(c => [c.id, c] as const));
+
+    const getDims = (orig: SemanticCircuitComponent | undefined): { width: number; height: number } => {
+        if (!orig) return { width: 40, height: 40 };
+        const base = COMPONENT_DIMENSIONS[orig.type] || { width: 40, height: 40 };
+        if (orig.orientation === 'vertical' && orig.type !== 'ground') {
+            return { width: base.height, height: base.width };
+        }
+        return { width: base.width, height: base.height };
+    };
+
+    const getPinPoint = (compId: string, side: PortHint): { x: number; y: number } | undefined => {
+        const orig = origById.get(compId);
+        // Find placed component
+        const placed = placedById.get(compId);
+        if (!placed) return undefined;
+
+        const { width, height } = getDims(orig);
+        const cx = placed.position.x;
+        const cy = placed.position.y;
+
+        switch (side) {
+            case 'left':
+                return { x: cx - width / 2, y: cy };
+            case 'right':
+                return { x: cx + width / 2, y: cy };
+            case 'top':
+                return { x: cx, y: cy - height / 2 };
+            case 'bottom':
+                return { x: cx, y: cy + height / 2 };
+        }
+    };
+
+    const normalizeManhattan = (
+        start: { x: number; y: number },
+        end: { x: number; y: number },
+        bendPoints: Array<{ x: number; y: number }> | undefined
+    ): Array<{ x: number; y: number }> | undefined => {
+        const bps = (bendPoints ?? []).slice();
+
+        if (bps.length === 0) {
+            // One-bend L shape based on overall flow
+            if (merged.flowDirection === 'top-to-bottom') {
+                return [{ x: start.x, y: end.y }];
+            }
+            return [{ x: end.x, y: start.y }];
+        }
+
+        // Insert helper points to ensure orthogonal entry/exit when we snap endpoints
+        bps.unshift({ x: start.x, y: bps[0].y });
+        bps.push({ x: end.x, y: bps[bps.length - 1].y });
+
+        // Drop consecutive duplicates
+        const out: Array<{ x: number; y: number }> = [];
+        for (const p of bps) {
+            const prev = out[out.length - 1];
+            if (!prev || prev.x !== p.x || prev.y !== p.y) out.push(p);
+        }
+        return out;
+    };
 
     // Map ELK nodes back to components
     const components: CircuitComponent[] = originalConfig.components.map(orig => {
@@ -404,6 +458,39 @@ function fromElkGraph(
         };
     });
 
+    const placedById = new Map(components.map(c => [c.id, c] as const));
+
+    // Deterministic ground placement: put ground under the circuit.
+    if (merged.groundAtBottom) {
+        const groundIds = originalConfig.components
+            .filter(c => c.role === 'ground' && c.type === 'ground')
+            .map(c => c.id);
+
+        if (groundIds.length > 0) {
+            const nonGround = components.filter(c => !groundIds.includes(c.id));
+            const maxY = nonGround.length > 0 ? Math.max(...nonGround.map(c => c.position.y)) : 0;
+
+            for (const gndId of groundIds) {
+                const gnd = placedById.get(gndId);
+                if (!gnd) continue;
+
+                const incoming = originalConfig.connections.filter(c => c.to === gndId);
+                const xs: number[] = [];
+                for (const inc of incoming) {
+                    const src = placedById.get(inc.from);
+                    if (src) xs.push(src.position.x);
+                }
+
+                const x = xs.length > 0
+                    ? Math.round(xs.reduce((s, v) => s + v, 0) / xs.length)
+                    : gnd.position.x;
+
+                gnd.position.x = x;
+                gnd.position.y = maxY + 80;
+            }
+        }
+    }
+
     // Map ELK edges back to connections with bend points
     const connections: CircuitConnection[] = originalConfig.connections.map((orig, idx) => {
         const elkEdge = elkGraph.edges?.find((e: ElkExtendedEdge) => e.id === `e${idx}`);
@@ -431,6 +518,23 @@ function fromElkGraph(
                     y: snap(bp.y),
                 }));
             }
+        }
+
+        // Snap endpoints to our symbol pins (ELK routing points can be slightly offset)
+        const fromOrig = origById.get(orig.from);
+        const toOrig = origById.get(orig.to);
+        const inferred = inferEdgePortSides(fromOrig, toOrig, constraints);
+        const fromSide = orig.fromPort ?? inferred.fromSide;
+        const toSide = orig.toPort ?? inferred.toSide;
+
+        const snappedStart = getPinPoint(orig.from, fromSide);
+        const snappedEnd = getPinPoint(orig.to, toSide);
+
+        if (snappedStart) startPoint = snappedStart;
+        if (snappedEnd) endPoint = snappedEnd;
+
+        if (startPoint && endPoint) {
+            bendPoints = normalizeManhattan(startPoint, endPoint, bendPoints);
         }
 
         return {
