@@ -127,24 +127,34 @@ function getNodeLayoutOptions(
 /**
  * Convert semantic config to ELK graph
  */
-// Helper to create a port
-function createPort(id: string, side: 'WEST' | 'EAST' | 'NORTH' | 'SOUTH' | 'CENTER'): ElkPort {
-    const port: ElkPort = {
+// Helper to create a port (explicit x/y improves alignment with our SVG symbols)
+function createPort(
+    id: string,
+    side: 'WEST' | 'EAST' | 'NORTH' | 'SOUTH',
+    x: number,
+    y: number
+): ElkPort {
+    const port: any = {
         id,
+        x,
+        y,
+        width: 1,
+        height: 1,
         layoutOptions: {
-            'elk.port.side': side === 'CENTER' ? 'WEST' : side, // CENTER fallback
+            'elk.port.side': side,
         }
     };
 
-    // For specific centering or fixed positions, we rely on side constraints
-    return port;
+    return port as ElkPort;
 }
 
 /**
  * Generate ports for a component based on its type and orientation
  */
 function getComponentPorts(
-    comp: SemanticCircuitComponent
+    comp: SemanticCircuitComponent,
+    width: number,
+    height: number
 ): ElkPort[] {
     const ports: ElkPort[] = [];
     const isVertical = comp.orientation === 'vertical';
@@ -153,39 +163,111 @@ function getComponentPorts(
     if (['resistor', 'capacitor', 'inductor', 'voltage-source', 'current-source', 'switch'].includes(comp.type)) {
         if (isVertical) {
             // Vertical: Top and Bottom
-            ports.push(createPort(`${comp.id}_p1`, 'NORTH'));
-            ports.push(createPort(`${comp.id}_p2`, 'SOUTH'));
+            ports.push(createPort(`${comp.id}_p1`, 'NORTH', width / 2, 0));
+            ports.push(createPort(`${comp.id}_p2`, 'SOUTH', width / 2, height));
         } else {
             // Horizontal: Left and Right
             // If direction is Left-to-Right, strict inputs usually on West, Outputs on East
             // But allowing both sides handles bidirectional flow flexibility
-            ports.push(createPort(`${comp.id}_left`, 'WEST'));
-            ports.push(createPort(`${comp.id}_right`, 'EAST'));
+            ports.push(createPort(`${comp.id}_left`, 'WEST', 0, height / 2));
+            ports.push(createPort(`${comp.id}_right`, 'EAST', width, height / 2));
         }
     }
     // 2. Ground - Single top port
     else if (comp.type === 'ground') {
-        ports.push(createPort(`${comp.id}_top`, 'NORTH'));
+        ports.push(createPort(`${comp.id}_top`, 'NORTH', width / 2, 0));
     }
-    // 3. One-port terminals (Input/Output labels treated as nodes)
-    else if (comp.role === 'input') {
-        ports.push(createPort(`${comp.id}_p`, 'EAST')); // Input feeds into circuit to the right
-    }
-    else if (comp.role === 'output') {
-        ports.push(createPort(`${comp.id}_p`, 'WEST')); // Output receives from circuit to the left
-    }
-    // 4. Nodes (Connections points) - Omni-directional
+    // 3. Nodes (Connections points) - Omni-directional
     else if (comp.type === 'node') {
         // Nodes are tricky. To allow connections from all sides, we can define one center port
         // or ports on all 4 sides. 
         // ELK works best with explicit sides. Let's add all 4 to be safe.
-        ports.push(createPort(`${comp.id}_n`, 'NORTH'));
-        ports.push(createPort(`${comp.id}_s`, 'SOUTH'));
-        ports.push(createPort(`${comp.id}_e`, 'EAST'));
-        ports.push(createPort(`${comp.id}_w`, 'WEST'));
+        ports.push(createPort(`${comp.id}_n`, 'NORTH', width / 2, 0));
+        ports.push(createPort(`${comp.id}_s`, 'SOUTH', width / 2, height));
+        ports.push(createPort(`${comp.id}_e`, 'EAST', width, height / 2));
+        ports.push(createPort(`${comp.id}_w`, 'WEST', 0, height / 2));
     }
 
     return ports;
+}
+
+type PortHint = 'left' | 'right' | 'top' | 'bottom';
+
+function resolvePortId(comp: SemanticCircuitComponent | undefined, side: PortHint): string | undefined {
+    if (!comp) return undefined;
+
+    // Ground symbol: single top port
+    if (comp.type === 'ground') {
+        return `${comp.id}_top`;
+    }
+
+    // Omni node ports
+    if (comp.type === 'node') {
+        switch (side) {
+            case 'top':
+                return `${comp.id}_n`;
+            case 'bottom':
+                return `${comp.id}_s`;
+            case 'left':
+                return `${comp.id}_w`;
+            case 'right':
+                return `${comp.id}_e`;
+        }
+    }
+
+    const isVertical = comp.orientation === 'vertical';
+
+    // Two-terminal components
+    if (['resistor', 'capacitor', 'inductor', 'voltage-source', 'current-source', 'switch'].includes(comp.type)) {
+        if (isVertical) {
+            // Vertical uses NORTH/SOUTH ports
+            return side === 'bottom' ? `${comp.id}_p2` : `${comp.id}_p1`;
+        }
+        // Horizontal uses WEST/EAST ports
+        return side === 'right' ? `${comp.id}_right` : `${comp.id}_left`;
+    }
+
+    return undefined;
+}
+
+function inferEdgePortSides(
+    fromComp: SemanticCircuitComponent | undefined,
+    toComp: SemanticCircuitComponent | undefined,
+    constraints: CircuitLayoutConstraints
+): { fromSide: PortHint; toSide: PortHint } {
+    const merged = { ...DEFAULT_CIRCUIT_CONSTRAINTS, ...constraints };
+    const flow = merged.flowDirection;
+
+    // Default by flow
+    let fromSide: PortHint = flow === 'top-to-bottom' ? 'bottom' : 'right';
+    let toSide: PortHint = flow === 'top-to-bottom' ? 'top' : 'left';
+
+    // Always connect into ground from the top
+    if (toComp?.type === 'ground') {
+        toSide = 'top';
+        // Prefer leaving from bottom when sinking to ground
+        if (fromComp?.type === 'node') fromSide = 'bottom';
+        if (fromComp?.orientation === 'vertical') fromSide = 'bottom';
+        return { fromSide, toSide };
+    }
+
+    // Terminals
+    if (fromComp?.role === 'input') fromSide = flow === 'top-to-bottom' ? 'bottom' : 'right';
+    if (toComp?.role === 'output') toSide = flow === 'top-to-bottom' ? 'top' : 'left';
+
+    // Node -> vertical component: draw a downward branch
+    if (fromComp?.type === 'node' && toComp?.orientation === 'vertical') {
+        fromSide = 'bottom';
+        toSide = 'top';
+        return { fromSide, toSide };
+    }
+
+    // Vertical component tends to connect from its top to upstream nodes
+    if (toComp?.orientation === 'vertical') {
+        toSide = 'top';
+    }
+
+    return { fromSide, toSide };
 }
 
 /**
@@ -193,6 +275,15 @@ function getComponentPorts(
  */
 function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
     const constraints = config.constraints || {};
+
+    const componentById = new Map<string, SemanticCircuitComponent>();
+    for (const c of config.components) componentById.set(c.id, c);
+
+    // Track outgoing edges per component (used for safer constraint decisions)
+    const outgoingCount = new Map<string, number>();
+    for (const conn of config.connections) {
+        outgoingCount.set(conn.from, (outgoingCount.get(conn.from) ?? 0) + 1);
+    }
 
     // Build nodes
     const children: ElkNode[] = config.components.map(comp => {
@@ -211,6 +302,16 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
 
         const nodeMsg: Record<string, string> = getNodeLayoutOptions(comp, constraints);
 
+        // If ground has no outgoing edges, we can safely force it to LAST layer.
+        // This avoids ELK's constraint exception when a LAST node has outgoing edges.
+        if (comp.role === 'ground') {
+            const merged = { ...DEFAULT_CIRCUIT_CONSTRAINTS, ...constraints };
+            const out = outgoingCount.get(comp.id) ?? 0;
+            if (merged.groundAtBottom && out === 0) {
+                nodeMsg['elk.layered.layering.layerConstraint'] = 'LAST';
+            }
+        }
+
         // Ensure ports are respected
         nodeMsg['elk.portConstraints'] = 'FIXED_SIDE';
 
@@ -219,17 +320,35 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
             width,
             height,
             layoutOptions: nodeMsg,
-            labels: comp.label ? [{ text: comp.label }] : [],
-            ports: getComponentPorts(comp),
+            labels: [],
+            ports: getComponentPorts(comp, width, height),
         };
     });
 
     // Build edges
-    const edges: ElkExtendedEdge[] = config.connections.map((conn, idx) => ({
-        id: `e${idx}`,
-        sources: [conn.from],
-        targets: [conn.to],
-    }));
+    const edges: ElkExtendedEdge[] = config.connections.map((conn, idx) => {
+        const fromComp = componentById.get(conn.from);
+        const toComp = componentById.get(conn.to);
+
+        const inferred = inferEdgePortSides(fromComp, toComp, constraints);
+        const fromSide = (conn.fromPort ?? inferred.fromSide);
+        const toSide = (conn.toPort ?? inferred.toSide);
+
+        const sourcePort = resolvePortId(fromComp, fromSide);
+        const targetPort = resolvePortId(toComp, toSide);
+
+        // ELK expects node IDs in sources/targets; ports are supplied via sourcePorts/targetPorts.
+        const edge: any = {
+            id: `e${idx}`,
+            sources: [conn.from],
+            targets: [conn.to],
+        };
+
+        if (sourcePort) edge.sourcePorts = [sourcePort];
+        if (targetPort) edge.targetPorts = [targetPort];
+
+        return edge as ElkExtendedEdge;
+    });
 
     return {
         id: 'root',
@@ -284,27 +403,6 @@ function fromElkGraph(
             rotation,
         };
     });
-
-    // Post-process: Force ground components to bottom
-    const constraints = originalConfig.constraints || {};
-    const merged = { ...DEFAULT_CIRCUIT_CONSTRAINTS, ...constraints };
-    
-    if (merged.groundAtBottom) {
-        // Find all ground components
-        const groundComponents = components.filter(c => 
-            originalConfig.components.find(oc => oc.id === c.id)?.role === 'ground'
-        );
-        
-        if (groundComponents.length > 0) {
-            // Find the maximum Y position (bottom)
-            const maxY = Math.max(...components.map(c => c.position.y));
-            
-            // Move ground components to bottom with some padding
-            groundComponents.forEach(gc => {
-                gc.position.y = maxY + 60;
-            });
-        }
-    }
 
     // Map ELK edges back to connections with bend points
     const connections: CircuitConnection[] = originalConfig.connections.map((orig, idx) => {

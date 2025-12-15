@@ -97,7 +97,7 @@ describe("ELK Circuit Layout Engine", () => {
         });
     });
 
-    test("should snap positions to grid", async () => {
+    test("should produce integer pixel positions", async () => {
         const config: SemanticCircuitConfig = {
             components: [
                 { id: "r1", type: "resistor", label: "R" },
@@ -113,10 +113,10 @@ describe("ELK Circuit Layout Engine", () => {
 
         const result = await computeCircuitLayout(config);
 
-        // All positions should be multiples of 20
+        // Positions are rounded to integer pixels; we don't snap to grid
         result.components.forEach(comp => {
-            expect(comp.position.x % 20).toBe(0);
-            expect(comp.position.y % 20).toBe(0);
+            expect(Number.isInteger(comp.position.x)).toBe(true);
+            expect(Number.isInteger(comp.position.y)).toBe(true);
         });
     });
 

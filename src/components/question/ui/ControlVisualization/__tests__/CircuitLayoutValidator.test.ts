@@ -132,7 +132,7 @@ describe("Circuit Layout Geometric Validation", () => {
                 ports.push({ x: x - 30, y: y });
                 ports.push({ x: x + 30, y: y });
             }
-            else if (comp.type === 'capacitor' && comp.rotation === 90) {
+            else if (comp.type === 'capacitor' && (comp.rotation === 90 || comp.rotation === 270)) {
                 // Vertical: top/bottom +/- 30
                 ports.push({ x: x, y: y - 30 }); // Top (North)
                 ports.push({ x: x, y: y + 30 }); // Bottom (South)
@@ -195,18 +195,17 @@ describe("Circuit Layout Geometric Validation", () => {
         expect(misalignmentErrors).toHaveLength(0);
     });
 
-    test("should aligned to grid", async () => {
+    test("should use integer pixel coordinates", async () => {
         const layout = await computeCircuitLayout(TEST_CONFIG);
-        const GRID_SIZE = 20;
 
-        const misaligned = layout.components.filter(c =>
-            c.position.x % GRID_SIZE !== 0 || c.position.y % GRID_SIZE !== 0
+        const nonInteger = layout.components.filter(c =>
+            !Number.isInteger(c.position.x) || !Number.isInteger(c.position.y)
         );
 
-        if (misaligned.length > 0) {
-            console.error("Misaligned components:", misaligned.map(c => `${c.id}(${c.position.x},${c.position.y})`));
+        if (nonInteger.length > 0) {
+            console.error("Non-integer component positions:", nonInteger.map(c => `${c.id}(${c.position.x},${c.position.y})`));
         }
 
-        expect(misaligned).toHaveLength(0);
+        expect(nonInteger).toHaveLength(0);
     });
 });
