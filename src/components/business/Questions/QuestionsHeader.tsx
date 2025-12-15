@@ -41,7 +41,6 @@ export function QuestionsHeader({
     onQuestionSelect
 }: QuestionsHeaderProps) {
     const {
-        progress,
         currentGroupId,
         setCurrentGroupId,
         filterStatus,

@@ -113,24 +113,30 @@ export function VectorField3DVisualizer({
     const fnY = useMemo(() => parseExpr3D(fy), [fy]);
     const fnZ = useMemo(() => parseExpr3D(fz), [fz]);
 
-    const finalXRange = xRange || range || [-2, 2];
-    const finalYRange = yRange || range || [-2, 2];
-    const finalZRange = zRange || range || [-2, 2];
-
     // Calculate divergence if needed
     const calculateDivergence = useMemo(() => {
-        if (!showDivergence) return null;
-        return (x: number, y: number, z: number) => {
-            const h = 0.01;
-            const dPdx = (fnX(x + h, y, z) - fnX(x - h, y, z)) / (2 * h);
-            const dQdy = (fnY(x, y + h, z) - fnY(x, y - h, z)) / (2 * h);
-            const dRdz = (fnZ(x, y, z + h) - fnZ(x, y, z - h)) / (2 * h);
-            return dPdx + dQdy + dRdz;
+        const finalXRange = xRange || range || [-2, 2];
+        const finalYRange = yRange || range || [-2, 2];
+        const finalZRange = zRange || range || [-2, 2];
+        
+        if (!showDivergence) return { fn: null, finalXRange, finalYRange, finalZRange };
+        return {
+            fn: (x: number, y: number, z: number) => {
+                const h = 0.01;
+                const dPdx = (fnX(x + h, y, z) - fnX(x - h, y, z)) / (2 * h);
+                const dQdy = (fnY(x, y + h, z) - fnY(x, y - h, z)) / (2 * h);
+                const dRdz = (fnZ(x, y, z + h) - fnZ(x, y, z - h)) / (2 * h);
+                return dPdx + dQdy + dRdz;
+            },
+            finalXRange,
+            finalYRange,
+            finalZRange
         };
-    }, [fnX, fnY, fnZ, showDivergence]);
+    }, [fnX, fnY, fnZ, showDivergence, xRange, yRange, zRange, range]);
 
     const arrows = useMemo(() => {
         const result: React.ReactNode[] = [];
+        const { finalXRange, finalYRange, finalZRange, fn: divFn } = calculateDivergence;
         const [xMin, xMax] = finalXRange;
         const [yMin, yMax] = finalYRange;
         const [zMin, zMax] = finalZRange;
@@ -153,8 +159,8 @@ export function VectorField3DVisualizer({
 
                     if (mag > 0.01) {
                         let color = "#3b82f6";
-                        if (showDivergence && calculateDivergence) {
-                            const div = calculateDivergence(x, y, z);
+                        if (showDivergence && divFn) {
+                            const div = divFn(x, y, z);
                             if (div > 0.1) color = "#22c55e"; // source
                             else if (div < -0.1) color = "#ef4444"; // sink
                         }
@@ -174,7 +180,7 @@ export function VectorField3DVisualizer({
         }
 
         return result;
-    }, [fnX, fnY, fnZ, finalXRange, finalYRange, finalZRange, density, scale, showDivergence, calculateDivergence]);
+    }, [fnX, fnY, fnZ, density, scale, showDivergence, calculateDivergence]);
 
     return (
         <div className={cn("w-full rounded-lg overflow-hidden border bg-slate-100 dark:bg-slate-900 relative", className)} style={{ height }}>

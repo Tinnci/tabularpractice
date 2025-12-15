@@ -6,15 +6,11 @@ import {
     IntegralRegion2D,
     EnhancedFunctionPlot,
     VectorField2D,
-    ParametricCurve2D,
-    Viz2DContainer,
-    Viz2DControls
+    ParametricCurve2D
 } from ".";
 
 import {
-    VisualizationConfig,
     IntegralRegion2DConfig,
-    FunctionPlotConfig,
     EnhancedFunctionPlotConfig,
     ParametricCurve2DConfig,
     VectorField2DConfig,

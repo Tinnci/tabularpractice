@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Mafs, Coordinates, Plot, Line, Point, Text, useMovablePoint, vec } from "mafs";
+import { Mafs, Coordinates, Plot, Line, Point, Text } from "mafs";
 import { cn } from "@/lib/utils";
 import type { StepResponseConfig } from "./types";
 import "mafs/core.css";
@@ -117,7 +117,7 @@ export function StepResponse({
     }, [systemType, dampingRatio, gain]);
 
     // Calculate rise time (10% to 90%)
-    const riseTime = useMemo(() => {
+    const _riseTime = useMemo(() => {
         if (systemType === "first-order") {
             return 2.2 * timeConstant;
         }

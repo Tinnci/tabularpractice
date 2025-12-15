@@ -51,7 +51,7 @@ describe("ControlVisualizationRenderer Integration", () => {
         expect(svg).toBeTruthy();
 
         // Should have title
-        const title = container.textContent;
+        const _title = container.textContent;
         // Text content might be "Computing layout..." initially due to async layout
         // So we check if component mounted and didn't crash
         expect(container).toBeDefined();

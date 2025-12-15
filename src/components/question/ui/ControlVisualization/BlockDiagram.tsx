@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import {
     ReactFlow,
     Controls,
@@ -14,7 +14,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { cn } from "@/lib/utils";
-import type { BlockDiagramConfig, BlockType } from "./types";
+import type { BlockDiagramConfig } from "./types";
 
 export interface BlockDiagramProps extends Omit<BlockDiagramConfig, "type"> {
     height?: number;
@@ -37,7 +37,7 @@ function TransferFunctionNode({ data }: NodeProps) {
 }
 
 /** Summing Junction (circle with ±) */
-function SummingJunctionNode({ data }: NodeProps) {
+function SummingJunctionNode({ data: _data }: NodeProps) {
     return (
         <div className="w-8 h-8 rounded-full border-2 border-gray-700 dark:border-gray-300 bg-white dark:bg-gray-900 flex items-center justify-center shadow-sm">
             <Handle type="target" position={Position.Left} id="left" className="!bg-gray-600" />
@@ -50,7 +50,7 @@ function SummingJunctionNode({ data }: NodeProps) {
 }
 
 /** Sampler (switch symbol) */
-function SamplerNode({ data }: NodeProps) {
+function SamplerNode({ data: _data }: NodeProps) {
     return (
         <div className="relative w-10 h-8 flex items-center justify-center">
             <Handle type="target" position={Position.Left} className="!bg-purple-500" />
@@ -112,7 +112,7 @@ function IONode({ data }: NodeProps) {
 }
 
 /** Integrator Block */
-function IntegratorNode({ data }: NodeProps) {
+function IntegratorNode({ data: _data }: NodeProps) {
     return (
         <div className="px-3 py-1.5 border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950 rounded shadow-sm text-center">
             <Handle type="target" position={Position.Left} className="!bg-indigo-500" />

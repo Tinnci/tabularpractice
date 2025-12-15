@@ -1,10 +1,10 @@
 
 import { readFile, writeFile, access } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { constants } from 'fs';
 
 // Configuration
-const DATA_DIR = join(process.cwd(), 'papers'); // Adjust based on where this script runs. Assuming root.
+const _DATA_DIR = join(process.cwd(), 'papers'); // Adjust based on where this script runs. Assuming root.
 // Actually allow passing paper directory
 
 async function fileExists(path: string): Promise<boolean> {

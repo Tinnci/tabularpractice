@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Mafs, Coordinates, Plot, Line, Point, Text, Polygon, vec } from "mafs";
+import { Mafs, Coordinates, Plot, Line, Point, Text } from "mafs";
 import { cn } from "@/lib/utils";
 import type { BodePlotConfig } from "./types";
 import "mafs/core.css";
@@ -20,8 +20,8 @@ export function BodePlot({
     omegaRange,
     showAsymptotes = true,
     showPhaseMargin = false,
-    showGainMargin = false,
-    annotations = [],
+    showGainMargin: _showGainMargin = false,
+    annotations: _annotations = [],
     height = 400,
     className,
 }: BodePlotProps) {

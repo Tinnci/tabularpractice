@@ -110,7 +110,7 @@ export function CircuitDiagram({
         return layout.connections.map((conn) => {
             return calculateConnectionPath(conn);
         });
-    }, [layout.connections, layout.components]);
+    }, [layout.connections]);
 
     // Loading state
     if (layout.isLoading) {

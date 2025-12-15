@@ -6,7 +6,6 @@ import type {
     ControlVisualizationRendererProps,
     BodePlotConfig,
     BlockDiagramConfig,
-    CircuitDiagramConfig,
     RootLocusConfig,
     SignalFlowGraphConfig,
     StepResponseConfig,

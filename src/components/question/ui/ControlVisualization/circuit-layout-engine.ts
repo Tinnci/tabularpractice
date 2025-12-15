@@ -14,7 +14,7 @@
  * - Constraint satisfaction
  */
 
-import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
+import ELK, { type ElkNode, type ElkExtendedEdge, type ElkPort } from 'elkjs/lib/elk.bundled.js';
 import type {
     SemanticCircuitConfig,
     SemanticCircuitComponent,
@@ -77,7 +77,10 @@ function getNodeLayoutOptions(
     component: SemanticCircuitComponent,
     constraints: CircuitLayoutConstraints
 ): Record<string, string> {
-    const options: Record<string, string> = {};
+    const options: Record<string, string> = {
+        // Force ports to be centered on their side to match fixed SVG pins
+        'elk.portAlignment.default': 'CENTER'
+    };
     const merged = { ...DEFAULT_CIRCUIT_CONSTRAINTS, ...constraints };
 
     switch (component.role) {
@@ -106,10 +109,7 @@ function getNodeLayoutOptions(
             break;
     }
 
-    // Handle orientation hints
-    if (component.orientation === 'vertical') {
-        options['elk.portAlignment.default'] = 'CENTER';
-    }
+    // Handle orientation hints -> Force center alignment is now global above
 
     return options;
 }
@@ -120,8 +120,8 @@ function getNodeLayoutOptions(
  * Convert semantic config to ELK graph
  */
 // Helper to create a port
-function createPort(id: string, side: 'WEST' | 'EAST' | 'NORTH' | 'SOUTH' | 'CENTER'): any {
-    const port: any = {
+function createPort(id: string, side: 'WEST' | 'EAST' | 'NORTH' | 'SOUTH' | 'CENTER'): ElkPort {
+    const port: ElkPort = {
         id,
         layoutOptions: {
             'elk.port.side': side === 'CENTER' ? 'WEST' : side, // CENTER fallback
@@ -136,10 +136,9 @@ function createPort(id: string, side: 'WEST' | 'EAST' | 'NORTH' | 'SOUTH' | 'CEN
  * Generate ports for a component based on its type and orientation
  */
 function getComponentPorts(
-    comp: SemanticCircuitComponent,
-    constraints: CircuitLayoutConstraints
-): any[] {
-    const ports: any[] = [];
+    comp: SemanticCircuitComponent
+): ElkPort[] {
+    const ports: ElkPort[] = [];
     const isVertical = comp.orientation === 'vertical';
 
     // 1. Two-terminal components (Resistor, Capacitor, Inductor, Voltage Source)
@@ -202,7 +201,7 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
             height = baseDims.width;
         }
 
-        const nodeMsg: any = getNodeLayoutOptions(comp, constraints);
+        const nodeMsg: Record<string, string> = getNodeLayoutOptions(comp, constraints);
 
         // Ensure ports are respected
         nodeMsg['elk.portConstraints'] = 'FIXED_SIDE';
@@ -213,7 +212,7 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
             height,
             layoutOptions: nodeMsg,
             labels: comp.label ? [{ text: comp.label }] : [],
-            ports: getComponentPorts(comp, constraints),
+            ports: getComponentPorts(comp),
         };
     });
 
@@ -237,8 +236,7 @@ function toElkGraph(config: SemanticCircuitConfig): ElkGraph {
  */
 function fromElkGraph(
     elkGraph: ElkGraph,
-    originalConfig: SemanticCircuitConfig,
-    gridSize: number
+    originalConfig: SemanticCircuitConfig
 ): { components: CircuitComponent[]; connections: CircuitConnection[] } {
     // We used to snap to gridSize (20px), but this caused misalignment for components 
     // whose ports are not on the 20px grid (e.g. Resistor pins at +/- 30px, Ground pin at -15px).
@@ -324,8 +322,6 @@ function fromElkGraph(
 export async function computeCircuitLayout(
     config: SemanticCircuitConfig
 ): Promise<{ components: CircuitComponent[]; connections: CircuitConnection[] }> {
-    const gridSize = config.constraints?.gridSize ?? DEFAULT_CIRCUIT_CONSTRAINTS.gridSize;
-
     // Convert to ELK format
     const elkGraph = toElkGraph(config);
 
@@ -333,7 +329,7 @@ export async function computeCircuitLayout(
     const layoutedGraph = await elk.layout(elkGraph);
 
     // Convert back to our format
-    return fromElkGraph(layoutedGraph as ElkGraph, config, gridSize);
+    return fromElkGraph(layoutedGraph as ElkGraph, config);
 }
 
 /**
