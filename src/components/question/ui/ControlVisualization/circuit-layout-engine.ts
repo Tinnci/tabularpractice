@@ -67,6 +67,12 @@ function buildLayoutOptions(constraints: CircuitLayoutConstraints): Record<strin
 
         // Aspect ratio
         'elk.aspectRatio': String(merged.aspectRatio),
+        
+        // Consider model order for better grouping
+        'elk.considerModelOrder.strategy': 'NODES_AND_EDGES',
+        
+        // Separate connected components
+        'elk.separateConnectedComponents': 'false',
     };
 }
 
@@ -97,12 +103,14 @@ function getNodeLayoutOptions(
         case 'ground':
             if (merged.groundAtBottom) {
                 // In LEFT-to-RIGHT layout, "bottom" means high Y value
-                // Use LAST layer constraint to ensure ground is at the bottom
+                // Force ground to be in its own last layer
                 options['elk.layered.layering.layerConstraint'] = 'LAST';
-                // Also push to bottom within its layer
+                // Push to bottom within its layer
                 options['elk.layered.crossingMinimization.inLayerConstraint'] = 'LAST';
-                // Add priority to ensure it's processed last
-                options['elk.priority'] = '1';
+                // Increase priority to force lower position
+                options['elk.priority'] = '10';
+                // Add position constraint
+                options['elk.layered.nodePlacement.favorStraightEdges'] = 'false';
             }
             break;
 
@@ -249,7 +257,7 @@ function fromElkGraph(
     const snap = (val: number) => Math.round(val);
 
     // Map ELK nodes back to components
-    const components: CircuitComponent[] = originalConfig.components.map(orig => {
+    let components: CircuitComponent[] = originalConfig.components.map(orig => {
         const elkNode = elkGraph.children?.find((n: ElkNode) => n.id === orig.id);
 
         // Determine rotation based on orientation
@@ -280,6 +288,27 @@ function fromElkGraph(
             rotation,
         };
     });
+
+    // Post-process: Force ground components to bottom
+    const constraints = originalConfig.constraints || {};
+    const merged = { ...DEFAULT_CIRCUIT_CONSTRAINTS, ...constraints };
+    
+    if (merged.groundAtBottom) {
+        // Find all ground components
+        const groundComponents = components.filter(c => 
+            originalConfig.components.find(oc => oc.id === c.id)?.role === 'ground'
+        );
+        
+        if (groundComponents.length > 0) {
+            // Find the maximum Y position (bottom)
+            const maxY = Math.max(...components.map(c => c.position.y));
+            
+            // Move ground components to bottom with some padding
+            groundComponents.forEach(gc => {
+                gc.position.y = maxY + 60;
+            });
+        }
+    }
 
     // Map ELK edges back to connections with bend points
     const connections: CircuitConnection[] = originalConfig.connections.map((orig, idx) => {
