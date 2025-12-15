@@ -240,7 +240,11 @@ function fromElkGraph(
     originalConfig: SemanticCircuitConfig,
     gridSize: number
 ): { components: CircuitComponent[]; connections: CircuitConnection[] } {
-    const snap = (val: number) => Math.round(val / gridSize) * gridSize;
+    // We used to snap to gridSize (20px), but this caused misalignment for components 
+    // whose ports are not on the 20px grid (e.g. Resistor pins at +/- 30px, Ground pin at -15px).
+    // ELK computes precise routing based on ports, so we should trust its output coordinate precision.
+    // Rounding to 1px is sufficient to avoid sub-pixel blurring.
+    const snap = (val: number) => Math.round(val);
 
     // Map ELK nodes back to components
     const components: CircuitComponent[] = originalConfig.components.map(orig => {
